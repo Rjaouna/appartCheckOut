@@ -47,9 +47,57 @@ select {
 
 .page-shell {
     max-width: 1400px;
-    margin: 0 auto;
-    padding: 24px;
+    margin: 65px auto;
+    padding: 140px 24px 24px;
     min-width: 0;
+}
+
+.page-shell > *:first-child {
+    margin-top: 10px;
+}
+
+.top-app-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: transparent;
+    border-bottom: none;
+    backdrop-filter: none;
+}
+
+.top-app-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text);
+}
+
+.top-app-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ff6f91, #ff385c);
+    color: #fff;
+}
+
+.top-app-brand-mark svg {
+    width: 26px;
+    height: 26px;
+}
+
+.top-app-brand-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
 }
 
 .shell-header {
@@ -852,12 +900,12 @@ textarea {
 }
 
 .floating-main-menu-button {
-    position: fixed;
-    right: 18px;
-    top: 22px;
+    position: relative;
+    right: auto;
+    top: auto;
     bottom: auto;
     transform: none;
-    z-index: 60;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1433,7 +1481,8 @@ textarea {
 
 @media (max-width: 720px) {
     .page-shell,
-    .shell-header {
+    .shell-header,
+    .top-app-bar {
         padding: 16px;
     }
 
@@ -1533,9 +1582,6 @@ textarea {
     }
 
     .floating-main-menu-button {
-        right: 14px;
-        top: 18px;
-        bottom: auto;
         width: 62px;
         height: 62px;
     }

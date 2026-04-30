@@ -12,6 +12,34 @@
         {% endblock %}
     </head>
     <body class="{% block body_class %}{% endblock %}">
+        {% if app.user %}
+            <div class="top-app-bar">
+                <a class="top-app-brand" href="{{ is_granted('ROLE_ADMIN') ? path('admin_dashboard') : path('employee_dashboard') }}">
+                    <span class="top-app-brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 64 64">
+                            <path fill="currentColor" d="M32 8c-3.8 0-6.6 1.9-8.3 5.7L13 38.2c-1.4 3.1-1.2 6 .6 8.6 1.8 2.6 4.4 3.9 7.8 3.9h21.2c3.4 0 6-1.3 7.8-3.9 1.8-2.6 2-5.5.6-8.6L40.3 13.7C38.6 9.9 35.8 8 32 8Zm0 7.3c1.1 0 1.9.6 2.5 1.9l10.8 24.7c.6 1.3.5 2.4-.2 3.4-.7 1-1.7 1.5-3 1.5H21.9c-1.3 0-2.3-.5-3-1.5-.7-1-.8-2.1-.2-3.4l10.8-24.7c.6-1.3 1.4-1.9 2.5-1.9Z"/>
+                        </svg>
+                    </span>
+                    <span class="top-app-brand-text">Check-out</span>
+                </a>
+
+                <button
+                    id="floating-main-menu-button"
+                    class="floating-main-menu-button"
+                    type="button"
+                    title="Ouvrir le menu"
+                    aria-label="Ouvrir le menu principal"
+                    data-action-menu-trigger
+                    data-action-menu-title="Menu principal"
+                    data-action-menu-source="#global-main-menu"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        {% endif %}
+
         <main class="page-shell">
             {% block body %}{% endblock %}
         </main>
@@ -23,24 +51,7 @@
                 {% endfor %}
             {% endfor %}
         </div>
-
         {% if app.user %}
-            <button
-                id="floating-main-menu-button"
-                class="floating-main-menu-button"
-                type="button"
-                title="Ouvrir le menu"
-                aria-label="Ouvrir le menu principal"
-                data-action-menu-trigger
-                data-action-menu-title="Menu principal"
-                data-action-menu-source="#global-main-menu"
-                data-draggable-y
-            >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
-                </svg>
-            </button>
-
             <div id="global-main-menu" class="workflow-actions-source" hidden>
                 <div class="action-menu-grid">
                     {% if is_granted('ROLE_ADMIN') %}

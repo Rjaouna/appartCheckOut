@@ -362,20 +362,7 @@ function restoreFloatingMenuPosition() {
     if (!(button instanceof HTMLElement)) {
         return;
     }
-
-    try {
-        const storedTop = localStorage.getItem('floating-main-menu-top');
-        if (storedTop) {
-            button.style.top = storedTop;
-            button.style.bottom = 'auto';
-            button.style.transform = 'none';
-            return;
-        }
-    } catch (error) {
-        // ignore storage failures
-    }
-
-    button.style.top = '22px';
+    button.style.top = 'auto';
     button.style.bottom = 'auto';
     button.style.transform = 'none';
 }
