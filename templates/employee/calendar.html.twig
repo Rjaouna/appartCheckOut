@@ -26,9 +26,7 @@
                     <span>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Date non renseignée' }}</span>
                     <span>{{ checkout.progressPercent }}%</span>
                 </div>
-                <a class="primary-button full-width" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">
-                    {{ checkout.status.value == 'paused' ? 'Reprendre' : 'Ouvrir' }}
-                </a>
+                <span class="secondary-button full-width disabled-like">Consulte depuis le tableau de bord le moment venu</span>
             </article>
         {% else %}
             <p class="empty-state">Aucun check-out programmé pour le moment.</p>
