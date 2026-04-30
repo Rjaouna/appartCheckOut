@@ -33,14 +33,13 @@
                         {% for anomaly in checkout.anomalies %}
                             <div>
                                 <strong>{{ anomaly.room.name }}</strong>
-                                <span>{{ anomaly.roomEquipment.label }}</span>
+                                <a class="inline-detail-link" href="{{ path('employee_anomaly_detail', {id: anomaly.id}) }}">{{ anomaly.roomEquipment.label }}</a>
                             </div>
                         {% endfor %}
                     </div>
                 {% else %}
                     <p class="muted">Aucune anomalie sur ce check-out.</p>
                 {% endif %}
-                <a class="secondary-button full-width" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">Voir le detail</a>
             </article>
         {% else %}
             <p class="empty-state">Aucun historique disponible pour le moment.</p>

@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail anomalie{% endblock %}
+
+{% block body %}
+    <section class="page-head employee-page-head">
+        <div>
+            <h1>{{ anomaly.apartment.name }}</h1>
+            <p class="muted">{{ anomaly.room.name }} • {{ anomaly.roomEquipment.catalogEquipment ? anomaly.roomEquipment.catalogEquipment.name : anomaly.roomEquipment.label }}</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('employee_anomalies') }}">Retour anomalies</a>
+            <a class="secondary-button" href="{{ path('employee_history') }}">Retour historique</a>
+        </div>
+    </section>
+
+    <section class="employee-list-stack">
+        <article class="employee-list-card employee-anomaly-card">
+            <div class="employee-list-card-top">
+                <span class="status-badge is-warning">{{ anomaly.status.label }}</span>
+                <span class="mini-badge">{{ anomaly.type.label }}</span>
+            </div>
+
+            <div class="employee-anomaly-summary employee-anomaly-summary-inline">
+                <div>
+                    <span class="employee-anomaly-label">Appartement</span>
+                    <strong>{{ anomaly.apartment.name }}</strong>
+                </div>
+                <div>
+                    <span class="employee-anomaly-label">Piece</span>
+                    <strong>{{ anomaly.room.name }}</strong>
+                </div>
+                <div>
+                    <span class="employee-anomaly-label">Equipement</span>
+                    <strong>{{ anomaly.roomEquipment.catalogEquipment ? anomaly.roomEquipment.catalogEquipment.name : anomaly.roomEquipment.label }}</strong>
+                </div>
+                <div>
+                    <span class="employee-anomaly-label">Declaree le</span>
+                    <strong>{{ anomaly.createdAt|date('d/m/Y H:i') }}</strong>
+                </div>
+            </div>
+
+            <div class="employee-anomaly-comment">
+                <span class="employee-anomaly-label">Commentaire</span>
+                <p>{{ anomaly.comment }}</p>
+            </div>
+
+            {% if anomaly.photoPath %}
+                <button
+                    class="anomaly-photo-thumb anomaly-photo-thumb-card"
+                    type="button"
+                    data-lightbox-src="{{ anomaly.photoPath }}"
+                    data-lightbox-alt="Photo anomalie - {{ anomaly.apartment.name }}"
+                >
+                    <img src="{{ anomaly.photoPath }}" alt="Photo anomalie {{ anomaly.apartment.name }}">
+                </button>
+            {% endif %}
+        </article>
+    </section>
+{% endblock %}

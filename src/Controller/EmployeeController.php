@@ -112,6 +112,16 @@ class EmployeeController extends AbstractController
         ]);
     }
 
+    #[Route('/anomalies/{id}', name: 'employee_anomaly_detail', methods: ['GET'])]
+    public function anomalyDetail(Anomaly $anomaly): Response
+    {
+        $this->denyAccessUnlessGrantedToAnomaly($anomaly);
+
+        return $this->render('employee/anomaly_detail.html.twig', [
+            'anomaly' => $anomaly,
+        ]);
+    }
+
     #[Route('/anomalies/{id}/workflow', name: 'employee_anomaly_workflow_update', methods: ['POST'])]
     public function updateAnomalyWorkflow(Anomaly $anomaly, Request $request, EntityManagerInterface $entityManager, AnomalyWorkflowManager $workflowManager): JsonResponse
     {
@@ -382,6 +392,23 @@ class EmployeeController extends AbstractController
         if (
             !$user instanceof User
             || !$user->canManageAnomalyWorkflow()
+            || !$checkout instanceof Checkout
+            || !$apartment instanceof Apartment
+            || $checkout->getAssignedTo()?->getId() !== $user->getId()
+            || $apartment->getStatus() !== ApartmentStatus::Active
+        ) {
+            throw $this->createAccessDeniedException();
+        }
+    }
+
+    private function denyAccessUnlessGrantedToAnomaly(Anomaly $anomaly): void
+    {
+        $user = $this->getUser();
+        $checkout = $anomaly->getCheckout();
+        $apartment = $anomaly->getApartment();
+
+        if (
+            !$user instanceof User
             || !$checkout instanceof Checkout
             || !$apartment instanceof Apartment
             || $checkout->getAssignedTo()?->getId() !== $user->getId()
