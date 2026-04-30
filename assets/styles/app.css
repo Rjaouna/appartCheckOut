@@ -1466,7 +1466,6 @@ textarea {
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-x: contain;
-        touch-action: pan-x;
         padding: 0 0 6px;
         margin: 0;
         scrollbar-width: none;
