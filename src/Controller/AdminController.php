@@ -272,7 +272,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/users/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
-    public function deleteUser(User $user, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteUser(User $user, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $this->assertManageableEmployee($user);
 

@@ -115,19 +115,5 @@
             </div>
         </article>
 
-        <article class="apartment-detail-card apartment-detail-card-wide">
-            <h3>Actions</h3>
-            <form
-                method="post"
-                action="{{ path('admin_user_delete', {id: user.id}) }}"
-                data-async-form
-                data-update-target="main.page-shell"
-                data-confirm-reset
-                data-confirm-title="Supprimer cet employe"
-                data-confirm-message="Cette action va supprimer ce compte. Veux-tu continuer ?"
-            >
-                <button class="secondary-button danger-button" type="submit">Supprimer le compte</button>
-            </form>
-        </article>
     </section>
 </div>
