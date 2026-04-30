@@ -47,7 +47,7 @@ select {
 
 .page-shell {
     max-width: 1400px;
-    margin: 65px auto;
+    margin: 75px auto;
     padding: 140px 24px 24px;
     min-width: 0;
 }
@@ -66,7 +66,7 @@ select {
     align-items: center;
     justify-content: space-between;
     padding: 18px 24px;
-    background: transparent;
+    background: #fafaf8;
     border-bottom: none;
     backdrop-filter: none;
 }
