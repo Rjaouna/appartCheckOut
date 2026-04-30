@@ -15,15 +15,14 @@
     <section class="employee-apartments-grid">
         {% for apartment in apartments %}
             <article class="employee-card employee-apartment-card" data-click-url="{{ path('employee_apartment_show', {id: apartment.id}) }}">
-                <div class="apartment-topline">
-                    <span class="status-badge {{ apartment.isInventoryPriority ? '' : 'is-neutral' }}">{{ apartment.isInventoryPriority ? 'Prioritaire' : 'Actif' }}</span>
+                <div class="employee-apartment-head">
+                    <h2 class="employee-apartment-card-title">{{ apartment.name }}</h2>
                     <a class="employee-apartment-waze" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer" title="Ouvrir dans Waze" aria-label="Ouvrir dans Waze">
                         <span class="employee-apartment-waze-icon" aria-hidden="true">
                             {% include 'shared/_waze_icon.html.twig' %}
                         </span>
                     </a>
                 </div>
-                <h2 class="employee-apartment-card-title">{{ apartment.name }}</h2>
                 <p class="employee-apartment-city">{{ apartment.city }}</p>
                 <div class="employee-apartment-code-block">
                     <div>
