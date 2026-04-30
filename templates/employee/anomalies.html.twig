@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes anomalies{% endblock %}
+
+{% block body %}
+    <section class="page-head employee-page-head">
+        <div>
+            <h1>Mes anomalies</h1>
+            <p class="muted">Retrouve uniquement les anomalies encore en cours sur tes appartements.</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('employee_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    <section class="employee-list-stack">
+        {% for anomaly in anomalies %}
+            <article class="employee-list-card employee-anomaly-card">
+                <div class="employee-list-card-top">
+                    <span class="status-badge is-warning">{{ anomaly.status.label }}</span>
+                    <span class="mini-badge">{{ anomaly.type.label }}</span>
+                </div>
+                <h2>{{ anomaly.apartment.name }}</h2>
+                <p>{{ anomaly.room.name }} • {{ anomaly.roomEquipment.catalogEquipment ? anomaly.roomEquipment.catalogEquipment.name : anomaly.roomEquipment.label }}</p>
+                {% if anomaly.photoPath %}
+                    <button
+                        class="anomaly-photo-thumb"
+                        type="button"
+                        data-lightbox-src="{{ anomaly.photoPath }}"
+                        data-lightbox-alt="Photo anomalie - {{ anomaly.apartment.name }}"
+                    >
+                        <img src="{{ anomaly.photoPath }}" alt="Photo anomalie {{ anomaly.apartment.name }}">
+                    </button>
+                {% endif %}
+                <div class="employee-list-card-meta">
+                    <span>{{ anomaly.createdAt|date('d/m/Y H:i') }}</span>
+                    <span>{{ anomaly.comment }}</span>
+                </div>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucune anomalie ouverte pour le moment.</p>
+        {% endfor %}
+    </section>
+{% endblock %}

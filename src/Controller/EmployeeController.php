@@ -2,10 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\Anomaly;
+use App\Entity\Apartment;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
 use App\Entity\Room;
 use App\Entity\User;
+use App\Enum\AnomalyStatus;
 use App\Enum\ApartmentStatus;
 use App\Enum\CheckoutStatus;
 use App\Enum\EquipmentCheckStatus;
@@ -30,6 +33,146 @@ class EmployeeController extends AbstractController
     public function dashboardPartial(EntityManagerInterface $entityManager): Response
     {
         return $this->render('employee/_dashboard_content.html.twig', $this->buildDashboardData($entityManager));
+    }
+
+    #[Route('/history', name: 'employee_history', methods: ['GET'])]
+    public function history(EntityManagerInterface $entityManager): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $historyCheckouts = $entityManager->createQueryBuilder()
+            ->select('checkout', 'apartment')
+            ->from(Checkout::class, 'checkout')
+            ->join('checkout.apartment', 'apartment')
+            ->where('checkout.assignedTo = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->andWhere('checkout.status IN (:statuses)')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->setParameter('statuses', [
+                CheckoutStatus::Completed,
+                CheckoutStatus::Cancelled,
+            ])
+            ->orderBy('checkout.completedAt', 'DESC')
+            ->addOrderBy('checkout.scheduledAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('employee/history.html.twig', [
+            'historyCheckouts' => $historyCheckouts,
+        ]);
+    }
+
+    #[Route('/calendar', name: 'employee_calendar', methods: ['GET'])]
+    public function calendar(EntityManagerInterface $entityManager): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $todayStart = (new \DateTimeImmutable('today'))->setTime(0, 0);
+
+        $scheduledCheckouts = $entityManager->createQueryBuilder()
+            ->select('checkout', 'apartment')
+            ->from(Checkout::class, 'checkout')
+            ->join('checkout.apartment', 'apartment')
+            ->where('checkout.assignedTo = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->andWhere('checkout.scheduledAt IS NOT NULL')
+            ->andWhere('checkout.scheduledAt >= :todayStart')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->setParameter('todayStart', $todayStart)
+            ->orderBy('checkout.scheduledAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('employee/calendar.html.twig', [
+            'scheduledCheckouts' => $scheduledCheckouts,
+            'todayStart' => $todayStart,
+        ]);
+    }
+
+    #[Route('/anomalies', name: 'employee_anomalies', methods: ['GET'])]
+    public function anomalies(EntityManagerInterface $entityManager): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $anomalies = $entityManager->createQueryBuilder()
+            ->select('anomaly', 'checkout', 'apartment', 'room', 'roomEquipment')
+            ->from(Anomaly::class, 'anomaly')
+            ->join('anomaly.checkout', 'checkout')
+            ->join('anomaly.apartment', 'apartment')
+            ->join('anomaly.room', 'room')
+            ->join('anomaly.roomEquipment', 'roomEquipment')
+            ->where('checkout.assignedTo = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->andWhere('anomaly.status != :closedStatus')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
+            ->orderBy('anomaly.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('employee/anomalies.html.twig', [
+            'anomalies' => $anomalies,
+        ]);
+    }
+
+    #[Route('/apartments', name: 'employee_apartments', methods: ['GET'])]
+    public function apartments(EntityManagerInterface $entityManager): Response
+    {
+        return $this->render('employee/apartments.html.twig', [
+            'apartments' => $this->findAssignedApartments($entityManager),
+        ]);
+    }
+
+    #[Route('/apartments/{id}', name: 'employee_apartment_show', methods: ['GET'])]
+    public function apartmentShow(Apartment $apartment): Response
+    {
+        $this->denyAccessUnlessGrantedToApartment($apartment);
+
+        return $this->render('employee/apartment_show.html.twig', [
+            'apartment' => $apartment,
+        ]);
+    }
+
+    #[Route('/apartments/{id}/content', name: 'employee_apartment_content', methods: ['GET'])]
+    public function apartmentContent(Apartment $apartment): Response
+    {
+        $this->denyAccessUnlessGrantedToApartment($apartment);
+
+        return $this->render('employee/_apartment_detail_content.html.twig', [
+            'apartment' => $apartment,
+        ]);
+    }
+
+    #[Route('/apartments/{id}/field', name: 'employee_apartment_field_update', methods: ['POST'])]
+    public function updateApartmentField(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToApartment($apartment);
+
+        $field = (string) $request->request->get('field');
+        $value = trim((string) $request->request->get('value'));
+
+        try {
+            $this->applyApartmentFieldUpdate($apartment, $field, $value);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_apartment_detail_content.html.twig', [
+                'apartment' => $apartment,
+            ]),
+            'message' => 'Information appartement mise a jour.',
+        ]);
     }
 
     #[Route('/checkouts/{id}', name: 'employee_checkout_show', methods: ['GET'])]
@@ -132,6 +275,14 @@ class EmployeeController extends AbstractController
             return $this->redirectResponse($checkout, $message);
         }
 
+        if ($group['totalCount'] > 0 && $group['checkedCount'] >= $group['totalCount']) {
+            return new JsonResponse([
+                'success' => true,
+                'redirect' => $this->generateUrl('employee_checkout_show', ['id' => $checkout->getId()]),
+                'message' => 'Pièce terminée. Retour à la liste des pièces.',
+            ]);
+        }
+
         $html = $this->renderView('employee/_room_workspace.html.twig', [
             'checkout' => $checkout,
             'checkStatuses' => EquipmentCheckStatus::cases(),
@@ -179,16 +330,46 @@ class EmployeeController extends AbstractController
         }
     }
 
+    private function denyAccessUnlessGrantedToApartment(Apartment $apartment): void
+    {
+        $user = $this->getUser();
+        if (
+            !$user instanceof User
+            || $apartment->getStatus() !== ApartmentStatus::Active
+            || !$apartment->getAssignedEmployees()->exists(static fn (int $key, User $employee) => $employee->getId() === $user->getId())
+        ) {
+            throw $this->createAccessDeniedException();
+        }
+    }
+
     /**
-     * @return array{checkouts:list<Checkout>, apartments:iterable<mixed>, statusOverview:list<array{label:string, count:int, tone:string}>}
+     * @return array{
+     *     user: User,
+     *     checkouts: list<Checkout>,
+     *     checkoutCount: int,
+     *     todayCheckout: ?Checkout,
+     *     nextCheckout: ?Checkout,
+     *     historyPreview: list<Checkout>,
+     *     scheduledPreview: list<Checkout>,
+     *     anomaliesPreview: list<Anomaly>,
+     *     anomalyCount: int,
+     *     apartments: list<Apartment>
+     * }
      */
     private function buildDashboardData(EntityManagerInterface $entityManager): array
     {
         /** @var User $user */
         $user = $this->getUser();
+        $openStatuses = [
+            CheckoutStatus::Todo,
+            CheckoutStatus::InProgress,
+            CheckoutStatus::Paused,
+            CheckoutStatus::PendingValidation,
+            CheckoutStatus::Blocked,
+        ];
 
         $checkouts = $entityManager->createQueryBuilder()
-            ->select('checkout')
+            ->select('checkout', 'apartment')
             ->from(Checkout::class, 'checkout')
             ->join('checkout.apartment', 'apartment')
             ->where('checkout.assignedTo = :user')
@@ -196,23 +377,146 @@ class EmployeeController extends AbstractController
             ->andWhere('checkout.status IN (:statuses)')
             ->setParameter('user', $user)
             ->setParameter('apartmentStatus', ApartmentStatus::Active)
-            ->setParameter('statuses', [
-                CheckoutStatus::Todo,
-                CheckoutStatus::InProgress,
-                CheckoutStatus::Paused,
-                CheckoutStatus::PendingValidation,
-                CheckoutStatus::Blocked,
-            ])
+            ->setParameter('statuses', $openStatuses)
             ->orderBy('checkout.scheduledAt', 'ASC')
             ->addOrderBy('checkout.id', 'DESC')
             ->getQuery()
             ->getResult();
 
+        $historyPreview = $entityManager->createQueryBuilder()
+            ->select('checkout', 'apartment')
+            ->from(Checkout::class, 'checkout')
+            ->join('checkout.apartment', 'apartment')
+            ->where('checkout.assignedTo = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->andWhere('checkout.status IN (:statuses)')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->setParameter('statuses', [CheckoutStatus::Completed, CheckoutStatus::Cancelled])
+            ->orderBy('checkout.completedAt', 'DESC')
+            ->addOrderBy('checkout.scheduledAt', 'DESC')
+            ->setMaxResults(3)
+            ->getQuery()
+            ->getResult();
+
+        $todayStart = (new \DateTimeImmutable('today'))->setTime(0, 0);
+        $todayEnd = $todayStart->modify('+1 day');
+        $todayCheckout = null;
+        $nextCheckout = null;
+        $scheduledPreview = [];
+
+        foreach ($checkouts as $checkout) {
+            $scheduledAt = $checkout->getScheduledAt();
+            if ($scheduledAt instanceof \DateTimeImmutable) {
+                if ($scheduledAt >= $todayStart && $scheduledAt < $todayEnd && $todayCheckout === null) {
+                    $todayCheckout = $checkout;
+                }
+
+                if ($scheduledAt >= $todayStart) {
+                    $scheduledPreview[] = $checkout;
+                }
+
+                if ($scheduledAt >= $todayEnd && $nextCheckout === null) {
+                    $nextCheckout = $checkout;
+                }
+            }
+        }
+
+        $anomaliesPreview = $entityManager->createQueryBuilder()
+            ->select('anomaly', 'checkout', 'apartment', 'room', 'roomEquipment')
+            ->from(Anomaly::class, 'anomaly')
+            ->join('anomaly.checkout', 'checkout')
+            ->join('anomaly.apartment', 'apartment')
+            ->join('anomaly.room', 'room')
+            ->join('anomaly.roomEquipment', 'roomEquipment')
+            ->where('checkout.assignedTo = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->andWhere('anomaly.status != :closedStatus')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
+            ->orderBy('anomaly.createdAt', 'DESC')
+            ->setMaxResults(3)
+            ->getQuery()
+            ->getResult();
+
+        $apartments = $this->findAssignedApartments($entityManager);
+
         return [
+            'user' => $user,
             'checkouts' => $checkouts,
-            'apartments' => $user->getAssignedApartments(),
-            'statusOverview' => $this->buildStatusOverview($checkouts),
+            'checkoutCount' => count($checkouts),
+            'todayCheckout' => $todayCheckout,
+            'todayCheckoutTimeLabel' => $todayCheckout?->getScheduledAt() ? $this->formatFrenchDateTime($todayCheckout->getScheduledAt(), 'HH\'h\'mm') : null,
+            'nextCheckout' => $nextCheckout,
+            'nextCheckoutDateLabel' => $nextCheckout?->getScheduledAt() ? $this->formatFrenchDateTime($nextCheckout->getScheduledAt(), 'EEEE d MMMM \'à\' HH\'h\'mm') : null,
+            'historyPreview' => $historyPreview,
+            'scheduledPreview' => array_slice($scheduledPreview, 0, 4),
+            'anomaliesPreview' => $anomaliesPreview,
+            'anomalyCount' => count($anomaliesPreview),
+            'apartments' => $apartments,
         ];
+    }
+
+    /**
+     * @return list<Apartment>
+     */
+    private function findAssignedApartments(EntityManagerInterface $entityManager): array
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $entityManager->createQueryBuilder()
+            ->select('apartment')
+            ->from(Apartment::class, 'apartment')
+            ->join('apartment.assignedEmployees', 'employee')
+            ->where('employee = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->orderBy('apartment.isInventoryPriority', 'DESC')
+            ->addOrderBy('apartment.inventoryDueAt', 'ASC')
+            ->addOrderBy('apartment.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    private function applyApartmentFieldUpdate(Apartment $apartment, string $field, string $value): void
+    {
+        $normalizedValue = $value === '' ? null : $value;
+
+        match ($field) {
+            'floor' => $apartment->setFloor($normalizedValue),
+            'doorNumber' => $apartment->setDoorNumber($normalizedValue),
+            'mailboxNumber' => $apartment->setMailboxNumber($normalizedValue),
+            'buildingAccessCode' => $apartment->setBuildingAccessCode($normalizedValue),
+            'keyBoxCode' => $apartment->setKeyBoxCode($normalizedValue),
+            'googleMapsLink' => $apartment->setGoogleMapsLink($normalizedValue),
+            'ownerPhone' => $apartment->setOwnerPhone($normalizedValue),
+            'entryInstructions' => $apartment->setEntryInstructions($value === '' ? 'Aucune consigne pour le moment.' : $value),
+            default => throw new \InvalidArgumentException('Champ non modifiable.'),
+        };
+    }
+
+    private function formatFrenchDateTime(\DateTimeImmutable $dateTime, string $pattern): string
+    {
+        if (class_exists(\IntlDateFormatter::class)) {
+            $formatter = new \IntlDateFormatter(
+                'fr_FR',
+                \IntlDateFormatter::FULL,
+                \IntlDateFormatter::SHORT,
+                $dateTime->getTimezone()->getName(),
+                \IntlDateFormatter::GREGORIAN,
+                $pattern
+            );
+
+            $formatted = $formatter->format($dateTime);
+            if (is_string($formatted) && $formatted !== '') {
+                return mb_convert_case($formatted, MB_CASE_LOWER, 'UTF-8');
+            }
+        }
+
+        return $dateTime->format('d/m/Y H:i');
     }
 
     /**
@@ -248,6 +552,20 @@ class EmployeeController extends AbstractController
             }
         }
 
+        foreach ($groups as &$group) {
+            usort($group['lines'], static function (CheckoutLine $left, CheckoutLine $right): int {
+                $leftPending = $left->getStatus() === null;
+                $rightPending = $right->getStatus() === null;
+
+                if ($leftPending !== $rightPending) {
+                    return $leftPending ? -1 : 1;
+                }
+
+                return $left->getSequence() <=> $right->getSequence();
+            });
+        }
+        unset($group);
+
         $groups = array_values($groups);
         foreach ($groups as &$group) {
             $group['completionPercent'] = $group['totalCount'] > 0
@@ -270,57 +588,5 @@ class EmployeeController extends AbstractController
         }
 
         return null;
-    }
-
-    /**
-     * @param list<Checkout> $checkouts
-     * @return list<array{label:string, count:int, tone:string}>
-     */
-    private function buildStatusOverview(array $checkouts): array
-    {
-        $counts = [
-            CheckoutStatus::Todo->value => 0,
-            CheckoutStatus::InProgress->value => 0,
-            CheckoutStatus::Paused->value => 0,
-            CheckoutStatus::PendingValidation->value => 0,
-            CheckoutStatus::Blocked->value => 0,
-        ];
-
-        foreach ($checkouts as $checkout) {
-            $counts[$checkout->getStatus()->value] = ($counts[$checkout->getStatus()->value] ?? 0) + 1;
-        }
-
-        return [
-            [
-                'label' => 'Total',
-                'count' => count($checkouts),
-                'tone' => 'dark',
-            ],
-            [
-                'label' => CheckoutStatus::Todo->label(),
-                'count' => $counts[CheckoutStatus::Todo->value],
-                'tone' => 'accent',
-            ],
-            [
-                'label' => CheckoutStatus::InProgress->label(),
-                'count' => $counts[CheckoutStatus::InProgress->value],
-                'tone' => 'blue',
-            ],
-            [
-                'label' => CheckoutStatus::Paused->label(),
-                'count' => $counts[CheckoutStatus::Paused->value],
-                'tone' => 'warning',
-            ],
-            [
-                'label' => CheckoutStatus::PendingValidation->label(),
-                'count' => $counts[CheckoutStatus::PendingValidation->value],
-                'tone' => 'success',
-            ],
-            [
-                'label' => CheckoutStatus::Blocked->label(),
-                'count' => $counts[CheckoutStatus::Blocked->value],
-                'tone' => 'danger',
-            ],
-        ];
     }
 }

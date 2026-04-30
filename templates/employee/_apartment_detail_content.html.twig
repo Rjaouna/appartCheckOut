@@ -1,0 +1,91 @@
+<div class="employee-apartment-detail-shell">
+    <section class="employee-apartment-hero">
+        <div>
+            <span class="status-badge">{{ apartment.status.label }}</span>
+            <h2>{{ apartment.name }}</h2>
+            <p>{{ apartment.fullAddress }}</p>
+        </div>
+        <div class="employee-apartment-hero-actions">
+            <a class="waze-pill waze-pill-large" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer" aria-label="Ouvrir dans Waze">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3a8 8 0 0 0-8 8c0 4.4 3.6 8 8 8h.3l1.7 2.5 1.7-2.5H16a8 8 0 0 0 0-16h-4Zm-2.2 8.5a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm4.4 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm-5.2 2.2h6.1a3.7 3.7 0 0 1-6.1 0Z" fill="currentColor"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <div class="employee-apartment-detail-grid">
+        <section class="apartment-detail-card">
+            <h3>Acces</h3>
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'floor',
+                label: 'Etage',
+                value: apartment.floor ?: '-',
+                rawValue: apartment.floor ?: ''
+            } %}
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'doorNumber',
+                label: 'Porte',
+                value: apartment.doorNumber ?: '-',
+                rawValue: apartment.doorNumber ?: ''
+            } %}
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'mailboxNumber',
+                label: 'Boite aux lettres',
+                value: apartment.mailboxNumber ?: '-',
+                rawValue: apartment.mailboxNumber ?: ''
+            } %}
+        </section>
+
+        <section class="apartment-detail-card">
+            <h3>Codes</h3>
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'buildingAccessCode',
+                label: 'Code immeuble',
+                value: apartment.buildingAccessCode ?: '-',
+                rawValue: apartment.buildingAccessCode ?: ''
+            } %}
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'keyBoxCode',
+                label: 'Code boite a cles / code porte',
+                value: apartment.keyBoxCode ?: '-',
+                rawValue: apartment.keyBoxCode ?: ''
+            } %}
+        </section>
+
+        <section class="apartment-detail-card">
+            <h3>Navigation et contact</h3>
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'googleMapsLink',
+                label: 'Google Maps',
+                value: apartment.googleMapsLink ?: '-',
+                rawValue: apartment.googleMapsLink ?: ''
+            } %}
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'ownerPhone',
+                label: 'Numero de telephone',
+                value: apartment.ownerPhone ?: '-',
+                rawValue: apartment.ownerPhone ?: ''
+            } %}
+        </section>
+
+        <section class="apartment-detail-card apartment-detail-card-wide">
+            <h3>Consignes</h3>
+            {% include 'employee/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'entryInstructions',
+                label: 'Instructions d entree',
+                value: apartment.entryInstructions ?: 'Aucune consigne pour le moment.',
+                rawValue: apartment.entryInstructions ?: '',
+                multiline: true
+            } %}
+        </section>
+    </div>
+</div>

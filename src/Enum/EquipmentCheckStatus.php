@@ -15,11 +15,11 @@ enum EquipmentCheckStatus: string
     {
         return match ($this) {
             self::Ok => 'OK',
-            self::ReplaceService => 'RS',
+            self::ReplaceService => 'À remplacer',
             self::MinorIssue => 'Anomalie mineure',
             self::MajorIssue => 'Anomalie majeure',
             self::Missing => 'Absent',
-            self::NotChecked => 'Non verifie',
+            self::NotChecked => 'Non vérifié',
         };
     }
 

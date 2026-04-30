@@ -48,12 +48,12 @@ select {
 .page-shell {
     max-width: 1400px;
     margin: 75px auto;
-    padding: 140px 24px 24px;
+    padding: 156px 24px 24px;
     min-width: 0;
 }
 
 .page-shell > *:first-child {
-    margin-top: 10px;
+    margin-top: 18px;
 }
 
 .top-app-bar {
@@ -66,9 +66,10 @@ select {
     align-items: center;
     justify-content: space-between;
     padding: 18px 24px;
-    background: #fafaf8;
+    background: transparent;
     border-bottom: none;
     backdrop-filter: none;
+    transition: opacity 0.25s ease;
 }
 
 .top-app-brand {
@@ -76,6 +77,7 @@ select {
     align-items: center;
     gap: 12px;
     color: var(--text);
+    transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .top-app-brand-mark {
@@ -452,6 +454,11 @@ textarea {
 .status-badge.is-danger {
     background: #fdecec;
     color: var(--danger);
+}
+
+.status-badge.is-neutral {
+    background: #f2f2ef;
+    color: var(--muted);
 }
 
 .progress-badge {
@@ -920,11 +927,31 @@ textarea {
     user-select: none;
     border: 1px solid rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(10px);
+    transition: top 0.25s ease, right 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
 }
 
 .floating-main-menu-button svg {
     width: 30px;
     height: 30px;
+}
+
+body.nav-compact .top-app-bar {
+    pointer-events: none;
+}
+
+body.nav-compact .top-app-brand {
+    opacity: 0;
+    transform: translateY(-18px);
+}
+
+body.nav-compact .floating-main-menu-button {
+    position: fixed;
+    top: 50%;
+    right: 24px;
+    bottom: auto;
+    transform: translateY(-50%);
+    z-index: 80;
+    pointer-events: auto;
 }
 
 .workflow-modal-grid {
@@ -1415,6 +1442,433 @@ textarea {
     gap: 12px;
 }
 
+.employee-home-intro h1,
+.employee-home-intro p,
+.employee-page-head h1,
+.employee-page-head p {
+    margin: 0;
+}
+
+.employee-home-intro {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.employee-home-intro h1 {
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1;
+}
+
+.employee-home-intro p {
+    font-size: 1.15rem;
+    color: var(--muted);
+}
+
+.employee-home-stack {
+    display: grid;
+    gap: 22px;
+}
+
+.employee-home-primary-card,
+.employee-home-info-card,
+.employee-list-card,
+.employee-apartment-hero,
+.editable-field-row {
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background: var(--surface);
+}
+
+.employee-home-primary-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 18px;
+    padding: 22px;
+    background: linear-gradient(135deg, #ff5a76 0%, #ff385c 55%, #df3154 100%);
+    color: #fff;
+    overflow: hidden;
+}
+
+.employee-home-primary-card.is-empty {
+    background: linear-gradient(135deg, #f06b84 0%, #ff385c 100%);
+}
+
+.employee-home-primary-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+.employee-home-primary-icon svg {
+    width: 42px;
+    height: 42px;
+}
+
+.employee-home-primary-content {
+    display: grid;
+    align-content: center;
+    gap: 8px;
+}
+
+.employee-home-kicker {
+    font-size: 0.9rem;
+    font-weight: 700;
+    opacity: 0.92;
+}
+
+.employee-home-primary-content h2,
+.employee-home-primary-content p {
+    margin: 0;
+}
+
+.employee-home-primary-content h2 {
+    font-size: clamp(1.55rem, 4vw, 2.2rem);
+}
+
+.employee-home-primary-content p {
+    max-width: 34ch;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.employee-home-primary-cta {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--accent-dark);
+    font-weight: 800;
+}
+
+.employee-home-primary-cta.is-disabled {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+.employee-home-primary-arrow {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.employee-home-quick-links {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 22px;
+    overflow: hidden;
+}
+
+.employee-home-quick-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 16px;
+    color: #fff;
+    font-weight: 700;
+}
+
+.employee-home-quick-link + .employee-home-quick-link {
+    border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.employee-home-quick-icon {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+}
+
+.employee-home-quick-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.employee-home-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.employee-home-info-card {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px;
+    cursor: default;
+}
+
+.employee-home-info-card-neutral {
+    cursor: pointer;
+}
+
+.employee-home-info-card-warm {
+    background: linear-gradient(180deg, #fff4f1 0%, #fff8f5 100%);
+}
+
+.employee-home-info-card-soft {
+    background: linear-gradient(180deg, #f8f7ff 0%, #fbfbff 100%);
+}
+
+.employee-home-info-card-neutral {
+    background: linear-gradient(180deg, #f6f9ff 0%, #fbfdff 100%);
+}
+
+.employee-home-info-copy {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+}
+
+.employee-home-card-label,
+.employee-home-info-copy h3,
+.employee-home-info-copy p {
+    margin: 0;
+}
+
+.employee-home-card-label {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.employee-home-info-copy h3 {
+    font-size: 1.45rem;
+}
+
+.employee-home-info-copy p {
+    color: var(--text);
+    line-height: 1.45;
+}
+
+.employee-home-inline-link,
+.employee-home-disabled-chip {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 42px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-weight: 700;
+}
+
+.employee-home-inline-link {
+    color: var(--accent-dark);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.employee-home-disabled-chip {
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.employee-home-card-art {
+    flex: 0 0 92px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 92px;
+    height: 92px;
+    border-radius: 26px;
+}
+
+.employee-home-card-art svg {
+    width: 54px;
+    height: 54px;
+}
+
+.employee-home-card-art-warm {
+    background: #fff1eb;
+    color: #f26a4a;
+}
+
+.employee-home-card-art-soft {
+    background: #f0eeff;
+    color: #6467d9;
+}
+
+.employee-home-card-art-neutral {
+    background: #eef4ff;
+    color: #4769d8;
+}
+
+.employee-list-stack {
+    display: grid;
+    gap: 16px;
+}
+
+.employee-list-card {
+    display: grid;
+    gap: 14px;
+    padding: 22px;
+}
+
+.employee-list-card.is-highlighted {
+    border-color: rgba(255, 56, 92, 0.32);
+    background: linear-gradient(180deg, #fff8f9 0%, #ffffff 100%);
+}
+
+.employee-list-card-top,
+.employee-list-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.employee-list-card h2,
+.employee-list-card p {
+    margin: 0;
+}
+
+.employee-list-card p {
+    color: var(--muted);
+}
+
+.employee-list-card-meta {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.anomaly-photo-thumb {
+    width: 120px;
+    height: 120px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    background: #f6f5f1;
+    cursor: pointer;
+}
+
+.anomaly-photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.employee-apartment-detail-shell {
+    display: grid;
+    gap: 20px;
+}
+
+.employee-apartment-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px;
+}
+
+.employee-apartment-hero h2,
+.employee-apartment-hero p {
+    margin: 8px 0 0;
+}
+
+.employee-apartment-hero p {
+    color: var(--muted);
+}
+
+.employee-apartment-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.waze-pill-large {
+    width: 58px;
+    height: 58px;
+    border-radius: 20px;
+}
+
+.apartment-detail-card {
+    display: grid;
+    gap: 12px;
+}
+
+.apartment-detail-card-wide {
+    grid-column: 1 / -1;
+}
+
+.editable-field-row {
+    padding: 16px;
+}
+
+.editable-field-display {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.editable-field-copy {
+    display: grid;
+    gap: 6px;
+}
+
+.editable-field-label {
+    color: var(--muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.editable-field-copy strong {
+    font-size: 1.05rem;
+}
+
+.inline-edit-button {
+    border: none;
+    background: #f6f5f1;
+    color: var(--text);
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.inline-edit-button svg {
+    width: 22px;
+    height: 22px;
+}
+
+.editable-field-form {
+    margin-top: 14px;
+    display: grid;
+    gap: 12px;
+}
+
+.editable-field-form.is-collapsed {
+    display: none;
+}
+
+.editable-field-form input,
+.editable-field-form textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: #fff;
+}
+
+.editable-field-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .toast-stack {
     position: fixed;
     right: 20px;
@@ -1464,6 +1918,11 @@ textarea {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .employee-home-card-grid,
+    .employee-apartment-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
     .status-circle-grid,
     .status-circle-grid-primary,
     .status-circle-grid-secondary {
@@ -1504,6 +1963,36 @@ textarea {
     .metrics-grid,
     .card-grid {
         grid-template-columns: 1fr;
+    }
+
+    .employee-home-primary-card {
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+
+    .employee-home-primary-cta {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .employee-home-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .employee-apartment-hero,
+    .editable-field-display {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .employee-home-info-card {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .employee-home-card-art {
+        width: 82px;
+        height: 82px;
     }
 
     .apartment-card-grid {
@@ -1586,6 +2075,10 @@ textarea {
         height: 62px;
     }
 
+    body.nav-compact .floating-main-menu-button {
+        right: 16px;
+    }
+
     .panel,
     .employee-card,
     .mobile-info-card,
@@ -1599,6 +2092,10 @@ textarea {
 
     .room-selector-grid,
     .room-tab-nav-wide {
+        grid-template-columns: 1fr;
+    }
+
+    .employee-apartment-detail-grid {
         grid-template-columns: 1fr;
     }
 

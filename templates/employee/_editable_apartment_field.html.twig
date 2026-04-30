@@ -1,0 +1,43 @@
+{% set multiline = multiline|default(false) %}
+<div class="editable-field-row">
+    <div class="editable-field-display">
+        <div class="editable-field-copy">
+            <span class="editable-field-label">{{ label }}</span>
+            {% if field == 'googleMapsLink' and rawValue %}
+                <strong><a class="inline-detail-link" href="{{ rawValue }}" target="_blank" rel="noreferrer">Ouvrir</a></strong>
+            {% else %}
+                <strong>{{ value }}</strong>
+            {% endif %}
+        </div>
+        <button
+            class="inline-edit-button"
+            type="button"
+            aria-label="Modifier {{ label }}"
+            data-edit-target="#editable-form-{{ field }}"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m4 17.3 9.9-9.9 2.7 2.7-9.9 9.9H4v-2.7Zm12.5-11.9 1.4-1.4a2 2 0 0 1 2.8 2.8l-1.4 1.4-2.8-2.8Z" fill="currentColor"/>
+            </svg>
+        </button>
+    </div>
+
+    <form
+        id="editable-form-{{ field }}"
+        class="editable-field-form is-collapsed"
+        method="post"
+        action="{{ path('employee_apartment_field_update', {id: apartment.id}) }}"
+        data-async-form
+        data-update-target="#employee-apartment-detail"
+    >
+        <input type="hidden" name="field" value="{{ field }}">
+        {% if multiline %}
+            <textarea name="value" rows="4">{{ rawValue }}</textarea>
+        {% else %}
+            <input type="text" name="value" value="{{ rawValue }}">
+        {% endif %}
+        <div class="editable-field-actions">
+            <button class="primary-button" type="submit">Enregistrer</button>
+            <button class="secondary-button" type="button" data-edit-target="#editable-form-{{ field }}">Annuler</button>
+        </div>
+    </form>
+</div>

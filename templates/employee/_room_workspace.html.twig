@@ -5,7 +5,7 @@
             <p>{{ roomGroup.room.type.label }}</p>
         </div>
         <div class="info-cluster">
-            <a class="secondary-button" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">Retour aux pièces</a>
+            <a class="primary-button" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">Retour aux pièces</a>
             <span class="progress-badge">{{ roomGroup.checkedCount }}/{{ roomGroup.totalCount }} contrôles</span>
             {% if roomGroup.anomalyCount > 0 %}
                 <span class="status-badge is-warning">{{ roomGroup.anomalyCount }} anomalie{{ roomGroup.anomalyCount > 1 ? 's' : '' }}</span>

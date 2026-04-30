@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Calendrier{% endblock %}
+
+{% block body %}
+    <section class="page-head employee-page-head">
+        <div>
+            <h1>Calendrier</h1>
+            <p class="muted">Tous les check-outs programmes a partir d'aujourd'hui.</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('employee_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    <section class="employee-list-stack">
+        {% for checkout in scheduledCheckouts %}
+            <article class="employee-list-card {{ checkout.scheduledAt and checkout.scheduledAt|date('Y-m-d') == todayStart|date('Y-m-d') ? 'is-highlighted' : '' }}">
+                <div class="employee-list-card-top">
+                    <span class="status-badge">{{ checkout.status.label }}</span>
+                    <span class="mini-badge">{{ checkout.priority == 'high' ? 'Prioritaire' : 'Programme' }}</span>
+                </div>
+                <h2>{{ checkout.apartment.name }}</h2>
+                <p>{{ checkout.apartment.fullAddress }}</p>
+                <div class="employee-list-card-meta">
+                    <span>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Date non renseignee' }}</span>
+                    <span>{{ checkout.progressPercent }}%</span>
+                </div>
+                <a class="primary-button full-width" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">
+                    {{ checkout.status.value == 'paused' ? 'Reprendre' : 'Ouvrir' }}
+                </a>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucun check-out programme pour le moment.</p>
+        {% endfor %}
+    </section>
+{% endblock %}

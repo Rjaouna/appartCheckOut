@@ -1,39 +1,115 @@
-<div id="employee-dashboard-content" data-checkout-count="{{ checkouts|length }}">
-    <section class="employee-overview-strip">
-        <div class="status-circle-grid status-circle-grid-primary">
-            {% for item in statusOverview|slice(1, 3) %}
-                <article class="status-circle-card tone-{{ item.tone }}">
-                    <div class="status-circle-value">{{ item.count }}</div>
-                    <strong>{{ item.label }}</strong>
-                </article>
-            {% endfor %}
-        </div>
+<div id="employee-dashboard-content" data-checkout-count="{{ checkoutCount }}">
+    <section class="employee-home-intro">
+        <h1>Mon espace</h1>
+        <p>{{ user.fullName }}</p>
     </section>
 
-    <section class="card-grid apartment-card-grid">
-        {% for checkout in checkouts %}
-            <article class="employee-card employee-apartment-card">
-                <div class="apartment-topline">
-                    <span class="status-badge {{ checkout.status.value == 'paused' ? 'is-warning' : '' }}">{{ checkout.status.label }}</span>
-                    <a class="waze-pill" href="{{ checkout.apartment.wazeLink }}" target="_blank" rel="noreferrer" title="Ouvrir dans Waze" aria-label="Ouvrir dans Waze">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 3a8 8 0 0 0-8 8c0 4.4 3.6 8 8 8h.3l1.7 2.5 1.7-2.5H16a8 8 0 0 0 0-16h-4Zm-2.2 8.5a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm4.4 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm-5.2 2.2h6.1a3.7 3.7 0 0 1-6.1 0Z" fill="currentColor"/>
-                        </svg>
+    <section class="employee-home-stack">
+        <article class="employee-home-primary-card {{ todayCheckout ? '' : 'is-empty' }}">
+            <div class="employee-home-primary-icon" aria-hidden="true">
+                <svg viewBox="0 0 64 64">
+                    <path d="M19 17h26a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H19a6 6 0 0 1-6-6V23a6 6 0 0 1 6-6Zm0 8v16h26V25H19Zm5 4h16v4H24v-4Z" fill="currentColor"/>
+                </svg>
+            </div>
+            <div class="employee-home-primary-content">
+                {% if todayCheckout %}
+                    <span class="employee-home-kicker">Check-out du jour prêt</span>
+                    <h2>{{ todayCheckout.apartment.name }}</h2>
+                    <p>
+                        {% if todayCheckout.scheduledAt %}
+                            Aujourd'hui à {{ todayCheckoutTimeLabel }}
+                        {% else %}
+                            Disponible dès maintenant
+                        {% endif %}
+                    </p>
+                {% else %}
+                    <span class="employee-home-kicker">Aucun check-out aujourd'hui</span>
+                    <h2>Journée calme</h2>
+                    <p>Le prochain check-out apparaîtra ici automatiquement dès qu'il sera programmé.</p>
+                {% endif %}
+            </div>
+            {% if todayCheckout %}
+                <a class="employee-home-primary-cta" href="{{ path('employee_checkout_show', {id: todayCheckout.id}) }}">
+                    <span>Consulter</span>
+                    <span class="employee-home-primary-arrow" aria-hidden="true">›</span>
+                </a>
+            {% else %}
+                <span class="employee-home-primary-cta is-disabled">
+                    <span>En attente</span>
+                </span>
+            {% endif %}
+
+            <div class="employee-home-quick-links">
+                <a class="employee-home-quick-link" href="{{ path('employee_calendar') }}">
+                    <span class="employee-home-quick-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10ZM6 8h12V6H6v2Z" fill="currentColor"/></svg>
+                    </span>
+                    <span>Calendrier</span>
+                </a>
+                <a class="employee-home-quick-link" href="{{ path('employee_history') }}">
+                    <span class="employee-home-quick-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 8.95 10H19.9A7 7 0 1 1 13 5v3l5-4-5-4v3Zm-1 5h2v6h-5v-2h3V8Z" fill="currentColor"/></svg>
+                    </span>
+                    <span>Historique</span>
+                </a>
+            </div>
+        </article>
+
+        <div class="employee-home-card-grid">
+            <article class="employee-home-info-card employee-home-info-card-warm">
+                <div class="employee-home-info-copy">
+                    <p class="employee-home-card-label">Mes anomalies</p>
+                    <h3>Anomalies en cours</h3>
+                    <p>
+                        {% if anomalyCount > 0 %}
+                            {{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }} à suivre sur tes check-outs.
+                        {% else %}
+                            Tout est sous contrôle pour le moment.
+                        {% endif %}
+                    </p>
+                    <a class="employee-home-inline-link" href="{{ path('employee_anomalies') }}">
+                        Voir le suivi de mes anomalies
                     </a>
                 </div>
-                <h2>{{ checkout.apartment.name }}</h2>
-                <dl class="key-values">
-                    <div><dt>Adresse</dt><dd>{{ checkout.apartment.city }}</dd></div>
-                    <div><dt>Code immeuble</dt><dd>{{ checkout.apartment.buildingAccessCode ?: '-' }}</dd></div>
-                    <div><dt>Code boite</dt><dd>{{ checkout.apartment.keyBoxCode ?: '-' }}</dd></div>
-                    <div><dt>Progression</dt><dd>{{ checkout.progressPercent }}%</dd></div>
-                </dl>
-                <a class="primary-button full-width" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">
-                    {{ checkout.status.value == 'paused' ? 'Reprendre' : 'Ouvrir le check-out' }}
-                </a>
+                <span class="employee-home-card-art employee-home-card-art-warm" aria-hidden="true">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M18 14h28a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V20a6 6 0 0 1 6-6Zm4 10v16h20V24H22Zm22-9a8 8 0 1 1 0 16 8 8 0 0 1 0-16Z" fill="currentColor"/>
+                    </svg>
+                </span>
             </article>
-        {% else %}
-            <p class="empty-state">Aucun check-out assigne pour l'instant.</p>
-        {% endfor %}
+
+            <article class="employee-home-info-card employee-home-info-card-soft">
+                <div class="employee-home-info-copy">
+                    <p class="employee-home-card-label">Mon prochain check-out</p>
+                    <h3>{{ nextCheckout ? nextCheckout.apartment.name : 'Aucun check-out programmé' }}</h3>
+                    <p>
+                        {% if nextCheckout and nextCheckout.scheduledAt %}
+                            {{ nextCheckoutDateLabel }}
+                        {% else %}
+                            Aucun rendez-vous programmé après aujourd'hui.
+                        {% endif %}
+                    </p>
+                    <span class="employee-home-disabled-chip">Information uniquement</span>
+                </div>
+                <span class="employee-home-card-art employee-home-card-art-soft" aria-hidden="true">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M10 48V24l12 8 10-18 10 20 12 14H10Zm22-12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor"/>
+                    </svg>
+                </span>
+            </article>
+
+            <article class="employee-home-info-card employee-home-info-card-neutral" data-click-url="{{ path('employee_apartments') }}">
+                <div class="employee-home-info-copy">
+                    <p class="employee-home-card-label">Liste des appartements</p>
+                    <h3>{{ apartments|length }} appartement{{ apartments|length > 1 ? 's' : '' }} assigné{{ apartments|length > 1 ? 's' : '' }}</h3>
+                    <span class="employee-home-inline-link">Ouvrir la liste des appartements</span>
+                </div>
+                <span class="employee-home-card-art employee-home-card-art-neutral" aria-hidden="true">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M10 52V18a4 4 0 0 1 4-4h16v38H10Zm24 0V10a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v42H34ZM18 22h6v6h-6v-6Zm0 12h6v6h-6v-6Zm22-18h8v8h-8v-8Zm0 14h8v8h-8v-8Z" fill="currentColor"/>
+                    </svg>
+                </span>
+            </article>
+        </div>
     </section>
 </div>

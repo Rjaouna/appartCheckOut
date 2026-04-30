@@ -13,11 +13,11 @@ enum AnomalyType: string
     public function label(): string
     {
         return match ($this) {
-            self::ReplacementNeeded => 'RS',
+            self::ReplacementNeeded => 'À remplacer',
             self::Minor => 'Anomalie mineure',
             self::Major => 'Anomalie majeure',
             self::Missing => 'Absent',
-            self::NotChecked => 'Non verifie',
+            self::NotChecked => 'Non vérifié',
         };
     }
 

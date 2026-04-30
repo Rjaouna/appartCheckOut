@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique{% endblock %}
+
+{% block body %}
+    <section class="page-head employee-page-head">
+        <div>
+            <h1>Historique</h1>
+            <p class="muted">Retrouve ici tes check-outs deja termines ou clotures.</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('employee_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    <section class="employee-list-stack">
+        {% for checkout in historyCheckouts %}
+            <article class="employee-list-card">
+                <div class="employee-list-card-top">
+                    <span class="status-badge">{{ checkout.status.label }}</span>
+                    {% if checkout.completedAt %}
+                        <span class="mini-badge">{{ checkout.completedAt|date('d/m/Y H:i') }}</span>
+                    {% endif %}
+                </div>
+                <h2>{{ checkout.apartment.name }}</h2>
+                <p>{{ checkout.apartment.fullAddress }}</p>
+                <div class="employee-list-card-meta">
+                    <span>Planifie : {{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Non renseigne' }}</span>
+                    <span>Progression finale : {{ checkout.progressPercent }}%</span>
+                </div>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucun historique disponible pour le moment.</p>
+        {% endfor %}
+    </section>
+{% endblock %}

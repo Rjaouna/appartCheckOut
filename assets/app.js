@@ -11,13 +11,16 @@ let dashboardPollingStarted = false;
 
 restorePendingToast();
 restoreFloatingMenuPosition();
+syncTopBarOnScroll();
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         startDashboardPolling();
+        syncTopBarOnScroll();
     });
 } else {
     startDashboardPolling();
+    syncTopBarOnScroll();
 }
 
 document.addEventListener('submit', async (event) => {
@@ -201,6 +204,25 @@ document.addEventListener('click', (event) => {
         return;
     }
 
+    const editToggleTrigger = event.target instanceof Element ? event.target.closest('[data-edit-target]') : null;
+    if (editToggleTrigger instanceof HTMLButtonElement) {
+        const targetSelector = editToggleTrigger.getAttribute('data-edit-target');
+        const target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (target instanceof HTMLElement) {
+            const parentCard = target.closest('.apartment-detail-card');
+            if (parentCard instanceof HTMLElement) {
+                parentCard.querySelectorAll('.editable-field-form').forEach((formElement) => {
+                    if (formElement instanceof HTMLElement && formElement !== target) {
+                        formElement.classList.add('is-collapsed');
+                    }
+                });
+            }
+
+            target.classList.toggle('is-collapsed');
+        }
+        return;
+    }
+
     const actionMenuTrigger = event.target instanceof Element ? event.target.closest('[data-action-menu-trigger]') : null;
     if (actionMenuTrigger instanceof HTMLElement) {
         openActionMenuModal(actionMenuTrigger);
@@ -299,6 +321,8 @@ document.addEventListener('pointercancel', () => {
     activeDragButton = null;
 });
 
+window.addEventListener('scroll', syncTopBarOnScroll, {passive: true});
+
 document.addEventListener('hidden.bs.modal', (event) => {
     if (event.target instanceof HTMLElement && event.target.id === 'confirmActionModal') {
         pendingConfirmationForm = null;
@@ -365,6 +389,15 @@ function restoreFloatingMenuPosition() {
     button.style.top = 'auto';
     button.style.bottom = 'auto';
     button.style.transform = 'none';
+}
+
+function syncTopBarOnScroll() {
+    const body = document.body;
+    if (!(body instanceof HTMLBodyElement)) {
+        return;
+    }
+
+    body.classList.toggle('nav-compact', window.scrollY > 24);
 }
 
 function startDashboardPolling() {
