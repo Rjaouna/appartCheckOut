@@ -487,13 +487,19 @@ class AdminController extends AbstractController
         $checkoutRepository = $entityManager->getRepository(Checkout::class);
 
         $apartmentsWithAnomalies = $entityManager->createQueryBuilder()
-            ->select('DISTINCT apartment')
-            ->from(Apartment::class, 'apartment')
-            ->join(Anomaly::class, 'anomaly', 'WITH', 'anomaly.apartment = apartment')
-            ->orderBy('apartment.name', 'ASC')
-            ->setMaxResults(8)
-            ->getQuery()
-            ->getResult();
+    ->select('DISTINCT apartment')
+    ->from(Apartment::class, 'apartment')
+    ->join(
+        Anomaly::class,
+        'anomaly',
+        'WITH',
+        'anomaly.apartment = apartment AND anomaly.status != :closedStatus'
+    )
+    ->setParameter('closedStatus', AnomalyStatus::Closed)
+    ->orderBy('apartment.name', 'ASC')
+    ->setMaxResults(8)
+    ->getQuery()
+    ->getResult();
 
         return [
             'apartmentCards' => $this->buildApartmentCards($apartmentRepository->findBy(['status' => ApartmentStatus::Active], ['isInventoryPriority' => 'DESC', 'inventoryDueAt' => 'ASC', 'name' => 'ASC']), $entityManager),
