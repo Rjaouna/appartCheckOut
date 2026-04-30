@@ -998,6 +998,38 @@ textarea {
     height: 30px;
 }
 
+.scroll-to-top-button {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 85;
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #222222, #444444);
+    color: #fff;
+    box-shadow: 0 18px 34px rgba(34, 34, 34, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.scroll-to-top-button.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.scroll-to-top-button svg {
+    width: 24px;
+    height: 24px;
+}
+
 body.nav-compact .top-app-bar {
     pointer-events: none;
 }
@@ -1375,6 +1407,29 @@ body.nav-compact .floating-main-menu-button {
 .auth-card {
     padding: 28px;
     width: 100%;
+}
+
+.auth-brand {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.auth-brand .top-app-brand-mark {
+    width: 72px;
+    height: 72px;
+    border-radius: 24px;
+}
+
+.auth-brand .top-app-brand-mark svg {
+    width: 34px;
+    height: 34px;
+}
+
+.auth-brand .top-app-brand-text {
+    font-size: 1.4rem;
 }
 
 .hero-points {

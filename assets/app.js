@@ -183,7 +183,17 @@ function hideModal(id) {
     }
 }
 
+function scrollToTop() {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
 document.addEventListener('click', (event) => {
+    const scrollTopTrigger = event.target instanceof Element ? event.target.closest('#scroll-to-top-button') : null;
+    if (scrollTopTrigger instanceof HTMLButtonElement) {
+        scrollToTop();
+        return;
+    }
+
     const confirmButton = event.target instanceof Element ? event.target.closest('#confirmActionModalSubmit') : null;
     if (confirmButton instanceof HTMLButtonElement && pendingConfirmationForm instanceof HTMLFormElement) {
         confirmButton.blur();
@@ -386,6 +396,11 @@ function syncTopBarOnScroll() {
     }
 
     body.classList.toggle('nav-compact', window.scrollY > 24);
+
+    const scrollTopButton = document.getElementById('scroll-to-top-button');
+    if (scrollTopButton instanceof HTMLElement) {
+        scrollTopButton.classList.toggle('is-visible', window.scrollY > 280);
+    }
 }
 
 function startDashboardPolling() {

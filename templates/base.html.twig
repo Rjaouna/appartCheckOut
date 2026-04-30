@@ -44,6 +44,18 @@
             {% block body %}{% endblock %}
         </main>
 
+        <button
+            id="scroll-to-top-button"
+            class="scroll-to-top-button"
+            type="button"
+            aria-label="Remonter en haut"
+            title="Remonter en haut"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5 5 12l1.4 1.4L11 8.8V20h2V8.8l4.6 4.6L19 12l-7-7Z" fill="currentColor"/>
+            </svg>
+        </button>
+
         <div id="toast-stack" class="toast-stack" aria-live="polite">
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
