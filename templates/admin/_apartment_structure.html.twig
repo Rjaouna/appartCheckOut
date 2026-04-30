@@ -30,7 +30,7 @@
                 </form>
             {% else %}
                 <div class="empty-state">
-                    La suppression n est autorisee que si l appartement n a encore aucun check-out ni anomalie.
+                    La suppression n est autorisee que s il n y a plus de check-out en cours ou programme, ni d anomalie ouverte.
                 </div>
             {% endif %}
         </div>
@@ -100,8 +100,20 @@
                         </div>
                     </div>
                     <div class="equipment-tags">
-                        {% for equipment in room.roomEquipments %}
-                            <span class="equipment-tag">{{ equipment.label }}</span>
+                        {% for equipment in room.activeRoomEquipments %}
+                            <form
+                                method="post"
+                                action="{{ path('admin_room_equipment_delete', {id: equipment.id}) }}"
+                                class="equipment-tag equipment-tag-form"
+                                data-async-form
+                                data-update-target="#apartment-structure"
+                                data-confirm-reset
+                                data-confirm-title="Supprimer l equipement"
+                                data-confirm-message="Veux-tu vraiment supprimer cet equipement de la piece ?"
+                            >
+                                <span>{{ equipment.label }}</span>
+                                <button class="equipment-tag-remove" type="submit" aria-label="Supprimer {{ equipment.label }}" title="Supprimer {{ equipment.label }}">×</button>
+                            </form>
                         {% else %}
                             <span class="empty-inline">Aucun equipement ajoute.</span>
                         {% endfor %}
@@ -181,6 +193,27 @@
                     <strong>{{ checkout.assignedTo.fullName }}</strong>
                     <p>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-' }}</p>
                     <span class="status-badge">{{ checkout.status.label }}</span>
+                    <form method="post" action="{{ path('admin_checkout_schedule_update', {id: checkout.id}) }}" class="stack-form compact-form checkout-action-form" data-async-form data-update-target="#apartment-structure">
+                        <label>
+                            <span>Modifier la date prevue</span>
+                            <input type="datetime-local" name="scheduledAt" value="{{ checkout.scheduledAt ? checkout.scheduledAt|date('Y-m-d\\TH:i') : '' }}" required>
+                        </label>
+                        <button class="secondary-button" type="submit">Mettre a jour la date</button>
+                    </form>
+                    {% if checkout.status.value not in ['completed', 'cancelled'] %}
+                        <form
+                            method="post"
+                            action="{{ path('admin_checkout_cancel', {id: checkout.id}) }}"
+                            class="compact-form checkout-action-form"
+                            data-async-form
+                            data-update-target="#apartment-structure"
+                            data-confirm-reset
+                            data-confirm-title="Annuler le check-out"
+                            data-confirm-message="Veux-tu vraiment annuler ce check-out ?"
+                        >
+                            <button class="secondary-button danger-button" type="submit">Annuler le check-out</button>
+                        </form>
+                    {% endif %}
                 </article>
             {% else %}
                 <p class="empty-state">Aucun check-out cree.</p>

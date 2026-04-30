@@ -57,12 +57,8 @@ class CheckoutManager
     public function updateLine(CheckoutLine $line, EquipmentCheckStatus $status, ?string $comment, ?UploadedFile $photo, User $actor): void
     {
         $comment = $comment !== null ? trim($comment) : null;
-        if ($status->requiresComment() && $comment === '') {
+        if ($comment === '') {
             $comment = null;
-        }
-
-        if ($status->requiresComment() && $comment === null) {
-            throw new \InvalidArgumentException('Un commentaire est obligatoire pour ce statut.');
         }
 
         $checkout = $line->getCheckout();

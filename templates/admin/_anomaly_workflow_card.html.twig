@@ -6,6 +6,26 @@
         </div>
         <div class="anomaly-toolbar">
             <span class="status-badge {{ anomaly.status.value == 'closed' ? 'is-success' : 'is-warning' }}">{{ anomaly.status.label }}</span>
+            <form
+                method="post"
+                action="{{ path('admin_anomaly_delete', {id: anomaly.id}) }}"
+                data-async-form
+                data-confirm-reset
+                data-confirm-title="Supprimer l'anomalie"
+                data-confirm-message="Cette anomalie sera supprimée définitivement de la liste. Veux-tu confirmer la suppression ?"
+            >
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_anomaly_' ~ anomaly.id) }}">
+                <button
+                    class="icon-action-button icon-action-button-danger"
+                    type="submit"
+                    title="Supprimer l'anomalie"
+                    aria-label="Supprimer l'anomalie"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v8H7V9Zm4 0h2v8h-2V9Zm4 0h2v8h-2V9ZM6 21a2 2 0 0 1-2-2V7h16v12a2 2 0 0 1-2 2H6Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </form>
             <button
                 class="icon-action-button"
                 type="button"

@@ -10,6 +10,17 @@
             <p class="muted">{{ anomaly.apartment.name }} • {{ anomaly.room.name }}</p>
         </div>
         <div class="head-actions">
+            <form
+                method="post"
+                action="{{ path('admin_anomaly_delete', {id: anomaly.id}) }}"
+                data-async-form
+                data-confirm-reset
+                data-confirm-title="Supprimer l'anomalie"
+                data-confirm-message="Cette anomalie sera supprimée définitivement de la liste. Veux-tu confirmer la suppression ?"
+            >
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_anomaly_' ~ anomaly.id) }}">
+                <button class="danger-button secondary-button" type="submit">Supprimer l'anomalie</button>
+            </form>
             <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: anomaly.apartment.id}) }}">Retour appartement</a>
             <a class="secondary-button" href="{{ path('admin_anomalies') }}">Retour anomalies</a>
         </div>

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Anomaly;
 use App\Entity\Apartment;
 use App\Entity\Checkout;
+use App\Entity\CheckoutLine;
 use App\Entity\EquipmentCatalog;
 use App\Entity\Room;
 use App\Entity\RoomEquipment;
@@ -70,6 +71,38 @@ class AdminController extends AbstractController
             'anomaly' => $anomaly,
             'repeatCount' => $this->countAnomalyOccurrences($anomaly, $entityManager),
         ]);
+    }
+
+    #[Route('/anomalies/{id}/delete', name: 'admin_anomaly_delete', methods: ['POST'])]
+    public function deleteAnomaly(Anomaly $anomaly, Request $request, EntityManagerInterface $entityManager): JsonResponse|Response
+    {
+        if (!$this->isCsrfTokenValid('delete_anomaly_' . $anomaly->getId(), (string) $request->request->get('_token'))) {
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse(['success' => false, 'message' => 'Jeton de securite invalide.'], 422);
+            }
+
+            throw $this->createAccessDeniedException('Jeton de securite invalide.');
+        }
+
+        $redirectUrl = $this->generateUrl('admin_apartment_anomalies', ['id' => $anomaly->getApartment()?->getId()]);
+        $photoPath = $anomaly->getPhotoPath();
+
+        $entityManager->remove($anomaly);
+        $entityManager->flush();
+
+        $this->deleteAnomalyPhoto($photoPath);
+
+        if ($request->isXmlHttpRequest()) {
+            return new JsonResponse([
+                'success' => true,
+                'redirect' => $redirectUrl,
+                'message' => 'Anomalie supprimee de la liste.',
+            ]);
+        }
+
+        $this->addFlash('success', 'Anomalie supprimee de la liste.');
+
+        return $this->redirect($redirectUrl);
     }
 
     #[Route('/anomalies/{id}/workflow', name: 'admin_anomaly_workflow_update', methods: ['POST'])]
@@ -272,8 +305,8 @@ class AdminController extends AbstractController
     #[Route('/apartments/{id}/delete', name: 'admin_apartment_delete', methods: ['POST'])]
     public function deleteApartment(Apartment $apartment, EntityManagerInterface $entityManager): JsonResponse
     {
-        $hasCheckouts = $entityManager->getRepository(Checkout::class)->count(['apartment' => $apartment]) > 0;
-        $hasAnomalies = $entityManager->getRepository(Anomaly::class)->count(['apartment' => $apartment]) > 0;
+        $hasCheckouts = $this->hasOpenCheckout($apartment, $entityManager);
+        $hasAnomalies = $this->hasOpenAnomalies($apartment, $entityManager);
 
         if ($hasCheckouts || $hasAnomalies) {
             return new JsonResponse([
@@ -388,6 +421,28 @@ class AdminController extends AbstractController
         return $this->structureResponse($room->getApartment(), $entityManager, 'Equipement ajoute.');
     }
 
+    #[Route('/room-equipments/{id}/delete', name: 'admin_room_equipment_delete', methods: ['POST'])]
+    public function deleteRoomEquipment(RoomEquipment $equipment, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $hasCheckoutHistory = $entityManager->getRepository(CheckoutLine::class)->count(['roomEquipment' => $equipment]) > 0;
+        $hasAnomalyHistory = $entityManager->getRepository(Anomaly::class)->count(['roomEquipment' => $equipment]) > 0;
+
+        $room = $equipment->getRoom();
+        if (!$room instanceof Room || !$room->getApartment() instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
+        }
+
+        $apartment = $room->getApartment();
+        if ($hasCheckoutHistory || $hasAnomalyHistory) {
+            $equipment->setIsActive(false);
+        } else {
+            $entityManager->remove($equipment);
+        }
+        $entityManager->flush();
+
+        return $this->structureResponse($apartment, $entityManager, 'Equipement supprime de la piece.');
+    }
+
     #[Route('/apartments/{id}/checkouts', name: 'admin_checkout_create', methods: ['POST'])]
     public function createCheckout(Apartment $apartment, Request $request, EntityManagerInterface $entityManager, CheckoutManager $checkoutManager): JsonResponse
     {
@@ -414,6 +469,53 @@ class AdminController extends AbstractController
         }
 
         return $this->structureResponse($apartment, $entityManager, 'Check-out créé et assigné.');
+    }
+
+    #[Route('/checkouts/{id}/schedule', name: 'admin_checkout_schedule_update', methods: ['POST'])]
+    public function updateCheckoutSchedule(Checkout $checkout, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $scheduledAtRaw = trim((string) $request->request->get('scheduledAt'));
+        if ($scheduledAtRaw === '') {
+            return new JsonResponse(['success' => false, 'message' => 'La date prevue est obligatoire.'], 422);
+        }
+
+        try {
+            $checkout->setScheduledAt(new \DateTimeImmutable($scheduledAtRaw));
+        } catch (\Exception) {
+            return new JsonResponse(['success' => false, 'message' => 'La date prevue est invalide.'], 422);
+        }
+
+        $entityManager->flush();
+
+        $apartment = $checkout->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
+        }
+
+        return $this->structureResponse($apartment, $entityManager, 'Date du check-out mise a jour.');
+    }
+
+    #[Route('/checkouts/{id}/cancel', name: 'admin_checkout_cancel', methods: ['POST'])]
+    public function cancelCheckout(Checkout $checkout, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (in_array($checkout->getStatus(), [CheckoutStatus::Completed, CheckoutStatus::Cancelled], true)) {
+            return new JsonResponse(['success' => false, 'message' => 'Ce check-out ne peut plus etre annule.'], 422);
+        }
+
+        $checkout
+            ->setStatus(CheckoutStatus::Cancelled)
+            ->setPausedAt(null)
+            ->setPauseReason(null)
+            ->setBlockReason(null);
+
+        $entityManager->flush();
+
+        $apartment = $checkout->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
+        }
+
+        return $this->structureResponse($apartment, $entityManager, 'Check-out annule.');
     }
 
     private function structureResponse(Apartment $apartment, EntityManagerInterface $entityManager, string $message): JsonResponse
@@ -447,13 +549,23 @@ class AdminController extends AbstractController
             'apartment' => $apartment,
             'employees' => $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
             'catalog' => $entityManager->getRepository(EquipmentCatalog::class)->findBy(['isActive' => true], ['roomType' => 'ASC', 'name' => 'ASC']),
-            'checkouts' => $entityManager->getRepository(Checkout::class)->findBy(['apartment' => $apartment], ['id' => 'DESC'], 10),
+            'checkouts' => $entityManager->createQueryBuilder()
+                ->select('checkout')
+                ->from(Checkout::class, 'checkout')
+                ->where('checkout.apartment = :apartment')
+                ->andWhere('checkout.status != :cancelledStatus')
+                ->setParameter('apartment', $apartment)
+                ->setParameter('cancelledStatus', CheckoutStatus::Cancelled)
+                ->orderBy('checkout.id', 'DESC')
+                ->setMaxResults(10)
+                ->getQuery()
+                ->getResult(),
             'roomTypes' => RoomType::ordered(),
             'hasOpenCheckout' => $this->hasOpenCheckout($apartment, $entityManager),
             'anomalyCount' => count($anomalies),
             'anomalyGroups' => $this->buildAnomalyGroups($anomalies, $this->buildApartmentRepeatCounts($apartment, $entityManager)),
-            'canDeleteApartment' => $entityManager->getRepository(Checkout::class)->count(['apartment' => $apartment]) === 0
-                && $entityManager->getRepository(Anomaly::class)->count(['apartment' => $apartment]) === 0,
+            'canDeleteApartment' => !$this->hasOpenCheckout($apartment, $entityManager)
+                && !$this->hasOpenAnomalies($apartment, $entityManager),
         ];
     }
 
@@ -474,6 +586,19 @@ class AdminController extends AbstractController
             ->andWhere('checkout.status IN (:statuses)')
             ->setParameter('apartment', $apartment)
             ->setParameter('statuses', $openStatuses)
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
+
+    private function hasOpenAnomalies(Apartment $apartment, EntityManagerInterface $entityManager): bool
+    {
+        return $entityManager->createQueryBuilder()
+            ->select('COUNT(anomaly.id)')
+            ->from(Anomaly::class, 'anomaly')
+            ->where('anomaly.apartment = :apartment')
+            ->andWhere('anomaly.status != :closedStatus')
+            ->setParameter('apartment', $apartment)
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
             ->getQuery()
             ->getSingleScalarResult() > 0;
     }
@@ -730,5 +855,17 @@ class AdminController extends AbstractController
         } while ($entityManager->getRepository(Apartment::class)->findOneBy(['referenceCode' => $reference]) instanceof Apartment);
 
         return $reference;
+    }
+
+    private function deleteAnomalyPhoto(?string $photoPath): void
+    {
+        if (!is_string($photoPath) || $photoPath === '' || !str_starts_with($photoPath, '/uploads/anomalies/')) {
+            return;
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $photoPath;
+        if (is_file($fullPath)) {
+            @unlink($fullPath);
+        }
     }
 }

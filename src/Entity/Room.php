@@ -117,6 +117,17 @@ class Room
         return $this->roomEquipments;
     }
 
+    /**
+     * @return list<RoomEquipment>
+     */
+    public function getActiveRoomEquipments(): array
+    {
+        return array_values(array_filter(
+            $this->roomEquipments->toArray(),
+            static fn (RoomEquipment $roomEquipment): bool => $roomEquipment->isActive()
+        ));
+    }
+
     public function addRoomEquipment(RoomEquipment $roomEquipment): self
     {
         if (!$this->roomEquipments->contains($roomEquipment)) {

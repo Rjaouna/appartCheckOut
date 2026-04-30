@@ -43,9 +43,7 @@
                     rows="2"
                     placeholder="Commentaire obligatoire si anomalie ou non vérifié"
                     data-comment-field
-                    {{ line.status and line.status.value != 'ok' ? 'required' : '' }}
                 >{{ line.comment }}</textarea>
-                <small class="muted">Si tu choisis autre chose que OK, le commentaire devient obligatoire.</small>
                 <input type="file" name="photo" accept="image/*">
                 <button class="primary-button" type="submit">Enregistrer</button>
             </form>

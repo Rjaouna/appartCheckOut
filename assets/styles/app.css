@@ -192,6 +192,7 @@ select {
     justify-content: center;
     align-items: center;
     gap: 8px;
+    margin-bottom: 14px;
     border: none;
     border-radius: 16px;
     padding: 13px 18px;
@@ -348,6 +349,11 @@ select {
 .compact-form {
     display: grid;
     gap: 14px;
+}
+
+.checkout-action-form {
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 
 .stack-form label,
@@ -531,6 +537,14 @@ textarea {
 .room-selector-grid {
     display: grid;
     gap: 14px;
+}
+
+.mini-list > .compact-card {
+    margin-top: 6px;
+}
+
+.mini-list > .compact-card:first-child {
+    margin-top: 0;
 }
 
 .room-tab-nav {
@@ -798,6 +812,10 @@ textarea {
 
 .icon-action-button.is-warning {
     background: #d97706;
+}
+
+.icon-action-button-danger {
+    background: linear-gradient(135deg, #d95b5b, #b42318);
 }
 
 .icon-action-button svg {
@@ -1267,7 +1285,33 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .compact-card {
+    display: grid;
+    gap: 12px;
     padding: 16px;
+}
+
+.equipment-tag-form {
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    border: 1px solid #ece8df;
+}
+
+.equipment-tag-remove {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 999px;
+    background: #fff2f4;
+    color: #a61e4d;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
 }
 
 .table-like {

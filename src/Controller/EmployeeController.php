@@ -638,6 +638,25 @@ class EmployeeController extends AbstractController
                 ? (int) floor(($group['checkedCount'] / $group['totalCount']) * 100)
                 : 0;
         }
+        unset($group);
+
+        usort($groups, static function (array $left, array $right): int {
+            $leftCompleted = $left['totalCount'] > 0 && $left['checkedCount'] >= $left['totalCount'];
+            $rightCompleted = $right['totalCount'] > 0 && $right['checkedCount'] >= $right['totalCount'];
+
+            if ($leftCompleted !== $rightCompleted) {
+                return $leftCompleted ? 1 : -1;
+            }
+
+            $leftPending = $left['totalCount'] - $left['checkedCount'];
+            $rightPending = $right['totalCount'] - $right['checkedCount'];
+            if ($leftPending !== $rightPending) {
+                return $rightPending <=> $leftPending;
+            }
+
+            return ($left['room']->getDisplayOrder() <=> $right['room']->getDisplayOrder())
+                ?: (($left['room']->getId() ?? 0) <=> ($right['room']->getId() ?? 0));
+        });
 
         return $groups;
     }

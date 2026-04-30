@@ -260,23 +260,6 @@ document.addEventListener('click', (event) => {
     }
 });
 
-document.addEventListener('change', (event) => {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement) || input.name !== 'status') {
-        return;
-    }
-
-    const form = input.closest('form');
-    if (!(form instanceof HTMLFormElement)) {
-        return;
-    }
-
-    const commentField = form.querySelector('[data-comment-field]');
-    if (commentField instanceof HTMLTextAreaElement) {
-        commentField.required = input.value !== 'ok';
-    }
-});
-
 document.addEventListener('pointerdown', (event) => {
     const button = event.target instanceof Element ? event.target.closest('[data-draggable-y]') : null;
     if (!(button instanceof HTMLElement)) {
