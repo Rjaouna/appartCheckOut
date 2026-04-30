@@ -1963,6 +1963,17 @@ body.nav-compact .floating-main-menu-button {
     font-size: 0.95rem;
 }
 
+.employee-list-card-meta span:first-child {
+    font-size: 1.18rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.01em;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #fff4f6 0%, #fffafb 100%);
+    border: 1px solid rgba(255, 56, 92, 0.14);
+}
+
 .employee-anomaly-summary {
     display: grid;
     gap: 12px;
