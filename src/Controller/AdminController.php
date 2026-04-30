@@ -18,6 +18,7 @@ use App\Service\AnomalyWorkflowManager;
 use App\Service\CheckoutManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -149,6 +150,14 @@ class AdminController extends AbstractController
         return $this->render('admin/users.html.twig', $this->buildUsersPageData($entityManager));
     }
 
+    #[Route('/users/{id}', name: 'admin_user_show', methods: ['GET'])]
+    public function showUser(User $user): Response
+    {
+        $this->assertManageableEmployee($user);
+
+        return $this->render('admin/user_show.html.twig', $this->buildUserDetailData($user));
+    }
+
     #[Route('/users', name: 'admin_user_create', methods: ['POST'])]
     public function createUser(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
@@ -166,10 +175,16 @@ class AdminController extends AbstractController
         $user = (new User())
             ->setFullName(trim((string) $request->request->get('fullName')))
             ->setEmail($email)
+            ->setPhoneNumber($this->nullable($request->request->get('phoneNumber')))
             ->setRoles(['ROLE_EMPLOYEE'])
             ->setIsActive($request->request->getBoolean('isActive', true))
             ->setCanManageAnomalyWorkflow($request->request->getBoolean('canManageAnomalyWorkflow'));
         $user->setPassword($passwordHasher->hashPassword($user, $password));
+
+        $photo = $request->files->get('photo');
+        if ($photo instanceof UploadedFile) {
+            $user->setPhotoPath($this->storeUserPhoto($photo));
+        }
 
         $entityManager->persist($user);
         $entityManager->flush();
@@ -180,9 +195,7 @@ class AdminController extends AbstractController
     #[Route('/users/{id}', name: 'admin_user_update', methods: ['POST'])]
     public function updateUser(User $user, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            return new JsonResponse(['success' => false, 'message' => 'Les comptes administrateur ne se modifient pas depuis cet espace.'], 422);
-        }
+        $this->assertManageableEmployee($user);
 
         $email = mb_strtolower(trim((string) $request->request->get('email')));
         if ($email === '' || trim((string) $request->request->get('fullName')) === '') {
@@ -197,6 +210,7 @@ class AdminController extends AbstractController
         $user
             ->setFullName(trim((string) $request->request->get('fullName')))
             ->setEmail($email)
+            ->setPhoneNumber($this->nullable($request->request->get('phoneNumber')))
             ->setRoles(['ROLE_EMPLOYEE'])
             ->setIsActive($request->request->getBoolean('isActive'))
             ->setCanManageAnomalyWorkflow($request->request->getBoolean('canManageAnomalyWorkflow'));
@@ -206,17 +220,61 @@ class AdminController extends AbstractController
             $user->setPassword($passwordHasher->hashPassword($user, $password));
         }
 
+        $photo = $request->files->get('photo');
+        if ($photo instanceof UploadedFile) {
+            $previousPhotoPath = $user->getPhotoPath();
+            $user->setPhotoPath($this->storeUserPhoto($photo));
+            $this->deleteUserPhoto($previousPhotoPath);
+        }
+
         $entityManager->flush();
 
         return $this->usersResponse($entityManager, 'Employé mis à jour.');
     }
 
+    #[Route('/users/{id}/field', name: 'admin_user_field_update', methods: ['POST'])]
+    public function updateUserField(User $user, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    {
+        $this->assertManageableEmployee($user);
+
+        $field = (string) $request->request->get('field');
+        $value = trim((string) $request->request->get('value'));
+
+        try {
+            $this->applyAdminUserFieldUpdate($user, $field, $value, $entityManager, $passwordHasher);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return $this->userDetailResponse($user, 'Information employe mise a jour.');
+    }
+
+    #[Route('/users/{id}/photo', name: 'admin_user_photo_update', methods: ['POST'])]
+    public function updateUserPhoto(User $user, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->assertManageableEmployee($user);
+
+        $photo = $request->files->get('photo');
+        if (!$photo instanceof UploadedFile) {
+            return new JsonResponse(['success' => false, 'message' => 'Ajoute une photo avant de valider.'], 422);
+        }
+
+        $previousPhotoPath = $user->getPhotoPath();
+        $user->setPhotoPath($this->storeUserPhoto($photo));
+        $entityManager->flush();
+        $this->deleteUserPhoto($previousPhotoPath);
+
+        return $this->userDetailResponse($user, 'Photo employe mise a jour.');
+    }
+
     #[Route('/users/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
     public function deleteUser(User $user, EntityManagerInterface $entityManager): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            return new JsonResponse(['success' => false, 'message' => 'Les comptes administrateur ne se suppriment pas depuis cet espace.'], 422);
-        }
+        $this->assertManageableEmployee($user);
 
         $currentUser = $this->getUser();
         if ($currentUser instanceof User && $currentUser->getId() === $user->getId()) {
@@ -227,8 +285,10 @@ class AdminController extends AbstractController
             $user->removeAssignedApartment($apartment);
         }
 
+        $photoPath = $user->getPhotoPath();
         $entityManager->remove($user);
         $entityManager->flush();
+        $this->deleteUserPhoto($photoPath);
 
         return $this->usersResponse($entityManager, 'Employé supprimé.');
     }
@@ -604,6 +664,15 @@ class AdminController extends AbstractController
         ]);
     }
 
+    private function userDetailResponse(User $user, string $message): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('admin/_user_detail_content.html.twig', $this->buildUserDetailData($user)),
+            'message' => $message,
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -764,6 +833,16 @@ class AdminController extends AbstractController
         ];
     }
 
+    /**
+     * @return array{user: User}
+     */
+    private function buildUserDetailData(User $user): array
+    {
+        return [
+            'user' => $user,
+        ];
+    }
+
     private function getOpenCheckout(Apartment $apartment, EntityManagerInterface $entityManager): ?Checkout
     {
         $openStatuses = [
@@ -911,6 +990,13 @@ class AdminController extends AbstractController
             ->getSingleScalarResult();
     }
 
+    private function assertManageableEmployee(User $user): void
+    {
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            throw $this->createNotFoundException();
+        }
+    }
+
     private function nullable(mixed $value): ?string
     {
         if (!is_string($value)) {
@@ -949,6 +1035,45 @@ class AdminController extends AbstractController
         }
     }
 
+    private function applyAdminUserFieldUpdate(User $user, string $field, string $value, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): void
+    {
+        $normalizedValue = $value === '' ? null : $value;
+
+        match ($field) {
+            'fullName' => $user->setFullName($value !== '' ? $value : $user->getFullName()),
+            'email' => $this->updateAdminUserEmail($user, $value, $entityManager),
+            'phoneNumber' => $user->setPhoneNumber($normalizedValue),
+            'password' => $this->updateAdminUserPassword($user, $value, $passwordHasher),
+            'isActive' => $user->setIsActive(in_array(strtolower($value), ['1', 'true', 'oui', 'actif'], true)),
+            'canManageAnomalyWorkflow' => $user->setCanManageAnomalyWorkflow(in_array(strtolower($value), ['1', 'true', 'oui', 'autorise'], true)),
+            default => throw new \InvalidArgumentException('Champ employe non modifiable.'),
+        };
+    }
+
+    private function updateAdminUserEmail(User $user, string $value, EntityManagerInterface $entityManager): void
+    {
+        $email = mb_strtolower(trim($value));
+        if ($email === '') {
+            throw new \InvalidArgumentException('L email est obligatoire.');
+        }
+
+        $existing = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        if ($existing instanceof User && $existing->getId() !== $user->getId()) {
+            throw new \InvalidArgumentException('Cet email existe deja.');
+        }
+
+        $user->setEmail($email);
+    }
+
+    private function updateAdminUserPassword(User $user, string $value, UserPasswordHasherInterface $passwordHasher): void
+    {
+        if ($value === '') {
+            throw new \InvalidArgumentException('Le mot de passe ne peut pas etre vide.');
+        }
+
+        $user->setPassword($passwordHasher->hashPassword($user, $value));
+    }
+
     private function buildWazeLink(string $addressLine1, string $city, string $postalCode = ''): string
     {
         $parts = array_filter([$addressLine1, $postalCode, $city], static fn (string $part): bool => trim($part) !== '');
@@ -964,6 +1089,34 @@ class AdminController extends AbstractController
         } while ($entityManager->getRepository(Apartment::class)->findOneBy(['referenceCode' => $reference]) instanceof Apartment);
 
         return $reference;
+    }
+
+    private function storeUserPhoto(UploadedFile $photo): string
+    {
+        $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/users';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $safeName = pathinfo($photo->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeName = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeName) ?: 'employee';
+        $filename = sprintf('%s-%s.%s', $safeName, bin2hex(random_bytes(4)), $photo->guessExtension() ?: 'jpg');
+
+        $photo->move($targetDir, $filename);
+
+        return '/uploads/users/' . $filename;
+    }
+
+    private function deleteUserPhoto(?string $photoPath): void
+    {
+        if (!is_string($photoPath) || $photoPath === '' || !str_starts_with($photoPath, '/uploads/users/')) {
+            return;
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $photoPath;
+        if (is_file($fullPath)) {
+            @unlink($fullPath);
+        }
     }
 
     private function deleteAnomalyPhoto(?string $photoPath): void

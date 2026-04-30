@@ -29,6 +29,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 120)]
     private string $fullName = '';
 
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $phoneNumber = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photoPath = null;
+
     #[ORM\Column]
     private bool $isActive = true;
 
@@ -107,6 +113,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setFullName(string $fullName): self
     {
         $this->fullName = $fullName;
+
+        return $this;
+    }
+
+    public function getPhoneNumber(): ?string
+    {
+        return $this->phoneNumber;
+    }
+
+    public function setPhoneNumber(?string $phoneNumber): self
+    {
+        $this->phoneNumber = $phoneNumber;
+
+        return $this;
+    }
+
+    public function getPhotoPath(): ?string
+    {
+        return $this->photoPath;
+    }
+
+    public function setPhotoPath(?string $photoPath): self
+    {
+        $this->photoPath = $photoPath;
 
         return $this;
     }

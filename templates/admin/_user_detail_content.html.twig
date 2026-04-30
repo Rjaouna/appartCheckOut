@@ -1,0 +1,133 @@
+<div class="admin-user-detail-layout">
+    <section class="panel admin-user-hero-card">
+        <div class="admin-user-hero-media">
+            <div class="admin-user-avatar admin-user-avatar-large {{ user.photoPath ? 'has-photo' : '' }}">
+                {% if user.photoPath %}
+                    <img src="{{ user.photoPath }}" alt="{{ user.fullName }}">
+                {% else %}
+                    <span>{{ user.fullName|slice(0, 1)|upper }}</span>
+                {% endif %}
+            </div>
+
+            <div class="admin-user-hero-copy">
+                <h2>{{ user.fullName }}</h2>
+                <p>{{ user.email }}</p>
+                {% if user.phoneNumber %}
+                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <form
+            method="post"
+            action="{{ path('admin_user_photo_update', {id: user.id}) }}"
+            class="stack-form admin-user-photo-form"
+            enctype="multipart/form-data"
+            data-async-form
+            data-update-target="#admin-user-detail-content"
+        >
+            <label>
+                <span>Changer la photo</span>
+                <input type="file" name="photo" accept="image/*" required>
+            </label>
+            <button class="secondary-button" type="submit">Mettre a jour la photo</button>
+        </form>
+    </section>
+
+    <section class="admin-user-detail-grid">
+        <article class="apartment-detail-card">
+            <h3>Informations personnelles</h3>
+            {% include 'admin/_editable_user_field.html.twig' with {
+                user: user,
+                field: 'fullName',
+                label: 'Nom complet',
+                value: user.fullName,
+                rawValue: user.fullName
+            } %}
+            {% include 'admin/_editable_user_field.html.twig' with {
+                user: user,
+                field: 'password',
+                label: 'Mot de passe',
+                value: 'Modifier le mot de passe',
+                rawValue: '',
+                inputType: 'password',
+                placeholder: 'Nouveau mot de passe'
+            } %}
+        </article>
+
+        <article class="apartment-detail-card">
+            <h3>Informations de contact</h3>
+            {% include 'admin/_editable_user_field.html.twig' with {
+                user: user,
+                field: 'email',
+                label: 'Email',
+                value: user.email,
+                rawValue: user.email,
+                inputType: 'email'
+            } %}
+            {% include 'admin/_editable_user_field.html.twig' with {
+                user: user,
+                field: 'phoneNumber',
+                label: 'Numero de telephone',
+                value: user.phoneNumber ?: 'Non renseigne',
+                rawValue: user.phoneNumber,
+                inputType: 'tel',
+                placeholder: '06 00 00 00 00'
+            } %}
+        </article>
+
+        <article class="apartment-detail-card">
+            <h3>Parametres du compte</h3>
+            {% include 'admin/_editable_user_field.html.twig' with {
+                user: user,
+                field: 'isActive',
+                label: 'Etat du compte',
+                value: user.isActive ? 'Actif' : 'Inactif',
+                rawValue: user.isActive ? '1' : '0',
+                inputType: 'select',
+                options: [
+                    { value: '1', label: 'Actif' },
+                    { value: '0', label: 'Inactif' }
+                ]
+            } %}
+            {% include 'admin/_editable_user_field.html.twig' with {
+                user: user,
+                field: 'canManageAnomalyWorkflow',
+                label: 'Suivi des anomalies',
+                value: user.canManageAnomalyWorkflow ? 'Autorise' : 'Non autorise',
+                rawValue: user.canManageAnomalyWorkflow ? '1' : '0',
+                inputType: 'select',
+                options: [
+                    { value: '1', label: 'Autorise' },
+                    { value: '0', label: 'Non autorise' }
+                ]
+            } %}
+        </article>
+
+        <article class="apartment-detail-card apartment-detail-card-wide">
+            <h3>Appartements assignes</h3>
+            <div class="admin-user-assigned-list">
+                {% for apartment in user.assignedApartments %}
+                    <a class="mini-badge admin-user-assigned-chip" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartment.name }}</a>
+                {% else %}
+                    <p class="muted">Aucun appartement assigne pour le moment.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="apartment-detail-card apartment-detail-card-wide">
+            <h3>Actions</h3>
+            <form
+                method="post"
+                action="{{ path('admin_user_delete', {id: user.id}) }}"
+                data-async-form
+                data-update-target="main.page-shell"
+                data-confirm-reset
+                data-confirm-title="Supprimer cet employe"
+                data-confirm-message="Cette action va supprimer ce compte. Veux-tu continuer ?"
+            >
+                <button class="secondary-button danger-button" type="submit">Supprimer le compte</button>
+            </form>
+        </article>
+    </section>
+</div>

@@ -1,0 +1,55 @@
+{% set multiline = multiline|default(false) %}
+{% set inputType = inputType|default('text') %}
+{% set placeholder = placeholder|default('') %}
+{% set options = options|default([]) %}
+
+<div class="editable-field-row">
+    <div class="editable-field-display">
+        <div class="editable-field-copy">
+            <span class="editable-field-label">{{ label }}</span>
+            {% if field == 'email' and rawValue %}
+                <strong><a class="inline-detail-link" href="mailto:{{ rawValue }}">{{ value }}</a></strong>
+            {% elseif field == 'phoneNumber' and rawValue %}
+                <strong><a class="inline-detail-link" href="tel:{{ rawValue }}">{{ value }}</a></strong>
+            {% else %}
+                <strong>{{ value }}</strong>
+            {% endif %}
+        </div>
+        <button
+            class="inline-edit-button"
+            type="button"
+            aria-label="Modifier {{ label }}"
+            data-edit-target="#admin-user-editable-form-{{ field }}"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8ZM18.7 8a1 1 0 0 0 0-1.4l-1.3-1.3a1 1 0 0 0-1.4 0l-1.2 1.2 2.7 2.7L18.7 8Z" fill="currentColor"/>
+            </svg>
+        </button>
+    </div>
+
+    <form
+        id="admin-user-editable-form-{{ field }}"
+        class="editable-field-form is-collapsed"
+        method="post"
+        action="{{ path('admin_user_field_update', {id: user.id}) }}"
+        data-async-form
+        data-update-target="#admin-user-detail-content"
+    >
+        <input type="hidden" name="field" value="{{ field }}">
+        {% if multiline %}
+            <textarea name="value" rows="4" placeholder="{{ placeholder }}">{{ rawValue }}</textarea>
+        {% elseif inputType == 'select' %}
+            <select name="value">
+                {% for option in options %}
+                    <option value="{{ option.value }}" {{ option.value == rawValue ? 'selected' : '' }}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+        {% else %}
+            <input type="{{ inputType }}" name="value" value="{{ rawValue }}" placeholder="{{ placeholder }}">
+        {% endif %}
+        <div class="editable-field-actions">
+            <button class="primary-button" type="submit">Enregistrer</button>
+            <button class="secondary-button" type="button" data-edit-target="#admin-user-editable-form-{{ field }}">Annuler</button>
+        </div>
+    </form>
+</div>

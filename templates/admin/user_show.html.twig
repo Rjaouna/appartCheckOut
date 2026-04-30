@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ user.fullName }}{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Employe</span>
+            <h1>{{ user.fullName }}</h1>
+            <p class="muted">{{ user.email }}</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('admin_users') }}">Retour liste</a>
+        </div>
+    </section>
+
+    <section id="admin-user-detail-content">
+        {% include 'admin/_user_detail_content.html.twig' %}
+    </section>
+{% endblock %}
