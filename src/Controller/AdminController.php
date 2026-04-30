@@ -20,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/admin')]
@@ -107,6 +108,96 @@ class AdminController extends AbstractController
     public function apartments(EntityManagerInterface $entityManager): Response
     {
         return $this->render('admin/apartments.html.twig', $this->buildApartmentsPageData($entityManager));
+    }
+
+    #[Route('/users', name: 'admin_users', methods: ['GET'])]
+    public function users(EntityManagerInterface $entityManager): Response
+    {
+        return $this->render('admin/users.html.twig', $this->buildUsersPageData($entityManager));
+    }
+
+    #[Route('/users', name: 'admin_user_create', methods: ['POST'])]
+    public function createUser(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    {
+        $email = mb_strtolower(trim((string) $request->request->get('email')));
+        $password = (string) $request->request->get('password');
+
+        if ($email === '' || $password === '' || trim((string) $request->request->get('fullName')) === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Nom, email et mot de passe sont obligatoires.'], 422);
+        }
+
+        if ($entityManager->getRepository(User::class)->findOneBy(['email' => $email]) instanceof User) {
+            return new JsonResponse(['success' => false, 'message' => 'Cet email existe deja.'], 422);
+        }
+
+        $user = (new User())
+            ->setFullName(trim((string) $request->request->get('fullName')))
+            ->setEmail($email)
+            ->setRoles(['ROLE_EMPLOYEE'])
+            ->setIsActive($request->request->getBoolean('isActive', true))
+            ->setCanManageAnomalyWorkflow($request->request->getBoolean('canManageAnomalyWorkflow'));
+        $user->setPassword($passwordHasher->hashPassword($user, $password));
+
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        return $this->usersResponse($entityManager, 'Employe cree.');
+    }
+
+    #[Route('/users/{id}', name: 'admin_user_update', methods: ['POST'])]
+    public function updateUser(User $user, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    {
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return new JsonResponse(['success' => false, 'message' => 'Les comptes administrateur ne se modifient pas depuis cet espace.'], 422);
+        }
+
+        $email = mb_strtolower(trim((string) $request->request->get('email')));
+        if ($email === '' || trim((string) $request->request->get('fullName')) === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Nom et email sont obligatoires.'], 422);
+        }
+
+        $existing = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        if ($existing instanceof User && $existing->getId() !== $user->getId()) {
+            return new JsonResponse(['success' => false, 'message' => 'Cet email existe deja.'], 422);
+        }
+
+        $user
+            ->setFullName(trim((string) $request->request->get('fullName')))
+            ->setEmail($email)
+            ->setRoles(['ROLE_EMPLOYEE'])
+            ->setIsActive($request->request->getBoolean('isActive'))
+            ->setCanManageAnomalyWorkflow($request->request->getBoolean('canManageAnomalyWorkflow'));
+
+        $password = trim((string) $request->request->get('password'));
+        if ($password !== '') {
+            $user->setPassword($passwordHasher->hashPassword($user, $password));
+        }
+
+        $entityManager->flush();
+
+        return $this->usersResponse($entityManager, 'Employe mis a jour.');
+    }
+
+    #[Route('/users/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
+    public function deleteUser(User $user, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return new JsonResponse(['success' => false, 'message' => 'Les comptes administrateur ne se suppriment pas depuis cet espace.'], 422);
+        }
+
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User && $currentUser->getId() === $user->getId()) {
+            return new JsonResponse(['success' => false, 'message' => 'Tu ne peux pas supprimer le compte actuellement connecte.'], 422);
+        }
+
+        foreach ($user->getAssignedApartments()->toArray() as $apartment) {
+            $user->removeAssignedApartment($apartment);
+        }
+
+        $entityManager->remove($user);
+        $entityManager->flush();
+
+        return $this->usersResponse($entityManager, 'Employe supprime.');
     }
 
     #[Route('/apartments', name: 'admin_apartment_create', methods: ['POST'])]
@@ -336,6 +427,15 @@ class AdminController extends AbstractController
         ]);
     }
 
+    private function usersResponse(EntityManagerInterface $entityManager, string $message): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('admin/_users_content.html.twig', $this->buildUsersPageData($entityManager)),
+            'message' => $message,
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -433,6 +533,21 @@ class AdminController extends AbstractController
             'employees' => $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
             'apartmentStatuses' => ApartmentStatus::cases(),
             'openAnomalyCounts' => $openAnomalyCounts,
+        ];
+    }
+
+    /**
+     * @return array{users:list<User>}
+     */
+    private function buildUsersPageData(EntityManagerInterface $entityManager): array
+    {
+        $users = array_values(array_filter(
+            $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
+            static fn (User $user): bool => !in_array('ROLE_ADMIN', $user->getRoles(), true)
+        ));
+
+        return [
+            'users' => $users,
         ];
     }
 

@@ -46,14 +46,16 @@ class AppFixtures extends Fixture
         $admin
             ->setFullName('Mohamed Bourjime')
             ->setEmail('b.mohamed@gmail.com')
-            ->setRoles(['ROLE_ADMIN']);
+            ->setRoles(['ROLE_ADMIN'])
+            ->setCanManageAnomalyWorkflow(true);
         $admin->setPassword($this->passwordHasher->hashPassword($admin, 'password'));
 
         $employee = new User();
         $employee
             ->setFullName('Marouane Bourjime')
             ->setEmail('b.marouane@gmail.com')
-            ->setRoles(['ROLE_EMPLOYEE']);
+            ->setRoles(['ROLE_EMPLOYEE'])
+            ->setCanManageAnomalyWorkflow(false);
         $employee->setPassword($this->passwordHasher->hashPassword($employee, 'password'));
 
         $manager->persist($admin);

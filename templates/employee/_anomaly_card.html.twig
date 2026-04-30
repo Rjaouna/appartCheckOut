@@ -1,0 +1,101 @@
+<article id="employee-anomaly-{{ anomaly.id }}" class="employee-list-card employee-anomaly-card">
+    <div class="employee-list-card-top">
+        <div class="employee-anomaly-heading">
+            <h2>{{ anomaly.apartment.name }}</h2>
+            <p>Declaree le {{ anomaly.createdAt|date('d/m/Y a H:i') }}</p>
+        </div>
+        <div class="employee-anomaly-badges">
+            <span class="status-badge is-warning">{{ anomaly.status.label }}</span>
+            <span class="mini-badge">{{ anomaly.type.label }}</span>
+            {% if app.user and app.user.canManageAnomalyWorkflow %}
+                <button
+                    class="icon-action-button"
+                    type="button"
+                    title="Gerer le suivi"
+                    aria-label="Gerer le suivi"
+                    data-workflow-trigger
+                    data-workflow-title="Suivi de l anomalie"
+                    data-workflow-source="#employee-workflow-actions-{{ anomaly.id }}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="employee-anomaly-layout">
+        <div class="employee-anomaly-main">
+            <div class="employee-anomaly-summary employee-anomaly-summary-inline">
+                <div>
+                    <span class="employee-anomaly-label">Piece</span>
+                    <strong>{{ anomaly.room.name }}</strong>
+                </div>
+                <div>
+                    <span class="employee-anomaly-label">Equipement</span>
+                    <strong>{{ anomaly.roomEquipment.catalogEquipment ? anomaly.roomEquipment.catalogEquipment.name : anomaly.roomEquipment.label }}</strong>
+                </div>
+            </div>
+
+            <div class="employee-anomaly-comment">
+                <span class="employee-anomaly-label">Commentaire</span>
+                <p>{{ anomaly.comment }}</p>
+            </div>
+
+            {% if app.user and app.user.canManageAnomalyWorkflow %}
+                <div class="employee-anomaly-followup">
+                    <div class="workflow-summary-row">
+                        <span class="workflow-current">Suivi en cours : {{ anomaly.status.label }}</span>
+                    </div>
+
+                    <div id="employee-workflow-actions-{{ anomaly.id }}" class="workflow-actions-source" hidden>
+                        <div class="workflow-modal-grid">
+                            {% for choice in anomaly.status.nextChoices() %}
+                                <form method="post" action="{{ path('employee_anomaly_workflow_update', {id: anomaly.id}) }}" data-async-form data-update-target="#employee-anomaly-{{ anomaly.id }}" data-swap-mode="outer">
+                                    <input type="hidden" name="status" value="{{ choice.value }}">
+                                    <button class="workflow-action workflow-action-modal
+                                        {% if choice.value in ['complaint_filed', 'repair_in_progress'] %} workflow-action-blue{% endif %}
+                                        {% if choice.value == 'reimbursement_paid' %} workflow-action-green{% endif %}
+                                        {% if choice.value == 'reimbursement_refused' %} workflow-action-orange{% endif %}
+                                        {% if choice.value == 'resolved' %} workflow-action-teal{% endif %}
+                                        {% if choice.value == 'closed' %} workflow-action-dark{% endif %}"
+                                        type="submit"
+                                    >
+                                        <span class="workflow-icon">
+                                            {% if choice.value == 'complaint_filed' %}
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v12H9l-5 4V4h2Zm3 4v2h6V8H9Zm0 4v2h4v-2H9Z" fill="currentColor"/></svg>
+                                            {% elseif choice.value == 'reimbursement_paid' %}
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3V6Zm3 3v6h12V9H6Zm4 1h4v1h-1v3h-2v-3h-1v-1Z" fill="currentColor"/></svg>
+                                            {% elseif choice.value == 'reimbursement_refused' %}
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
+                                            {% elseif choice.value == 'repair_in_progress' %}
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/></svg>
+                                            {% elseif choice.value == 'resolved' %}
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12 3.4 13.4 9 19l12-12-1.4-1.4L9 16.2Z" fill="currentColor"/></svg>
+                                            {% elseif choice.value == 'closed' %}
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12l2 4v12H4V8l2-4Zm2 6v6h8v-6H8Zm1-4-1 2h8l-1-2H9Z" fill="currentColor"/></svg>
+                                            {% endif %}
+                                        </span>
+                                        <span>{{ choice.label }}</span>
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if anomaly.photoPath %}
+            <button
+                class="anomaly-photo-thumb anomaly-photo-thumb-card"
+                type="button"
+                data-lightbox-src="{{ anomaly.photoPath }}"
+                data-lightbox-alt="Photo anomalie - {{ anomaly.apartment.name }}"
+            >
+                <img src="{{ anomaly.photoPath }}" alt="Photo anomalie {{ anomaly.apartment.name }}">
+            </button>
+        {% endif %}
+    </div>
+</article>

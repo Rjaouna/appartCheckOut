@@ -3,15 +3,16 @@
 {% block title %}Appartements{% endblock %}
 
 {% block body %}
-    <section class="page-head">
+    <section class="admin-home-intro admin-home-intro-page">
         <div>
-            <span class="eyebrow">Parc appartements</span>
+            <h1>Appartements</h1>
+            <p>Cree un appartement, organise les infos d'acces et pilote l'affectation en gardant une presentation claire.</p>
         </div>
     </section>
 
-    <section class="three-columns">
-        <div class="panel">
-            <div class="panel-head"><h2>Nouvel appartement</h2></div>
+    <section class="admin-apartments-layout">
+        <div class="panel admin-form-panel">
+            <div class="admin-home-section-head compact"><div><h2>Nouvel appartement</h2><p>Une fiche propre et complete pour lancer les prochains check-outs.</p></div></div>
             <form method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form">
                 <label><span>Nom *</span><input name="name" required></label>
                 <label><span>Adresse *</span><input name="addressLine1" required></label>

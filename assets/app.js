@@ -80,7 +80,11 @@ document.addEventListener('submit', async (event) => {
         if (targetSelector && payload.html) {
             const target = document.querySelector(targetSelector);
             if (target) {
-                target.innerHTML = payload.html;
+                if (form.getAttribute('data-swap-mode') === 'outer') {
+                    target.outerHTML = payload.html;
+                } else {
+                    target.innerHTML = payload.html;
+                }
             }
         }
 

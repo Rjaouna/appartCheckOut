@@ -12,6 +12,7 @@ use App\Enum\AnomalyStatus;
 use App\Enum\ApartmentStatus;
 use App\Enum\CheckoutStatus;
 use App\Enum\EquipmentCheckStatus;
+use App\Service\AnomalyWorkflowManager;
 use App\Service\CheckoutManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -95,29 +96,37 @@ class EmployeeController extends AbstractController
     #[Route('/anomalies', name: 'employee_anomalies', methods: ['GET'])]
     public function anomalies(EntityManagerInterface $entityManager): Response
     {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        $anomalies = $entityManager->createQueryBuilder()
-            ->select('anomaly', 'checkout', 'apartment', 'room', 'roomEquipment')
-            ->from(Anomaly::class, 'anomaly')
-            ->join('anomaly.checkout', 'checkout')
-            ->join('anomaly.apartment', 'apartment')
-            ->join('anomaly.room', 'room')
-            ->join('anomaly.roomEquipment', 'roomEquipment')
-            ->where('checkout.assignedTo = :user')
-            ->andWhere('apartment.status = :apartmentStatus')
-            ->andWhere('anomaly.status != :closedStatus')
-            ->setParameter('user', $user)
-            ->setParameter('apartmentStatus', ApartmentStatus::Active)
-            ->setParameter('closedStatus', AnomalyStatus::Closed)
-            ->orderBy('anomaly.createdAt', 'DESC')
-            ->getQuery()
-            ->getResult();
-
         return $this->render('employee/anomalies.html.twig', [
-            'anomalies' => $anomalies,
+            'anomalies' => $this->findEmployeeAnomalies($entityManager),
         ]);
+    }
+
+    #[Route('/anomalies/{id}/workflow', name: 'employee_anomaly_workflow_update', methods: ['POST'])]
+    public function updateAnomalyWorkflow(Anomaly $anomaly, Request $request, EntityManagerInterface $entityManager, AnomalyWorkflowManager $workflowManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToAnomalyWorkflow($anomaly);
+
+        try {
+            $actor = $this->getUser();
+            $workflowManager->advance($anomaly, AnomalyStatus::from((string) $request->request->get('status')), $actor instanceof User ? $actor : null);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        return $this->anomalyCardResponse($anomaly, 'Suivi de l anomalie mis a jour.');
+    }
+
+    #[Route('/anomalies/{id}/workflow/reset', name: 'employee_anomaly_workflow_reset', methods: ['POST'])]
+    public function resetAnomalyWorkflow(Anomaly $anomaly, EntityManagerInterface $entityManager, AnomalyWorkflowManager $workflowManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToAnomalyWorkflow($anomaly);
+
+        $actor = $this->getUser();
+        $workflowManager->reset($anomaly, $actor instanceof User ? $actor : null);
+        $entityManager->flush();
+
+        return $this->anomalyCardResponse($anomaly, 'Suivi de l anomalie reinitialise.');
     }
 
     #[Route('/apartments', name: 'employee_apartments', methods: ['GET'])]
@@ -318,6 +327,17 @@ class EmployeeController extends AbstractController
         ]);
     }
 
+    private function anomalyCardResponse(Anomaly $anomaly, string $message): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_anomaly_card.html.twig', [
+                'anomaly' => $anomaly,
+            ]),
+            'message' => $message,
+        ]);
+    }
+
     private function denyAccessUnlessGrantedToCheckout(Checkout $checkout): void
     {
         $user = $this->getUser();
@@ -337,6 +357,24 @@ class EmployeeController extends AbstractController
             !$user instanceof User
             || $apartment->getStatus() !== ApartmentStatus::Active
             || !$apartment->getAssignedEmployees()->exists(static fn (int $key, User $employee) => $employee->getId() === $user->getId())
+        ) {
+            throw $this->createAccessDeniedException();
+        }
+    }
+
+    private function denyAccessUnlessGrantedToAnomalyWorkflow(Anomaly $anomaly): void
+    {
+        $user = $this->getUser();
+        $checkout = $anomaly->getCheckout();
+        $apartment = $anomaly->getApartment();
+
+        if (
+            !$user instanceof User
+            || !$user->canManageAnomalyWorkflow()
+            || !$checkout instanceof Checkout
+            || !$apartment instanceof Apartment
+            || $checkout->getAssignedTo()?->getId() !== $user->getId()
+            || $apartment->getStatus() !== ApartmentStatus::Active
         ) {
             throw $this->createAccessDeniedException();
         }
@@ -477,6 +515,34 @@ class EmployeeController extends AbstractController
             ->orderBy('apartment.isInventoryPriority', 'DESC')
             ->addOrderBy('apartment.inventoryDueAt', 'ASC')
             ->addOrderBy('apartment.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return list<Anomaly>
+     */
+    private function findEmployeeAnomalies(EntityManagerInterface $entityManager): array
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $entityManager->createQueryBuilder()
+            ->select('anomaly', 'checkout', 'apartment', 'room', 'roomEquipment', 'statusHistory')
+            ->from(Anomaly::class, 'anomaly')
+            ->join('anomaly.checkout', 'checkout')
+            ->join('anomaly.apartment', 'apartment')
+            ->join('anomaly.room', 'room')
+            ->join('anomaly.roomEquipment', 'roomEquipment')
+            ->leftJoin('anomaly.statusHistories', 'statusHistory')
+            ->where('checkout.assignedTo = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->andWhere('anomaly.status != :closedStatus')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
+            ->orderBy('anomaly.createdAt', 'DESC')
+            ->addOrderBy('statusHistory.changedAt', 'DESC')
             ->getQuery()
             ->getResult();
     }

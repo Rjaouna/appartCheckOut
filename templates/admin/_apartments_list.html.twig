@@ -1,11 +1,13 @@
-<div id="apartments-list-panel" class="panel span-two">
-    <div class="panel-head">
-        <h2>Liste des appartements</h2>
-        <span class="muted">{{ apartments|length }} appartements</span>
+<div id="apartments-list-panel" class="panel admin-apartments-list-panel">
+    <div class="admin-home-section-head compact">
+        <div>
+            <h2>Liste des appartements</h2>
+            <p>{{ apartments|length }} appartement{{ apartments|length > 1 ? 's' : '' }} dans le parc admin</p>
+        </div>
     </div>
-    <div class="card-grid apartment-card-grid">
+    <div class="card-grid apartment-card-grid admin-home-apartment-grid">
         {% for apartment in apartments %}
-            <article class="apartment-card admin-apartment-card {{ apartment.status.value != 'active' ? 'is-dimmed' : '' }}" data-click-url="{{ path('admin_apartment_show', {id: apartment.id}) }}">
+            <article class="employee-card admin-apartment-card admin-home-card {{ apartment.status.value != 'active' ? 'is-dimmed' : '' }}" data-click-url="{{ path('admin_apartment_show', {id: apartment.id}) }}">
                 <div class="apartment-topline">
                     <div class="card-top-actions">
                         {% if apartment.isInventoryPriority %}
@@ -39,12 +41,15 @@
                         </button>
                     </form>
                 </div>
-                <h3>{{ apartment.name }}</h3>
-                <p>{{ apartment.fullAddress }}</p>
+                <h2 class="card-title-link-wrap"><a class="card-title-link" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartment.name }}</a></h2>
                 <dl class="key-values">
                     <div><dt>Pieces</dt><dd>{{ apartment.rooms|length }}</dd></div>
                     <div><dt>Assignes</dt><dd>{{ apartment.assignedEmployees|length }}</dd></div>
                 </dl>
+                <div class="card-detail-list">
+                    <span>{{ apartment.city }}</span>
+                    <span>{{ apartment.buildingAccessCode ?: 'Sans code immeuble' }}</span>
+                </div>
             </article>
         {% else %}
             <p class="empty-state">Aucun appartement cree pour le moment.</p>

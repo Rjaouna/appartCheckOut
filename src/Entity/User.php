@@ -32,6 +32,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isActive = true;
 
+    #[ORM\Column]
+    private bool $canManageAnomalyWorkflow = false;
+
     /**
      * @var Collection<int, Apartment>
      */
@@ -116,6 +119,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    public function canManageAnomalyWorkflow(): bool
+    {
+        return $this->canManageAnomalyWorkflow;
+    }
+
+    public function setCanManageAnomalyWorkflow(bool $canManageAnomalyWorkflow): self
+    {
+        $this->canManageAnomalyWorkflow = $canManageAnomalyWorkflow;
 
         return $this;
     }

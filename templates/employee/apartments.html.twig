@@ -6,31 +6,35 @@
     <section class="page-head employee-page-head">
         <div>
             <h1>Mes appartements</h1>
-            <p class="muted">Ouvre une fiche pour consulter le detail et modifier les informations d'acces.</p>
         </div>
         <div class="head-actions">
-            <a class="secondary-button" href="{{ path('employee_dashboard') }}">Retour</a>
+            <a class="primary-button full-width" href="{{ path('employee_dashboard') }}">Retour</a>
         </div>
     </section>
 
-    <section class="card-grid apartment-card-grid">
+    <section class="employee-apartments-grid">
         {% for apartment in apartments %}
             <article class="employee-card employee-apartment-card" data-click-url="{{ path('employee_apartment_show', {id: apartment.id}) }}">
                 <div class="apartment-topline">
                     <span class="status-badge {{ apartment.isInventoryPriority ? '' : 'is-neutral' }}">{{ apartment.isInventoryPriority ? 'Prioritaire' : 'Actif' }}</span>
-                    <a class="waze-pill" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer" title="Ouvrir dans Waze" aria-label="Ouvrir dans Waze">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 3a8 8 0 0 0-8 8c0 4.4 3.6 8 8 8h.3l1.7 2.5 1.7-2.5H16a8 8 0 0 0 0-16h-4Zm-2.2 8.5a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm4.4 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm-5.2 2.2h6.1a3.7 3.7 0 0 1-6.1 0Z" fill="currentColor"/>
-                        </svg>
+                    <a class="employee-apartment-waze" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer" title="Ouvrir dans Waze" aria-label="Ouvrir dans Waze">
+                        <span class="employee-apartment-waze-icon" aria-hidden="true">
+                            {% include 'shared/_waze_icon.html.twig' %}
+                        </span>
                     </a>
                 </div>
-                <h2>{{ apartment.name }}</h2>
-                <dl class="key-values">
-                    <div><dt>Ville</dt><dd>{{ apartment.city }}</dd></div>
-                    <div><dt>Code immeuble</dt><dd>{{ apartment.buildingAccessCode ?: '-' }}</dd></div>
-                    <div><dt>Code boite</dt><dd>{{ apartment.keyBoxCode ?: '-' }}</dd></div>
-                    <div><dt>Pieces</dt><dd>{{ apartment.rooms|length }}</dd></div>
-                </dl>
+                <h2 class="employee-apartment-card-title">{{ apartment.name }}</h2>
+                <p class="employee-apartment-city">{{ apartment.city }}</p>
+                <div class="employee-apartment-code-block">
+                    <div>
+                        <span>Code immeuble</span>
+                        <strong>{{ apartment.buildingAccessCode ?: '-' }}</strong>
+                    </div>
+                    <div>
+                        <span>Code boite a cles / code porte</span>
+                        <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
+                    </div>
+                </div>
             </article>
         {% else %}
             <p class="empty-state">Aucun appartement assigne pour le moment.</p>

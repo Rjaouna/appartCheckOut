@@ -1,0 +1,139 @@
+<div class="admin-users-layout">
+    <section class="panel admin-users-form-panel">
+        <div class="admin-home-section-head compact">
+            <div>
+                <h2>Ajouter un employe</h2>
+                <p>Creer un acces terrain et autoriser si besoin le suivi des anomalies.</p>
+            </div>
+        </div>
+
+        <form
+            method="post"
+            action="{{ path('admin_user_create') }}"
+            class="stack-form"
+            data-async-form
+            data-update-target="#admin-users-content"
+            data-reset-form
+        >
+            <div class="form-grid two-columns">
+                <label>
+                    <span>Nom complet</span>
+                    <input type="text" name="fullName" required>
+                </label>
+                <label>
+                    <span>Email</span>
+                    <input type="email" name="email" required>
+                </label>
+                <label>
+                    <span>Mot de passe</span>
+                    <input type="text" name="password" required>
+                </label>
+            </div>
+
+            <div class="admin-user-options">
+                <label class="checkbox-row">
+                    <input type="checkbox" name="isActive" value="1" checked>
+                    <span>Compte actif</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="canManageAnomalyWorkflow" value="1">
+                    <span>Gerer le suivi des anomalies</span>
+                </label>
+            </div>
+
+            <button class="primary-button" type="submit">Creer l employe</button>
+        </form>
+    </section>
+
+    <section class="panel admin-users-list-panel">
+        <div class="admin-home-section-head compact">
+            <div>
+                <h2>Equipe</h2>
+                <p>Modification rapide en AJAX, sans rechargement de page.</p>
+            </div>
+            <span class="mini-badge">{{ users|length }} compte{{ users|length > 1 ? 's' : '' }}</span>
+        </div>
+
+        <div class="admin-users-grid">
+            {% for user in users %}
+                <article class="employee-card admin-user-card {{ not user.isActive ? 'is-muted' : '' }}">
+                    <div class="employee-list-card-top admin-user-card-top">
+                        <div>
+                            <h2>{{ user.fullName }}</h2>
+                            <p class="muted">{{ user.email }}</p>
+                        </div>
+                        <div class="employee-anomaly-badges">
+                            <span class="mini-badge">{{ 'ROLE_ADMIN' in user.roles ? 'Admin' : 'Employe' }}</span>
+                            {% if user.canManageAnomalyWorkflow %}
+                                <span class="status-badge is-warning">Suivi anomalies</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="admin-user-summary">
+                        <div class="admin-user-summary-item">
+                            <span>Etat</span>
+                            <strong>{{ user.isActive ? 'Actif' : 'Inactif' }}</strong>
+                        </div>
+                        <div class="admin-user-summary-item">
+                            <span>Appartements assignes</span>
+                            <strong>{{ user.assignedApartments|length }}</strong>
+                        </div>
+                    </div>
+
+                    <form
+                        method="post"
+                        action="{{ path('admin_user_update', {id: user.id}) }}"
+                        class="stack-form"
+                        data-async-form
+                        data-update-target="#admin-users-content"
+                    >
+                        <div class="form-grid two-columns">
+                            <label>
+                                <span>Nom complet</span>
+                                <input type="text" name="fullName" value="{{ user.fullName }}" required>
+                            </label>
+                            <label>
+                                <span>Email</span>
+                                <input type="email" name="email" value="{{ user.email }}" required>
+                            </label>
+                            <label>
+                                <span>Nouveau mot de passe</span>
+                                <input type="text" name="password" placeholder="Laisser vide pour garder l actuel">
+                            </label>
+                        </div>
+
+                        <div class="admin-user-options">
+                            <label class="checkbox-row">
+                                <input type="checkbox" name="isActive" value="1" {{ user.isActive ? 'checked' : '' }}>
+                                <span>Compte actif</span>
+                            </label>
+                            <label class="checkbox-row">
+                                <input type="checkbox" name="canManageAnomalyWorkflow" value="1" {{ user.canManageAnomalyWorkflow ? 'checked' : '' }}>
+                                <span>Gerer le suivi des anomalies</span>
+                            </label>
+                        </div>
+
+                        <div class="admin-user-actions">
+                            <button class="primary-button" type="submit">Enregistrer</button>
+                        </div>
+                    </form>
+
+                    <form
+                        method="post"
+                        action="{{ path('admin_user_delete', {id: user.id}) }}"
+                        data-async-form
+                        data-update-target="#admin-users-content"
+                        data-confirm-reset
+                        data-confirm-title="Supprimer cet employe"
+                        data-confirm-message="Cette action va supprimer ce compte. Veux-tu continuer ?"
+                    >
+                        <button class="secondary-button danger-button" type="submit">Supprimer</button>
+                    </form>
+                </article>
+            {% else %}
+                <p class="empty-state">Aucun employe enregistre pour le moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
