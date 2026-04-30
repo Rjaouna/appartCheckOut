@@ -43,9 +43,12 @@ class EmployeeController extends AbstractController
         $user = $this->getUser();
 
         $historyCheckouts = $entityManager->createQueryBuilder()
-            ->select('checkout', 'apartment')
+            ->select('checkout', 'apartment', 'anomalies', 'room', 'roomEquipment')
             ->from(Checkout::class, 'checkout')
             ->join('checkout.apartment', 'apartment')
+            ->leftJoin('checkout.anomalies', 'anomalies')
+            ->leftJoin('anomalies.room', 'room')
+            ->leftJoin('anomalies.roomEquipment', 'roomEquipment')
             ->where('checkout.assignedTo = :user')
             ->andWhere('apartment.status = :apartmentStatus')
             ->andWhere('checkout.status IN (:statuses)')
@@ -80,9 +83,17 @@ class EmployeeController extends AbstractController
             ->andWhere('apartment.status = :apartmentStatus')
             ->andWhere('checkout.scheduledAt IS NOT NULL')
             ->andWhere('checkout.scheduledAt >= :todayStart')
+            ->andWhere('checkout.status IN (:statuses)')
             ->setParameter('user', $user)
             ->setParameter('apartmentStatus', ApartmentStatus::Active)
             ->setParameter('todayStart', $todayStart)
+            ->setParameter('statuses', [
+                CheckoutStatus::Todo,
+                CheckoutStatus::InProgress,
+                CheckoutStatus::Paused,
+                CheckoutStatus::PendingValidation,
+                CheckoutStatus::Blocked,
+            ])
             ->orderBy('checkout.scheduledAt', 'ASC')
             ->getQuery()
             ->getResult();

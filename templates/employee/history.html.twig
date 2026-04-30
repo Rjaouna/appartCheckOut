@@ -28,6 +28,19 @@
                     <span>Planifié : {{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Non renseigné' }}</span>
                     <span>Progression finale : {{ checkout.progressPercent }}%</span>
                 </div>
+                {% if checkout.anomalies|length > 0 %}
+                    <div class="employee-anomaly-summary">
+                        {% for anomaly in checkout.anomalies %}
+                            <div>
+                                <strong>{{ anomaly.room.name }}</strong>
+                                <span>{{ anomaly.roomEquipment.label }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="muted">Aucune anomalie sur ce check-out.</p>
+                {% endif %}
+                <a class="secondary-button full-width" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">Voir le detail</a>
             </article>
         {% else %}
             <p class="empty-state">Aucun historique disponible pour le moment.</p>
