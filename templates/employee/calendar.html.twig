@@ -26,7 +26,6 @@
                     <span>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Date non renseignée' }}</span>
                     <span>{{ checkout.progressPercent }}%</span>
                 </div>
-                <span class="secondary-button full-width disabled-like">Consulte depuis le tableau de bord le moment venu</span>
             </article>
         {% else %}
             <p class="empty-state">Aucun check-out programmé pour le moment.</p>
