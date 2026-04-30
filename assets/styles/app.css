@@ -1007,6 +1007,10 @@ body.nav-compact .floating-main-menu-button {
     gap: 12px;
 }
 
+.workflow-modal-grid form {
+    width: 100%;
+}
+
 .workflow-action-modal {
     width: 100%;
     justify-content: flex-start;
@@ -1129,6 +1133,7 @@ body.nav-compact .floating-main-menu-button {
 
 .workflow-action {
     display: inline-flex;
+    width: 100%;
     align-items: center;
     justify-content: center;
     border: none;
