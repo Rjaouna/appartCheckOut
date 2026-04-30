@@ -549,14 +549,30 @@ class AdminController extends AbstractController
             'apartment' => $apartment,
             'employees' => $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
             'catalog' => $entityManager->getRepository(EquipmentCatalog::class)->findBy(['isActive' => true], ['roomType' => 'ASC', 'name' => 'ASC']),
-            'checkouts' => $entityManager->createQueryBuilder()
+            'activeCheckouts' => $entityManager->createQueryBuilder()
                 ->select('checkout')
                 ->from(Checkout::class, 'checkout')
                 ->where('checkout.apartment = :apartment')
-                ->andWhere('checkout.status != :cancelledStatus')
+                ->andWhere('checkout.status NOT IN (:excludedStatuses)')
                 ->setParameter('apartment', $apartment)
-                ->setParameter('cancelledStatus', CheckoutStatus::Cancelled)
+                ->setParameter('excludedStatuses', [CheckoutStatus::Cancelled, CheckoutStatus::Completed])
                 ->orderBy('checkout.id', 'DESC')
+                ->setMaxResults(10)
+                ->getQuery()
+                ->getResult(),
+            'completedCheckouts' => $entityManager->createQueryBuilder()
+                ->select('checkout', 'assignedTo', 'anomalies', 'room', 'roomEquipment')
+                ->from(Checkout::class, 'checkout')
+                ->leftJoin('checkout.assignedTo', 'assignedTo')
+                ->leftJoin('checkout.anomalies', 'anomalies')
+                ->leftJoin('anomalies.room', 'room')
+                ->leftJoin('anomalies.roomEquipment', 'roomEquipment')
+                ->where('checkout.apartment = :apartment')
+                ->andWhere('checkout.status = :completedStatus')
+                ->setParameter('apartment', $apartment)
+                ->setParameter('completedStatus', CheckoutStatus::Completed)
+                ->orderBy('checkout.completedAt', 'DESC')
+                ->addOrderBy('checkout.id', 'DESC')
                 ->setMaxResults(10)
                 ->getQuery()
                 ->getResult(),

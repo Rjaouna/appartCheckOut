@@ -188,7 +188,7 @@
         {% endif %}
 
         <div class="mini-list">
-            {% for checkout in checkouts %}
+            {% for checkout in activeCheckouts %}
                 <article class="compact-card">
                     <strong>{{ checkout.assignedTo.fullName }}</strong>
                     <p>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-' }}</p>
@@ -216,7 +216,30 @@
                     {% endif %}
                 </article>
             {% else %}
-                <p class="empty-state">Aucun check-out cree.</p>
+                <p class="empty-state">Aucun check-out en cours ou programme.</p>
+            {% endfor %}
+        </div>
+
+        <div class="panel-head">
+            <h3>Historique des check-outs termines</h3>
+        </div>
+        <div class="mini-list">
+            {% for checkout in completedCheckouts %}
+                <article class="compact-card">
+                    <strong>{{ checkout.assignedTo.fullName }}</strong>
+                    <p>{{ checkout.completedAt ? checkout.completedAt|date('d/m/Y H:i') : (checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-') }}</p>
+                    {% if checkout.anomalies|length > 0 %}
+                        <div class="card-detail-list">
+                            {% for anomaly in checkout.anomalies %}
+                                <span>{{ anomaly.room.name }} : {{ anomaly.roomEquipment.label }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="muted">Aucune anomalie.</p>
+                    {% endif %}
+                </article>
+            {% else %}
+                <p class="empty-state">Aucun check-out termine.</p>
             {% endfor %}
         </div>
     </div>
