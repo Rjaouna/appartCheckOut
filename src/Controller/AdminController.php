@@ -285,6 +285,24 @@ class AdminController extends AbstractController
         return $this->render('admin/apartment_show.html.twig', $this->buildApartmentDetailData($apartment, $entityManager));
     }
 
+    #[Route('/apartments/{id}/name', name: 'admin_apartment_name_update', methods: ['POST'])]
+    public function updateApartmentName(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $name = trim((string) $request->request->get('name'));
+        if ($name === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Le nom de l appartement est obligatoire.'], 422);
+        }
+
+        $apartment->setName($name);
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('admin/apartment_show.html.twig', $this->buildApartmentDetailData($apartment, $entityManager)),
+            'message' => 'Nom de l appartement mis a jour.',
+        ]);
+    }
+
     #[Route('/apartments/{id}/status', name: 'admin_apartment_status', methods: ['POST'])]
     public function updateApartmentStatus(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {

@@ -163,6 +163,22 @@ select {
     line-height: 1.05;
 }
 
+.inline-title-edit {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.inline-title-edit h1 {
+    margin: 8px 0;
+}
+
+.apartment-name-edit-form {
+    max-width: 440px;
+    margin-top: 12px;
+}
+
 .eyebrow {
     display: inline-flex;
     padding: 7px 12px;

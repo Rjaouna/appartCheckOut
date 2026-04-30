@@ -6,8 +6,34 @@
     <section class="page-head">
         <div>
             <span class="eyebrow">Appartement</span>
-            <h1>{{ apartment.name }}</h1>
+            <div class="inline-title-edit">
+                <h1>{{ apartment.name }}</h1>
+                <button
+                    class="icon-action-button"
+                    type="button"
+                    aria-label="Modifier le nom de l appartement"
+                    title="Modifier le nom de l appartement"
+                    data-edit-target="#apartment-name-edit-form"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8ZM18.7 8a1 1 0 0 0 0-1.4l-1.3-1.3a1 1 0 0 0-1.4 0l-1.2 1.2 2.7 2.7L18.7 8Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
             <p class="muted">{{ apartment.fullAddress }}</p>
+            <form
+                id="apartment-name-edit-form"
+                method="post"
+                action="{{ path('admin_apartment_name_update', {id: apartment.id}) }}"
+                class="editable-field-form is-collapsed apartment-name-edit-form"
+                data-async-form
+                data-update-target="main.page-shell"
+            >
+                <input type="text" name="name" value="{{ apartment.name }}" required>
+                <div class="editable-field-actions">
+                    <button class="secondary-button" type="submit">Enregistrer</button>
+                </div>
+            </form>
         </div>
         <div class="head-actions">
             <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies{% if anomalyCount > 0 %} ({{ anomalyCount }}){% endif %}</a>
