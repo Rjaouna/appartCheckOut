@@ -303,6 +303,25 @@ class AdminController extends AbstractController
         ]);
     }
 
+    #[Route('/apartments/{id}/field', name: 'admin_apartment_field_update', methods: ['POST'])]
+    public function updateApartmentField(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $field = (string) $request->request->get('field');
+        $value = trim((string) $request->request->get('value'));
+
+        try {
+            $this->applyAdminApartmentFieldUpdate($apartment, $field, $value);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return $this->structureResponse($apartment, $entityManager, 'Information appartement mise a jour.');
+    }
+
     #[Route('/apartments/{id}/status', name: 'admin_apartment_status', methods: ['POST'])]
     public function updateApartmentStatus(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -901,6 +920,33 @@ class AdminController extends AbstractController
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function applyAdminApartmentFieldUpdate(Apartment $apartment, string $field, string $value): void
+    {
+        $normalizedValue = $value === '' ? null : $value;
+
+        match ($field) {
+            'addressLine1' => $apartment->setAddressLine1($value !== '' ? $value : $apartment->getAddressLine1()),
+            'addressLine2' => $apartment->setAddressLine2($normalizedValue),
+            'city' => $apartment->setCity($value !== '' ? $value : $apartment->getCity()),
+            'postalCode' => $apartment->setPostalCode($value !== '' ? $value : $apartment->getPostalCode()),
+            'floor' => $apartment->setFloor($normalizedValue),
+            'doorNumber' => $apartment->setDoorNumber($normalizedValue),
+            'mailboxNumber' => $apartment->setMailboxNumber($normalizedValue),
+            'buildingAccessCode' => $apartment->setBuildingAccessCode($normalizedValue),
+            'keyBoxCode' => $apartment->setKeyBoxCode($normalizedValue),
+            'googleMapsLink' => $apartment->setGoogleMapsLink($normalizedValue),
+            'entryInstructions' => $apartment->setEntryInstructions($value === '' ? 'Aucune consigne pour le moment.' : $value),
+            'ownerName' => $apartment->setOwnerName($normalizedValue),
+            'ownerPhone' => $apartment->setOwnerPhone($normalizedValue),
+            'internalNotes' => $apartment->setInternalNotes($normalizedValue),
+            default => throw new \InvalidArgumentException('Champ non modifiable.'),
+        };
+
+        if (in_array($field, ['addressLine1', 'city', 'postalCode'], true)) {
+            $apartment->setWazeLink($this->buildWazeLink($apartment->getAddressLine1(), $apartment->getCity(), $apartment->getPostalCode()));
+        }
     }
 
     private function buildWazeLink(string $addressLine1, string $city, string $postalCode = ''): string

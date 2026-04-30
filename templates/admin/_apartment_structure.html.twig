@@ -39,11 +39,106 @@
     <div class="panel">
         <div class="panel-head"><h2>Informations d'acces</h2></div>
         <div class="info-list">
-            <div><span>Adresse</span><strong>{{ apartment.fullAddress }}</strong></div>
-            <div><span>Code immeuble</span><strong>{{ apartment.buildingAccessCode ?: 'Non renseigne' }}</strong></div>
-            <div><span>Code boite a cles / code porte</span><strong>{{ apartment.keyBoxCode ?: 'Non renseigne' }}</strong></div>
-            <div><span>Instructions</span><strong>{{ apartment.entryInstructions }}</strong></div>
-            <div><span>Contact</span><strong>{{ apartment.ownerName ?: '-' }} {{ apartment.ownerPhone ?: '' }}</strong></div>
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'addressLine1',
+                label: 'Adresse',
+                value: apartment.addressLine1,
+                rawValue: apartment.addressLine1
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'addressLine2',
+                label: 'Complement d adresse',
+                value: apartment.addressLine2 ?: 'Non renseigne',
+                rawValue: apartment.addressLine2
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'city',
+                label: 'Ville',
+                value: apartment.city,
+                rawValue: apartment.city
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'postalCode',
+                label: 'Code postal',
+                value: apartment.postalCode,
+                rawValue: apartment.postalCode
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'floor',
+                label: 'Etage',
+                value: apartment.floor ?: 'Non renseigne',
+                rawValue: apartment.floor
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'doorNumber',
+                label: 'Porte',
+                value: apartment.doorNumber ?: 'Non renseigne',
+                rawValue: apartment.doorNumber
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'mailboxNumber',
+                label: 'Boite aux lettres',
+                value: apartment.mailboxNumber ?: 'Non renseigne',
+                rawValue: apartment.mailboxNumber
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'buildingAccessCode',
+                label: 'Code immeuble',
+                value: apartment.buildingAccessCode ?: 'Non renseigne',
+                rawValue: apartment.buildingAccessCode
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'keyBoxCode',
+                label: 'Code boite a cles / code porte',
+                value: apartment.keyBoxCode ?: 'Non renseigne',
+                rawValue: apartment.keyBoxCode
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'googleMapsLink',
+                label: 'Google Maps',
+                value: apartment.googleMapsLink ?: 'Non renseigne',
+                rawValue: apartment.googleMapsLink
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'entryInstructions',
+                label: 'Instructions',
+                value: apartment.entryInstructions,
+                rawValue: apartment.entryInstructions,
+                multiline: true
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'ownerName',
+                label: 'Nom contact',
+                value: apartment.ownerName ?: 'Non renseigne',
+                rawValue: apartment.ownerName
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'ownerPhone',
+                label: 'Telephone contact',
+                value: apartment.ownerPhone ?: 'Non renseigne',
+                rawValue: apartment.ownerPhone
+            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with {
+                apartment: apartment,
+                field: 'internalNotes',
+                label: 'Notes internes',
+                value: apartment.internalNotes ?: 'Aucune note',
+                rawValue: apartment.internalNotes,
+                multiline: true
+            } %}
         </div>
     </div>
 
