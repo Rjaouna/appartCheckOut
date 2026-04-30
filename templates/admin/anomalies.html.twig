@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Anomalies{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Suivi anomalies</span>
+            <h1>Appartements avec anomalies</h1>
+            <p class="muted">Vue dediee aux anomalies uniquement, pour aller directement a l'essentiel.</p>
+        </div>
+    </section>
+
+    <section class="card-grid">
+        {% for apartment in apartments %}
+            <article class="apartment-card">
+                <h2>{{ apartment.name }}</h2>
+                <p>{{ apartment.fullAddress }}</p>
+                <a class="primary-button full-width" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies</a>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucune anomalie en cours.</p>
+        {% endfor %}
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Historique des anomalies</h2>
+                <p class="muted">Anomalies cloturees enregistrees pour le suivi et les statistiques.</p>
+            </div>
+        </div>
+        <div class="room-selector-grid">
+            {% for anomaly in historyAnomalies %}
+                <a class="room-selector-card admin-apartment-card" href="{{ path('admin_anomaly_detail', {id: anomaly.id}) }}">
+                    <div class="room-selector-top">
+                        {% include 'admin/_apartment_icon.html.twig' %}
+                        <span class="status-badge is-success">{{ anomaly.status.label }}</span>
+                    </div>
+                    <strong>{{ anomaly.roomEquipment.label }}</strong>
+                    <p>{{ anomaly.apartment.name }}</p>
+                    <div class="card-detail-list">
+                        <span>Responsable: {{ anomaly.createdBy.fullName }}</span>
+                        <span>Piece: {{ anomaly.room.name }}</span>
+                        <span>Cloturee: {{ anomaly.closedAt ? anomaly.closedAt|date('d/m/Y H:i') : '-' }}</span>
+                    </div>
+                </a>
+            {% else %}
+                <p class="empty-state">Aucune anomalie cloturee pour le moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

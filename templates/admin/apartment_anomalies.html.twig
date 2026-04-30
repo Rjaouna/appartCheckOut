@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Anomalies {{ apartment.name }}{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Anomalies appartement</span>
+            <h1>{{ apartment.name }}</h1>
+            <p class="muted">{{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }} recensée{{ anomalyCount > 1 ? 's' : '' }}</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('admin_anomalies') }}">Retour anomalies</a>
+            <a class="secondary-button" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">Retour appartement</a>
+        </div>
+    </section>
+
+    {% if anomalyCount > 0 %}
+        <section class="room-tab-nav room-tab-nav-wide">
+            {% for group in anomalyGroups %}
+                <a href="#room-{{ group.room.id }}" class="room-tab-button">
+                    <span>{{ group.room.name }}</span>
+                    <strong class="mini-badge is-warning">{{ group.count }}</strong>
+                </a>
+            {% endfor %}
+        </section>
+
+        <section class="workspace-main">
+            {% for group in anomalyGroups %}
+                <article class="panel" id="room-{{ group.room.id }}">
+                    <div class="panel-head">
+                        <div>
+                            <h2>{{ group.room.name }}</h2>
+                            <p class="muted">{{ group.room.type.label }}</p>
+                        </div>
+                        <span class="status-badge is-warning">{{ group.count }} anomalie{{ group.count > 1 ? 's' : '' }}</span>
+                    </div>
+
+                    <div class="list-stack">
+                        {% for item in group.anomalies %}
+                            <div id="anomaly-workflow-{{ item.anomaly.id }}">
+                                {% include 'admin/_anomaly_workflow_card.html.twig' with {anomaly: item.anomaly, repeatCount: item.repeatCount} %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <p class="empty-state">Aucune anomalie sur cet appartement.</p>
+    {% endif %}
+{% endblock %}

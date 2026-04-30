@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ checkout.apartment.name }}{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Check-out mobile</span>
+            <h1>{{ checkout.apartment.name }}</h1>
+            <p class="muted">{{ checkout.apartment.fullAddress }}</p>
+        </div>
+        <div class="head-actions">
+            <button class="btn btn-success secondary-button" type="button" data-toggle-target="#apartment-info-panel" data-toggle-label-open="Masquer infos appart" data-toggle-label-closed="Infos appart">Infos appart</button>
+            <a class="secondary-button" href="{{ path('employee_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    <section id="checkout-workspace">
+        {% include 'employee/_checkout_workspace.html.twig' %}
+    </section>
+{% endblock %}

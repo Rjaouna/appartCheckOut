@@ -1,0 +1,19 @@
+{% set type = room.type.value %}
+
+<span class="room-icon">
+    {% if type == 'bedroom' %}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v7h-2v-2H6v2H4v-7Zm2-4h4a3 3 0 0 1 3 3H6V7Zm8 1h3a1 1 0 0 1 1 1v1h-4V8Z" fill="currentColor"/></svg>
+    {% elseif type == 'living_room' %}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4h1v4h-2v-2H7v2H5v-4h1v-4Zm2 0v2h8v-2H8Z" fill="currentColor"/></svg>
+    {% elseif type == 'kitchen' %}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7V3Zm2 2v5h6V5H9Zm0 8h6v6H9v-6Z" fill="currentColor"/></svg>
+    {% elseif type == 'bathroom' or type == 'shower_room' %}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6a5 5 0 0 1 10 0v1h2v2H6v7H4V7h2V6Zm2 0v1h6V6a3 3 0 0 0-6 0Zm2 5h2v7h-2v-7Z" fill="currentColor"/></svg>
+    {% elseif type == 'toilet' %}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-3 3.87V15h2v2H9v-2h2v-2.13A4 4 0 0 1 8 9V4Zm2 2v3a2 2 0 1 0 4 0V6h-4Z" fill="currentColor"/></svg>
+    {% elseif type == 'terrace' or type == 'balcony' %}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16v2H4v-2Zm2-8h4v6H6v-6Zm8 0h4v6h-4v-6ZM5 9h14v2H5V9Zm2-6h2v4H7V3Zm8 0h2v4h-2V3Z" fill="currentColor"/></svg>
+    {% else %}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5V4Zm2 2v12h10V6H7Zm2 2h6v2H9V8Zm0 4h6v2H9v-2Z" fill="currentColor"/></svg>
+    {% endif %}
+</span>

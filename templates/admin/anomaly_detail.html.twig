@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail anomalie{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Détail anomalie</span>
+            <h1>{{ anomaly.roomEquipment.label }}</h1>
+            <p class="muted">{{ anomaly.apartment.name }} • {{ anomaly.room.name }}</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: anomaly.apartment.id}) }}">Retour appartement</a>
+            <a class="secondary-button" href="{{ path('admin_anomalies') }}">Retour anomalies</a>
+        </div>
+    </section>
+
+    <section class="detail-grid">
+        <div class="panel">
+            <div class="panel-head"><h2>Informations</h2></div>
+            <div class="info-list">
+                <div><span>Appartement</span><strong>{{ anomaly.apartment.name }}</strong></div>
+                <div><span>Pièce</span><strong>{{ anomaly.room.name }}</strong></div>
+                <div><span>Équipement</span><strong>{{ anomaly.roomEquipment.label }}</strong></div>
+                <div><span>Responsable</span><strong>{{ anomaly.createdBy.fullName }}</strong></div>
+                <div><span>Type</span><strong>{{ anomaly.type.label }}</strong></div>
+                <div><span>Statut</span><strong>{{ anomaly.status.label }}</strong></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><h2>Commentaire et média</h2></div>
+            <p>{{ anomaly.comment }}</p>
+            {% if repeatCount >= 2 %}
+                <div class="danger-repeat-block">
+                    <strong>Danger : anomalie récurrente</strong>
+                    <p>Cet équipement a déjà été signalé {{ repeatCount }} fois dans cet appartement. Un traitement durable est à prévoir.</p>
+                </div>
+            {% endif %}
+            {% if anomaly.photoPath %}
+                <button
+                    class="anomaly-photo-button anomaly-photo-button-large"
+                    type="button"
+                    data-lightbox-src="{{ anomaly.photoPath }}"
+                    data-lightbox-alt="{{ anomaly.roomEquipment.label }}"
+                >
+                    <img class="anomaly-photo-thumb anomaly-photo-thumb-large" src="{{ anomaly.photoPath }}" alt="{{ anomaly.roomEquipment.label }}">
+                </button>
+            {% endif %}
+        </div>
+
+        <div class="panel span-two">
+            <div class="panel-head"><h2>Suivi du dossier</h2></div>
+            <div id="anomaly-workflow-{{ anomaly.id }}">
+                {% include 'admin/_anomaly_workflow_card.html.twig' with {anomaly: anomaly} %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

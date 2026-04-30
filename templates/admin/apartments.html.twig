@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Appartements{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Parc appartements</span>
+            <h1>Creer et organiser les appartements</h1>
+            <p class="muted">Chaque fiche regroupe l'adresse, les acces, les affectations et la structure piece par piece.</p>
+        </div>
+    </section>
+
+    <section class="three-columns">
+        <div class="panel">
+            <div class="panel-head"><h2>Nouvel appartement</h2></div>
+            <form method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form">
+                <label><span>Nom *</span><input name="name" required></label>
+                <label><span>Adresse *</span><input name="addressLine1" required></label>
+                <label><span>Complement</span><input name="addressLine2"></label>
+                <div class="grid-two">
+                    <label><span>Ville *</span><input name="city" required></label>
+                    <label><span>Code postal</span><input name="postalCode"></label>
+                </div>
+                <div class="grid-two">
+                    <label><span>Etage</span><input name="floor"></label>
+                    <label><span>Porte</span><input name="doorNumber"></label>
+                </div>
+                <label><span>Numero boite aux lettres</span><input name="mailboxNumber"></label>
+                <label><span>Lien Google Maps</span><input name="googleMapsLink"></label>
+                <div class="grid-two">
+                    <label><span>Code immeuble</span><input name="buildingAccessCode"></label>
+                    <label><span>Code boite a cles / code porte</span><input name="keyBoxCode"></label>
+                </div>
+                <label><span>Instructions d'entree</span><textarea name="entryInstructions" rows="3"></textarea></label>
+                <div class="grid-two">
+                    <label><span>Etat *</span>
+                        <select name="conditionStatus" required>
+                            <option value="Tres bon etat">Tres bon etat</option>
+                            <option value="Bon etat" selected>Bon etat</option>
+                            <option value="Correct">Correct</option>
+                            <option value="A surveiller">A surveiller</option>
+                            <option value="En maintenance">En maintenance</option>
+                        </select>
+                    </label>
+                    <label><span>Statut *</span>
+                        <select name="status" required>
+                            {% for item in apartmentStatuses %}
+                                <option value="{{ item.value }}">{{ item.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+                <div class="grid-two">
+                    <label><span>Nombre de chambres *</span><input type="number" name="bedroomCount" min="0" value="1" required></label>
+                </div>
+                <div class="grid-two">
+                    <label><span>Nom du proprietaire *</span><input name="ownerName" required></label>
+                    <label><span>Numero de telephone *</span><input name="ownerPhone" required></label>
+                </div>
+                <label><span>Notes internes</span><textarea name="internalNotes" rows="3"></textarea></label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="isInventoryPriority" value="1">
+                    <span>Faire remonter dans la liste employe</span>
+                </label>
+                <label><span>Inventaire prevu pour</span><input type="datetime-local" name="inventoryDueAt"></label>
+                <label><span>Assigner a</span>
+                    <select name="assignedEmployees[]" multiple size="4">
+                        {% for employee in employees %}
+                            {% if 'ROLE_ADMIN' not in employee.roles %}
+                                <option value="{{ employee.id }}">{{ employee.fullName }} - {{ employee.email }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </label>
+                <button class="primary-button" type="submit">Creer l'appartement</button>
+            </form>
+        </div>
+
+        {% include 'admin/_apartments_list.html.twig' %}
+    </section>
+{% endblock %}

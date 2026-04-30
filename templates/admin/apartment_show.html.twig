@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ apartment.name }}{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Appartement</span>
+            <h1>{{ apartment.name }}</h1>
+            <p class="muted">{{ apartment.fullAddress }}</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies{% if anomalyCount > 0 %} ({{ anomalyCount }}){% endif %}</a>
+            <a class="secondary-button" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir Waze</a>
+            <a class="secondary-button" href="{{ path('admin_apartments') }}">Retour liste</a>
+        </div>
+    </section>
+
+    <section id="apartment-structure">
+        {% include 'admin/_apartment_structure.html.twig' %}
+    </section>
+{% endblock %}

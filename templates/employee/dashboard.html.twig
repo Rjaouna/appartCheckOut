@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes check-outs{% endblock %}
+
+{% block body %}
+    <div
+        id="employee-dashboard-poll"
+        data-poll-url="{{ path('employee_dashboard_partial') }}"
+        data-poll-interval="5000"
+        data-poll-target="#employee-dashboard-content"
+    >
+        {% include 'employee/_dashboard_content.html.twig' %}
+    </div>
+{% endblock %}

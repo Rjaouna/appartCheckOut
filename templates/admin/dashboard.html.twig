@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard admin{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Administration</span>
+            <h1>Pilotage des appartements et check-outs</h1>
+            <p class="muted">Une vue claire et moderne pour suivre les appartements, les anomalies et les demandes de check-out.</p>
+        </div>
+    </section>
+
+    <section id="admin-dashboard-content">
+        {% include 'admin/_dashboard_content.html.twig' %}
+    </section>
+{% endblock %}

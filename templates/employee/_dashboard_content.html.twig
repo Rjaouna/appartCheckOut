@@ -1,0 +1,39 @@
+<div id="employee-dashboard-content" data-checkout-count="{{ checkouts|length }}">
+    <section class="employee-overview-strip">
+        <div class="status-circle-grid status-circle-grid-primary">
+            {% for item in statusOverview|slice(1, 3) %}
+                <article class="status-circle-card tone-{{ item.tone }}">
+                    <div class="status-circle-value">{{ item.count }}</div>
+                    <strong>{{ item.label }}</strong>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="card-grid apartment-card-grid">
+        {% for checkout in checkouts %}
+            <article class="employee-card employee-apartment-card">
+                <div class="apartment-topline">
+                    <span class="status-badge {{ checkout.status.value == 'paused' ? 'is-warning' : '' }}">{{ checkout.status.label }}</span>
+                    <a class="waze-pill" href="{{ checkout.apartment.wazeLink }}" target="_blank" rel="noreferrer" title="Ouvrir dans Waze" aria-label="Ouvrir dans Waze">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 3a8 8 0 0 0-8 8c0 4.4 3.6 8 8 8h.3l1.7 2.5 1.7-2.5H16a8 8 0 0 0 0-16h-4Zm-2.2 8.5a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm4.4 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm-5.2 2.2h6.1a3.7 3.7 0 0 1-6.1 0Z" fill="currentColor"/>
+                        </svg>
+                    </a>
+                </div>
+                <h2>{{ checkout.apartment.name }}</h2>
+                <dl class="key-values">
+                    <div><dt>Adresse</dt><dd>{{ checkout.apartment.city }}</dd></div>
+                    <div><dt>Code immeuble</dt><dd>{{ checkout.apartment.buildingAccessCode ?: '-' }}</dd></div>
+                    <div><dt>Code boite</dt><dd>{{ checkout.apartment.keyBoxCode ?: '-' }}</dd></div>
+                    <div><dt>Progression</dt><dd>{{ checkout.progressPercent }}%</dd></div>
+                </dl>
+                <a class="primary-button full-width" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">
+                    {{ checkout.status.value == 'paused' ? 'Reprendre' : 'Ouvrir le check-out' }}
+                </a>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucun check-out assigne pour l'instant.</p>
+        {% endfor %}
+    </section>
+</div>

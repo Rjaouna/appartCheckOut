@@ -1,0 +1,118 @@
+<div class="workspace-main workspace-main-full">
+    <aside id="apartment-info-panel" class="mobile-info-card is-collapsed">
+        <div class="apartment-detail-hero">
+            <div class="info-cluster">
+                <span class="status-badge">{{ checkout.status.label }}</span>
+                <span class="progress-badge">{{ checkout.progressPercent }}%</span>
+            </div>
+            <h2>{{ checkout.apartment.name }}</h2>
+            <p>{{ checkout.apartment.fullAddress }}</p>
+        </div>
+
+        <div class="apartment-detail-sections">
+            <section class="apartment-detail-card">
+                <h3>Acces</h3>
+                <dl class="detail-definition-list">
+                    <div><dt>Adresse</dt><dd>{{ checkout.apartment.fullAddress }}</dd></div>
+                    <div><dt>Ville</dt><dd>{{ checkout.apartment.city }}</dd></div>
+                    <div><dt>Etage</dt><dd>{{ checkout.apartment.floor ?: '-' }}</dd></div>
+                    <div><dt>Porte</dt><dd>{{ checkout.apartment.doorNumber ?: '-' }}</dd></div>
+                    <div><dt>Boite aux lettres</dt><dd>{{ checkout.apartment.mailboxNumber ?: '-' }}</dd></div>
+                </dl>
+            </section>
+
+            <section class="apartment-detail-card">
+                <h3>Codes et navigation</h3>
+                <dl class="detail-definition-list">
+                    <div><dt>Code immeuble</dt><dd>{{ checkout.apartment.buildingAccessCode ?: '-' }}</dd></div>
+                    <div><dt>Code boite a cles</dt><dd>{{ checkout.apartment.keyBoxCode ?: '-' }}</dd></div>
+                    <div>
+                        <dt>Google Maps</dt>
+                        <dd>
+                            {% if checkout.apartment.googleMapsLink %}
+                                <a class="inline-detail-link" href="{{ checkout.apartment.googleMapsLink }}" target="_blank" rel="noreferrer">Ouvrir</a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="apartment-detail-card">
+                <h3>Contact</h3>
+                <dl class="detail-definition-list">
+                    <div><dt>Nom</dt><dd>{{ checkout.apartment.ownerName ?: '-' }}</dd></div>
+                    <div><dt>Telephone</dt><dd>{{ checkout.apartment.ownerPhone ?: '-' }}</dd></div>
+                </dl>
+            </section>
+
+            <section class="apartment-detail-card apartment-detail-card-wide">
+                <h3>Consignes</h3>
+                <p class="detail-note">{{ checkout.apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</p>
+                {% if checkout.apartment.internalNotes %}
+                    <div class="detail-note-soft">
+                        <strong>Notes internes</strong>
+                        <p>{{ checkout.apartment.internalNotes }}</p>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+
+        <div class="employee-actions">
+            {% if checkout.status.value == 'paused' %}
+                <form method="post" action="{{ path('employee_checkout_resume', {id: checkout.id}) }}" data-async-form>
+                    <button class="secondary-button full-width" type="submit">Reprendre</button>
+                </form>
+            {% else %}
+                <form method="post" action="{{ path('employee_checkout_pause', {id: checkout.id}) }}" class="stack-form" data-async-form>
+                    <input type="text" name="reason" placeholder="Motif de pause" required>
+                    <button class="secondary-button full-width" type="submit">Mettre en pause</button>
+                </form>
+            {% endif %}
+        </div>
+    </aside>
+
+    <section class="panel room-overview-panel">
+        <div class="panel-head">
+            <div>
+                <h2>Pieces de l'appartement</h2>
+                <p class="muted">Choisis une piece pour commencer ou reprendre le controle.</p>
+            </div>
+        </div>
+
+        <div class="room-selector-grid">
+            {% for group in roomGroups %}
+                <a class="room-selector-card {{ group.completionPercent == 100 ? 'is-completed' : '' }} {{ group.anomalyCount > 0 ? 'has-anomaly' : '' }}" href="{{ path('employee_checkout_room_show', {checkout: checkout.id, room: group.room.id}) }}">
+                    <div class="room-selector-top">
+                        {% include 'employee/_room_icon.html.twig' with {room: group.room} %}
+                        {% if group.anomalyCount > 0 %}
+                            <span class="mini-badge is-warning">{{ group.anomalyCount }}</span>
+                        {% else %}
+                            <span class="mini-badge is-success">OK</span>
+                        {% endif %}
+                    </div>
+                    <strong>{{ group.room.name }}</strong>
+                    <p>{{ group.room.type.label }}</p>
+                    <div class="room-selector-meta">
+                        <span class="progress-badge">{{ group.completionPercent }}%</span>
+                        <small>{{ group.checkedCount }}/{{ group.totalCount }} controles</small>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+
+        <div class="employee-footer-actions">
+            <form
+                method="post"
+                action="{{ path('employee_checkout_complete', {id: checkout.id}) }}"
+                data-async-form
+                data-confirm-reset
+                data-confirm-title="Cloturer le check-out"
+                data-confirm-message="Veux-tu vraiment terminer ce check-out ? Tu seras redirige vers l accueil."
+            >
+                <button class="primary-button full-width" type="submit">Terminer le check-out</button>
+            </form>
+        </div>
+    </section>
+</div>

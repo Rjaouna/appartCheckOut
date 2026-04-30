@@ -1,0 +1,256 @@
+<div class="dashboard-stack">
+    <section class="panel dashboard-panel">
+        <div class="panel-head">
+            <div>
+                <h2>Liste des appartements</h2>
+                <p class="muted">Une présentation claire pour piloter rapidement les demandes de check-out.</p>
+            </div>
+        </div>
+        <div class="card-grid apartment-card-grid">
+            {% for card in apartmentCards %}
+                <article class="employee-card admin-apartment-card {{ card.openCheckout ? 'is-maintenance' : '' }}">
+                    <div class="apartment-topline">
+                        <span class="status-badge {{ card.openCheckout ? 'is-warning' : 'is-success' }}">
+                            {{ card.openCheckout ? card.openCheckout.status.label : 'Prêt' }}
+                        </span>
+                        <div class="card-top-actions">
+                            {% if card.openAnomalyCount > 0 %}
+                                <span class="mini-badge is-warning">{{ card.openAnomalyCount }} anomalie{{ card.openAnomalyCount > 1 ? 's' : '' }}</span>
+                            {% endif %}
+                            {% if card.openCheckout %}
+                                <span class="maintenance-pill" title="Appartement en maintenance">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/>
+                                    </svg>
+                                </span>
+                            {% elseif card.apartment.isInventoryPriority %}
+                                <span class="priority-pill">Prioritaire</span>
+                            {% endif %}
+                            <button
+                                class="icon-action-button"
+                                type="button"
+                                title="Ouvrir les actions"
+                                aria-label="Ouvrir les actions"
+                                data-action-menu-trigger
+                                data-action-menu-title="{{ card.apartment.name }}"
+                                data-action-menu-source="#apartment-menu-{{ card.apartment.id }}"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 class="card-title-link-wrap">
+                        <a class="card-title-link" href="{{ path('admin_apartment_show', {id: card.apartment.id}) }}">{{ card.apartment.name }}</a>
+                    </h2>
+
+                    <dl class="key-values">
+                        <div><dt>Waze</dt><dd><a href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir</a></dd></div>
+                        <div><dt>Code immeuble</dt><dd>{{ card.apartment.buildingAccessCode ?: '-' }}</dd></div>
+                        <div><dt>Code boîte</dt><dd>{{ card.apartment.keyBoxCode ?: '-' }}</dd></div>
+                        <div><dt>Progression</dt><dd>{{ card.openCheckout ? card.openCheckout.progressPercent ~ '%' : '0%' }}</dd></div>
+                    </dl>
+
+                    <div class="card-detail-list">
+                        <span>Employé : {{ card.assignedEmployeeNames }}</span>
+                        <span>Pièces : {{ card.apartment.rooms|length }}</span>
+                    </div>
+
+                    <div id="apartment-menu-{{ card.apartment.id }}" class="workflow-actions-source" hidden>
+                        <div class="action-menu-grid">
+                            <a class="action-menu-tile" href="{{ path('admin_apartment_show', {id: card.apartment.id}) }}">
+                                <span class="action-menu-icon action-menu-icon-dark">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4V5Zm2 2v10h12V7H6Zm2 2h8v2H8V9Zm0 4h5v2H8v-2Z" fill="currentColor"/></svg>
+                                </span>
+                                <span>Fiche appartement</span>
+                            </a>
+                            <a class="action-menu-tile" href="{{ path('admin_apartment_anomalies', {id: card.apartment.id}) }}">
+                                <span class="action-menu-icon action-menu-icon-orange">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
+                                </span>
+                                <span>Anomalies</span>
+                            </a>
+                            <a class="action-menu-tile" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">
+                                <span class="action-menu-icon action-menu-icon-blue">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 4.4 3.6 8 8 8h.3l1.7 2.5 1.7-2.5H16a8 8 0 0 0 0-16h-4Zm-2.2 8.5a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm4.4 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm-5.2 2.2h6.1a3.7 3.7 0 0 1-6.1 0Z" fill="currentColor"/></svg>
+                                </span>
+                                <span>Ouvrir Waze</span>
+                            </a>
+                            {% if not card.openCheckout and card.canQuickLaunch %}
+                                <form method="post" action="{{ path('admin_checkout_create', {id: card.apartment.id}) }}" data-async-form data-update-target="#admin-dashboard-content">
+                                    <input type="hidden" name="assignedTo" value="{{ card.firstAssignedEmployeeId }}">
+                                    <input type="hidden" name="priority" value="normal">
+                                    <input type="hidden" name="context" value="dashboard">
+                                    <button class="action-menu-tile action-menu-tile-button" type="submit">
+                                        <span class="action-menu-icon action-menu-icon-pink">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6v-2Z" fill="currentColor"/></svg>
+                                        </span>
+                                        <span>Demander un check-out</span>
+                                    </button>
+                                </form>
+                            {% elseif card.openCheckout %}
+                                <div class="action-menu-tile action-menu-tile-muted">
+                                    <span class="action-menu-icon action-menu-icon-orange">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/></svg>
+                                    </span>
+                                    <span>Check-out déjà en cours</span>
+                                </div>
+                            {% else %}
+                                <div class="action-menu-tile action-menu-tile-muted">
+                                    <span class="action-menu-icon action-menu-icon-dark">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" fill="currentColor"/></svg>
+                                    </span>
+                                    <span>Aucun employé assigné</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                <p class="empty-state">Aucun appartement actif pour le moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel dashboard-panel">
+        <div class="panel-head">
+            <div>
+                <h2>Appartements avec anomalies</h2>
+                <p class="muted">Accès rapide aux appartements qui nécessitent un suivi.</p>
+            </div>
+            <a href="{{ path('admin_anomalies') }}">Voir tout</a>
+        </div>
+        <div class="card-grid apartment-card-grid">
+            {% for card in anomalyApartmentCards %}
+                <article class="employee-card admin-apartment-card">
+                    <div class="apartment-topline">
+                        <span class="status-badge is-warning">{{ card.openAnomalyCount }} anomalie{{ card.openAnomalyCount > 1 ? 's' : '' }}</span>
+                        <div class="card-top-actions">
+                            {% if card.apartment.isInventoryPriority %}
+                                <span class="priority-pill">Prioritaire</span>
+                            {% endif %}
+                            <button
+                                class="icon-action-button"
+                                type="button"
+                                title="Ouvrir les actions"
+                                aria-label="Ouvrir les actions"
+                                data-action-menu-trigger
+                                data-action-menu-title="{{ card.apartment.name }}"
+                                data-action-menu-source="#anomaly-apartment-menu-{{ card.apartment.id }}"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 class="card-title-link-wrap">
+                        <a class="card-title-link" href="{{ path('admin_apartment_anomalies', {id: card.apartment.id}) }}">{{ card.apartment.name }}</a>
+                    </h2>
+
+                    <dl class="key-values">
+                        <div><dt>Waze</dt><dd><a href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir</a></dd></div>
+                        <div><dt>Code immeuble</dt><dd>{{ card.apartment.buildingAccessCode ?: '-' }}</dd></div>
+                        <div><dt>Code boîte</dt><dd>{{ card.apartment.keyBoxCode ?: '-' }}</dd></div>
+                        <div><dt>Anomalies</dt><dd>{{ card.openAnomalyCount }}</dd></div>
+                    </dl>
+
+                    <div class="card-detail-list">
+                        <span>Employé : {{ card.assignedEmployeeNames }}</span>
+                        <span>Pièces : {{ card.apartment.rooms|length }}</span>
+                    </div>
+
+                    <div id="anomaly-apartment-menu-{{ card.apartment.id }}" class="workflow-actions-source" hidden>
+                        <div class="action-menu-grid">
+                            <a class="action-menu-tile" href="{{ path('admin_apartment_anomalies', {id: card.apartment.id}) }}">
+                                <span class="action-menu-icon action-menu-icon-orange">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
+                                </span>
+                                <span>Voir les anomalies</span>
+                            </a>
+                            <a class="action-menu-tile" href="{{ path('admin_apartment_show', {id: card.apartment.id}) }}">
+                                <span class="action-menu-icon action-menu-icon-dark">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4V5Zm2 2v10h12V7H6Zm2 2h8v2H8V9Zm0 4h5v2H8v-2Z" fill="currentColor"/></svg>
+                                </span>
+                                <span>Fiche appartement</span>
+                            </a>
+                            <a class="action-menu-tile" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">
+                                <span class="action-menu-icon action-menu-icon-blue">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 4.4 3.6 8 8 8h.3l1.7 2.5 1.7-2.5H16a8 8 0 0 0 0-16h-4Zm-2.2 8.5a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm4.4 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm-5.2 2.2h6.1a3.7 3.7 0 0 1-6.1 0Z" fill="currentColor"/></svg>
+                                </span>
+                                <span>Ouvrir Waze</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                <p class="empty-state">Aucun appartement avec anomalie.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="three-columns dashboard-panel-group">
+        <div class="panel admin-state-panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Check-outs programmés</h2>
+                    <p class="muted">Demandes planifiées mais non commencées.</p>
+                </div>
+            </div>
+            <div class="list-stack">
+                {% for checkout in scheduledCheckouts %}
+                    <article class="compact-card compact-card-modern">
+                        <strong>{{ checkout.apartment.name }}</strong>
+                        <p>{{ checkout.assignedTo.fullName }} • {{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-' }}</p>
+                        <span class="status-badge">{{ checkout.status.label }}</span>
+                    </article>
+                {% else %}
+                    <p class="empty-state">Aucun check-out programmé.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel admin-state-panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Check-outs en cours</h2>
+                    <p class="muted">Interventions en traitement sur le terrain.</p>
+                </div>
+            </div>
+            <div class="list-stack">
+                {% for checkout in activeCheckouts %}
+                    <article class="compact-card compact-card-modern">
+                        <strong>{{ checkout.apartment.name }}</strong>
+                        <p>{{ checkout.assignedTo.fullName }} • {{ checkout.progressPercent }}%</p>
+                        <span class="status-badge is-warning">{{ checkout.status.label }}</span>
+                    </article>
+                {% else %}
+                    <p class="empty-state">Aucun check-out en cours.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel admin-state-panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Check-outs finis</h2>
+                    <p class="muted">Check-outs terminés et sortis de la file active.</p>
+                </div>
+            </div>
+            <div class="list-stack">
+                {% for checkout in finishedCheckouts %}
+                    <article class="compact-card compact-card-modern">
+                        <strong>{{ checkout.apartment.name }}</strong>
+                        <p>{{ checkout.assignedTo.fullName }} • {{ checkout.completedAt ? checkout.completedAt|date('d/m/Y H:i') : '-' }}</p>
+                        <span class="status-badge is-success">{{ checkout.status.label }}</span>
+                    </article>
+                {% else %}
+                    <p class="empty-state">Aucun check-out terminé.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>

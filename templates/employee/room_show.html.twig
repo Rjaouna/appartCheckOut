@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ checkout.apartment.name }} - {{ roomGroup.room.name }}{% endblock %}
+
+{% block body %}
+    <section id="room-workspace">
+        {% include 'employee/_room_workspace.html.twig' with {checkout: checkout, roomGroup: roomGroup, checkStatuses: checkStatuses} %}
+    </section>
+{% endblock %}

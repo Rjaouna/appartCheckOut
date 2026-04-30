@@ -1,0 +1,53 @@
+<div id="apartments-list-panel" class="panel span-two">
+    <div class="panel-head">
+        <h2>Liste des appartements</h2>
+        <span class="muted">{{ apartments|length }} appartements</span>
+    </div>
+    <div class="card-grid apartment-card-grid">
+        {% for apartment in apartments %}
+            <article class="apartment-card admin-apartment-card {{ apartment.status.value != 'active' ? 'is-dimmed' : '' }}" data-click-url="{{ path('admin_apartment_show', {id: apartment.id}) }}">
+                <div class="apartment-topline">
+                    <div class="card-top-actions">
+                        {% if apartment.isInventoryPriority %}
+                            <span class="priority-pill">Inventaire prioritaire</span>
+                        {% endif %}
+                        {% set openAnomalyCount = openAnomalyCounts[apartment.id] ?? 0 %}
+                        {% if openAnomalyCount > 0 %}
+                            <span class="mini-badge is-warning">{{ openAnomalyCount }} anomalie{{ openAnomalyCount > 1 ? 's' : '' }}</span>
+                        {% endif %}
+                    </div>
+                    <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartments-list-panel">
+                        <input type="hidden" name="context" value="apartments-list">
+                        <input type="hidden" name="status" value="{{ apartment.status.value == 'active' ? 'inactive' : 'active' }}">
+                        <button
+                            class="icon-action-button {{ apartment.status.value == 'active' ? 'is-warning' : 'is-success' }}"
+                            type="submit"
+                            title="{{ apartment.status.value == 'active' ? 'Desactiver l appartement' : 'Activer l appartement' }}"
+                            aria-label="{{ apartment.status.value == 'active' ? 'Desactiver l appartement' : 'Activer l appartement' }}"
+                        >
+                            {% if apartment.status.value == 'active' %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 2v10"></path>
+                                    <path d="M6.2 6.2a8 8 0 1 0 11.6 0"></path>
+                                </svg>
+                            {% else %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 2v10"></path>
+                                    <path d="M18.4 6.6a8 8 0 1 1-12.8 0"></path>
+                                </svg>
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+                <h3>{{ apartment.name }}</h3>
+                <p>{{ apartment.fullAddress }}</p>
+                <dl class="key-values">
+                    <div><dt>Pieces</dt><dd>{{ apartment.rooms|length }}</dd></div>
+                    <div><dt>Assignes</dt><dd>{{ apartment.assignedEmployees|length }}</dd></div>
+                </dl>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucun appartement cree pour le moment.</p>
+        {% endfor %}
+    </div>
+</div>

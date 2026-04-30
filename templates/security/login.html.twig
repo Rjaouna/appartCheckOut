@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+
+{% block body %}
+    <section class="auth-layout">
+        <div class="auth-card">
+            <h2>Connexion</h2>
+            <p class="muted">Connectez-vous avec votre compte administrateur ou employe.</p>
+
+            {% if error %}
+                <div class="alert error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+            {% endif %}
+
+            <form method="post" class="stack-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <label>
+                    <span>Email</span>
+                    <input type="email" name="_username" value="{{ last_username }}" required autofocus>
+                </label>
+                <label>
+                    <span>Mot de passe</span>
+                    <input type="password" name="_password" required>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="_remember_me" checked>
+                    <span>Rester connecte</span>
+                </label>
+                <button class="primary-button" type="submit">Se connecter</button>
+            </form>
+
+            <div class="demo-accounts">
+                <h3>Comptes de connexion</h3>
+                <p><strong>Administrateur :</strong> Mohamed Bourjime<br>b.mohamed@gmail.com / password</p>
+                <p><strong>Employe :</strong> Marouane Bourjime<br>b.marouane@gmail.com / password</p>
+            </div>
+        </div>
+    </section>
+{% endblock %}
