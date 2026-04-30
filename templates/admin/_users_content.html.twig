@@ -2,8 +2,8 @@
     <section class="panel admin-users-form-panel">
         <div class="admin-home-section-head compact">
             <div>
-                <h2>Ajouter un employe</h2>
-                <p>Creer un acces terrain et autoriser si besoin le suivi des anomalies.</p>
+                <h2>Ajouter un employé</h2>
+                <p>Créer un accès terrain et autoriser si besoin le suivi des anomalies.</p>
             </div>
         </div>
 
@@ -41,7 +41,7 @@
                 </label>
             </div>
 
-            <button class="primary-button" type="submit">Creer l employe</button>
+            <button class="primary-button" type="submit">Créer l’employé</button>
         </form>
     </section>
 
@@ -76,7 +76,7 @@
                             <strong>{{ user.isActive ? 'Actif' : 'Inactif' }}</strong>
                         </div>
                         <div class="admin-user-summary-item">
-                            <span>Appartements assignes</span>
+                            <span>Appartements assignés</span>
                             <strong>{{ user.assignedApartments|length }}</strong>
                         </div>
                     </div>
@@ -99,7 +99,7 @@
                             </label>
                             <label>
                                 <span>Nouveau mot de passe</span>
-                                <input type="text" name="password" placeholder="Laisser vide pour garder l actuel">
+                                <input type="text" name="password" placeholder="Laisser vide pour garder l’actuel">
                             </label>
                         </div>
 
@@ -125,14 +125,14 @@
                         data-async-form
                         data-update-target="#admin-users-content"
                         data-confirm-reset
-                        data-confirm-title="Supprimer cet employe"
+                        data-confirm-title="Supprimer cet employé"
                         data-confirm-message="Cette action va supprimer ce compte. Veux-tu continuer ?"
                     >
                         <button class="secondary-button danger-button" type="submit">Supprimer</button>
                     </form>
                 </article>
             {% else %}
-                <p class="empty-state">Aucun employe enregistre pour le moment.</p>
+                <p class="empty-state">Aucun employé enregistré pour le moment.</p>
             {% endfor %}
         </div>
     </section>

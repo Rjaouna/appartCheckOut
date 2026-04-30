@@ -16,12 +16,12 @@ enum AnomalyStatus: string
     {
         return match ($this) {
             self::New => 'Nouvelle',
-            self::ComplaintFiled => 'Reclamation faite aupres de RBNB',
+            self::ComplaintFiled => 'Réclamation faite auprès de RBNB',
             self::ReimbursementPaid => 'Remboursement fait',
-            self::ReimbursementRefused => 'Remboursement refuse',
-            self::RepairInProgress => 'Reparation en cours',
-            self::Resolved => 'Probleme regle',
-            self::Closed => 'Cloturee',
+            self::ReimbursementRefused => 'Remboursement refusé',
+            self::RepairInProgress => 'Réparation en cours',
+            self::Resolved => 'Problème réglé',
+            self::Closed => 'Clôturée',
         };
     }
 

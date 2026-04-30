@@ -30,13 +30,13 @@
                         <strong>{{ apartment.buildingAccessCode ?: '-' }}</strong>
                     </div>
                     <div>
-                        <span>Code boite a cles / code porte</span>
+                        <span>Code boîte à clés / code porte</span>
                         <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
                     </div>
                 </div>
             </article>
         {% else %}
-            <p class="empty-state">Aucun appartement assigne pour le moment.</p>
+            <p class="empty-state">Aucun appartement assigné pour le moment.</p>
         {% endfor %}
     </section>
 {% endblock %}

@@ -86,7 +86,7 @@ class AdminController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'html' => $this->renderView('admin/_anomaly_workflow_card.html.twig', ['anomaly' => $anomaly]),
-            'message' => 'Workflow anomalie mis a jour.',
+            'message' => 'Workflow anomalie mis à jour.',
         ]);
     }
 
@@ -100,7 +100,7 @@ class AdminController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'html' => $this->renderView('admin/_anomaly_workflow_card.html.twig', ['anomaly' => $anomaly]),
-            'message' => 'Workflow anomalie reinitialise.',
+            'message' => 'Workflow anomalie réinitialisé.',
         ]);
     }
 
@@ -127,7 +127,7 @@ class AdminController extends AbstractController
         }
 
         if ($entityManager->getRepository(User::class)->findOneBy(['email' => $email]) instanceof User) {
-            return new JsonResponse(['success' => false, 'message' => 'Cet email existe deja.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Cet email existe déjà.'], 422);
         }
 
         $user = (new User())
@@ -141,7 +141,7 @@ class AdminController extends AbstractController
         $entityManager->persist($user);
         $entityManager->flush();
 
-        return $this->usersResponse($entityManager, 'Employe cree.');
+        return $this->usersResponse($entityManager, 'Employé créé.');
     }
 
     #[Route('/users/{id}', name: 'admin_user_update', methods: ['POST'])]
@@ -158,7 +158,7 @@ class AdminController extends AbstractController
 
         $existing = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
         if ($existing instanceof User && $existing->getId() !== $user->getId()) {
-            return new JsonResponse(['success' => false, 'message' => 'Cet email existe deja.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Cet email existe déjà.'], 422);
         }
 
         $user
@@ -175,7 +175,7 @@ class AdminController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->usersResponse($entityManager, 'Employe mis a jour.');
+        return $this->usersResponse($entityManager, 'Employé mis à jour.');
     }
 
     #[Route('/users/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
@@ -187,7 +187,7 @@ class AdminController extends AbstractController
 
         $currentUser = $this->getUser();
         if ($currentUser instanceof User && $currentUser->getId() === $user->getId()) {
-            return new JsonResponse(['success' => false, 'message' => 'Tu ne peux pas supprimer le compte actuellement connecte.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Tu ne peux pas supprimer le compte actuellement connecté.'], 422);
         }
 
         foreach ($user->getAssignedApartments()->toArray() as $apartment) {
@@ -197,7 +197,7 @@ class AdminController extends AbstractController
         $entityManager->remove($user);
         $entityManager->flush();
 
-        return $this->usersResponse($entityManager, 'Employe supprime.');
+        return $this->usersResponse($entityManager, 'Employé supprimé.');
     }
 
     #[Route('/apartments', name: 'admin_apartment_create', methods: ['POST'])]
@@ -262,7 +262,7 @@ class AdminController extends AbstractController
             return new JsonResponse([
                 'success' => true,
                 'html' => $this->renderView('admin/_apartments_list.html.twig', $this->buildApartmentsPageData($entityManager)),
-                'message' => 'Statut de l appartement mis a jour.',
+                'message' => 'Statut de l’appartement mis à jour.',
             ]);
         }
 
@@ -278,7 +278,7 @@ class AdminController extends AbstractController
         if ($hasCheckouts || $hasAnomalies) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Suppression impossible : cet appartement possede deja un historique de check-outs ou d anomalies.',
+                'message' => 'Suppression impossible : cet appartement possède déjà un historique de check-outs ou d’anomalies.',
             ], 422);
         }
 
@@ -305,7 +305,7 @@ class AdminController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->structureResponse($apartment, $entityManager, 'Affectations mises a jour.');
+        return $this->structureResponse($apartment, $entityManager, 'Affectations mises à jour.');
     }
 
     #[Route('/apartments/{id}/priority', name: 'admin_apartment_priority', methods: ['POST'])]
@@ -316,7 +316,7 @@ class AdminController extends AbstractController
         $apartment->setInventoryDueAt(is_string($due) && $due !== '' ? new \DateTimeImmutable($due) : null);
         $entityManager->flush();
 
-        return $this->structureResponse($apartment, $entityManager, 'Priorite inventaire mise a jour.');
+        return $this->structureResponse($apartment, $entityManager, 'Priorité inventaire mise à jour.');
     }
 
     #[Route('/apartments/{id}/rooms', name: 'admin_room_create', methods: ['POST'])]
@@ -392,12 +392,12 @@ class AdminController extends AbstractController
     public function createCheckout(Apartment $apartment, Request $request, EntityManagerInterface $entityManager, CheckoutManager $checkoutManager): JsonResponse
     {
         if ($this->hasOpenCheckout($apartment, $entityManager)) {
-            return new JsonResponse(['success' => false, 'message' => 'Un check-out non termine existe deja pour cet appartement.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Un check-out non terminé existe déjà pour cet appartement.'], 422);
         }
 
         $employee = $entityManager->getRepository(User::class)->find((int) $request->request->get('assignedTo'));
         if (!$employee instanceof User) {
-            return new JsonResponse(['success' => false, 'message' => 'Employe introuvable.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Employé introuvable.'], 422);
         }
 
         $scheduledAtRaw = (string) $request->request->get('scheduledAt');
@@ -409,11 +409,11 @@ class AdminController extends AbstractController
             return new JsonResponse([
                 'success' => true,
                 'html' => $this->renderView('admin/_dashboard_content.html.twig', $this->buildDashboardData($entityManager)),
-                'message' => 'Check-out cree et assigne.',
+                'message' => 'Check-out créé et assigné.',
             ]);
         }
 
-        return $this->structureResponse($apartment, $entityManager, 'Check-out cree et assigne.');
+        return $this->structureResponse($apartment, $entityManager, 'Check-out créé et assigné.');
     }
 
     private function structureResponse(Apartment $apartment, EntityManagerInterface $entityManager, string $message): JsonResponse
@@ -612,7 +612,7 @@ class AdminController extends AbstractController
                 'openCheckout' => $openCheckout,
                 'anomalyCount' => $entityManager->getRepository(Anomaly::class)->count(['apartment' => $apartment]),
                 'openAnomalyCount' => $openAnomalyCount,
-                'assignedEmployeeNames' => $employeeNames !== [] ? implode(', ', $employeeNames) : 'Aucun employe assigne',
+                'assignedEmployeeNames' => $employeeNames !== [] ? implode(', ', $employeeNames) : 'Aucun employé assigné',
                 'firstAssignedEmployeeId' => count($assignedEmployees) === 1 ? $assignedEmployees[0]->getId() : null,
                 'canQuickLaunch' => $openCheckout === null && count($assignedEmployees) === 1,
             ];

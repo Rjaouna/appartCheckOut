@@ -2,7 +2,7 @@
     <div class="employee-list-card-top">
         <div class="employee-anomaly-heading">
             <h2>{{ anomaly.apartment.name }}</h2>
-            <p>Declaree le {{ anomaly.createdAt|date('d/m/Y a H:i') }}</p>
+            <p>Déclarée le {{ anomaly.createdAt|date('d/m/Y à H:i') }}</p>
         </div>
         <div class="employee-anomaly-badges">
             <span class="status-badge is-warning">{{ anomaly.status.label }}</span>
@@ -11,10 +11,10 @@
                 <button
                     class="icon-action-button"
                     type="button"
-                    title="Gerer le suivi"
-                    aria-label="Gerer le suivi"
+                    title="Gérer le suivi"
+                    aria-label="Gérer le suivi"
                     data-workflow-trigger
-                    data-workflow-title="Suivi de l anomalie"
+                    data-workflow-title="Suivi de l'anomalie"
                     data-workflow-source="#employee-workflow-actions-{{ anomaly.id }}"
                 >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -29,11 +29,11 @@
         <div class="employee-anomaly-main">
             <div class="employee-anomaly-summary employee-anomaly-summary-inline">
                 <div>
-                    <span class="employee-anomaly-label">Piece</span>
+                    <span class="employee-anomaly-label">Pièce</span>
                     <strong>{{ anomaly.room.name }}</strong>
                 </div>
                 <div>
-                    <span class="employee-anomaly-label">Equipement</span>
+                    <span class="employee-anomaly-label">Équipement</span>
                     <strong>{{ anomaly.roomEquipment.catalogEquipment ? anomaly.roomEquipment.catalogEquipment.name : anomaly.roomEquipment.label }}</strong>
                 </div>
             </div>

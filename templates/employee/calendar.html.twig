@@ -6,7 +6,7 @@
     <section class="page-head employee-page-head">
         <div>
             <h1>Calendrier</h1>
-            <p class="muted">Tous les check-outs programmes a partir d'aujourd'hui.</p>
+            <p class="muted">Tous les check-outs programmés à partir d'aujourd'hui.</p>
         </div>
         <div class="head-actions">
             <a class="secondary-button" href="{{ path('employee_dashboard') }}">Retour</a>
@@ -23,7 +23,7 @@
                 <h2>{{ checkout.apartment.name }}</h2>
                 <p>{{ checkout.apartment.fullAddress }}</p>
                 <div class="employee-list-card-meta">
-                    <span>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Date non renseignee' }}</span>
+                    <span>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Date non renseignée' }}</span>
                     <span>{{ checkout.progressPercent }}%</span>
                 </div>
                 <a class="primary-button full-width" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">
@@ -31,7 +31,7 @@
                 </a>
             </article>
         {% else %}
-            <p class="empty-state">Aucun check-out programme pour le moment.</p>
+            <p class="empty-state">Aucun check-out programmé pour le moment.</p>
         {% endfor %}
     </section>
 {% endblock %}

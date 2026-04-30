@@ -126,7 +126,7 @@ class EmployeeController extends AbstractController
         $workflowManager->reset($anomaly, $actor instanceof User ? $actor : null);
         $entityManager->flush();
 
-        return $this->anomalyCardResponse($anomaly, 'Suivi de l anomalie reinitialise.');
+        return $this->anomalyCardResponse($anomaly, 'Suivi de l’anomalie réinitialisé.');
     }
 
     #[Route('/apartments', name: 'employee_apartments', methods: ['GET'])]
@@ -180,7 +180,7 @@ class EmployeeController extends AbstractController
             'html' => $this->renderView('employee/_apartment_detail_content.html.twig', [
                 'apartment' => $apartment,
             ]),
-            'message' => 'Information appartement mise a jour.',
+            'message' => 'Information appartement mise à jour.',
         ]);
     }
 
@@ -202,7 +202,7 @@ class EmployeeController extends AbstractController
 
         $group = $this->findRoomGroup($checkout, $room);
         if ($group === null) {
-            throw $this->createNotFoundException('Piece introuvable pour ce check-out.');
+            throw $this->createNotFoundException('Pièce introuvable pour ce check-out.');
         }
 
         return $this->render('employee/room_show.html.twig', [
@@ -270,7 +270,7 @@ class EmployeeController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
         }
 
-        return $this->redirectToDashboardResponse('Check-out termine.');
+        return $this->redirectToDashboardResponse('Check-out terminé.');
     }
 
     private function roomWorkspaceResponse(Checkout $checkout, ?Room $room, string $message): JsonResponse

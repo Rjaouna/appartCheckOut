@@ -19,7 +19,7 @@
             <div class="editable-field-row">
                 <div class="editable-field-display">
                     <div class="editable-field-copy">
-                        <span class="editable-field-label">Etage</span>
+                        <span class="editable-field-label">Étage</span>
                         <strong>{{ apartment.floor ?: '-' }}</strong>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
             <div class="editable-field-row">
                 <div class="editable-field-display">
                     <div class="editable-field-copy">
-                        <span class="editable-field-label">Boite aux lettres</span>
+                        <span class="editable-field-label">Boîte aux lettres</span>
                         <strong>{{ apartment.mailboxNumber ?: '-' }}</strong>
                     </div>
                 </div>
@@ -54,7 +54,7 @@
             {% include 'employee/_editable_apartment_field.html.twig' with {
                 apartment: apartment,
                 field: 'keyBoxCode',
-                label: 'Code boite a cles / code porte',
+                label: 'Code boîte à clés / code porte',
                 value: apartment.keyBoxCode ?: '-',
                 rawValue: apartment.keyBoxCode ?: ''
             } %}
@@ -79,7 +79,7 @@
             <div class="editable-field-row">
                 <div class="editable-field-display">
                     <div class="editable-field-copy">
-                        <span class="editable-field-label">Numero de telephone</span>
+                        <span class="editable-field-label">Numéro de téléphone</span>
                         <strong>{{ apartment.ownerPhone ?: '-' }}</strong>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
             <div class="editable-field-row">
                 <div class="editable-field-display">
                     <div class="editable-field-copy">
-                        <span class="editable-field-label">Instructions d entree</span>
+                        <span class="editable-field-label">Instructions d'entrée</span>
                         <strong>{{ apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</strong>
                     </div>
                 </div>

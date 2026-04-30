@@ -25,7 +25,7 @@
         <div class="panel-head">
             <div>
                 <h2>Historique des anomalies</h2>
-                <p class="muted">Anomalies cloturees enregistrees pour le suivi et les statistiques.</p>
+                <p class="muted">Anomalies clôturées enregistrées pour le suivi et les statistiques.</p>
             </div>
         </div>
         <div class="room-selector-grid">
@@ -39,12 +39,12 @@
                     <p>{{ anomaly.apartment.name }}</p>
                     <div class="card-detail-list">
                         <span>Responsable: {{ anomaly.createdBy.fullName }}</span>
-                        <span>Piece: {{ anomaly.room.name }}</span>
-                        <span>Cloturee: {{ anomaly.closedAt ? anomaly.closedAt|date('d/m/Y H:i') : '-' }}</span>
+                        <span>Pièce : {{ anomaly.room.name }}</span>
+                        <span>Clôturée : {{ anomaly.closedAt ? anomaly.closedAt|date('d/m/Y H:i') : '-' }}</span>
                     </div>
                 </a>
             {% else %}
-                <p class="empty-state">Aucune anomalie cloturee pour le moment.</p>
+                <p class="empty-state">Aucune anomalie clôturée pour le moment.</p>
             {% endfor %}
         </div>
     </section>

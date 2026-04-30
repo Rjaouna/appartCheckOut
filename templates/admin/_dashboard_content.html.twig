@@ -16,17 +16,17 @@
         <article class="admin-home-stat-card tone-orange">
             <span class="admin-home-stat-label">Anomalies ouvertes</span>
             <strong>{{ anomalyApartmentCards|length }}</strong>
-            <small>Appartements avec au moins une anomalie non cloturee</small>
+            <small>Appartements avec au moins une anomalie non clôturée</small>
         </article>
         <article class="admin-home-stat-card tone-blue">
-            <span class="admin-home-stat-label">Check-outs programmes</span>
+            <span class="admin-home-stat-label">Check-outs programmés</span>
             <strong>{{ scheduledCheckouts|length }}</strong>
-            <small>Demandes planifiees a venir</small>
+            <small>Demandes planifiées à venir</small>
         </article>
         <article class="admin-home-stat-card tone-green">
-            <span class="admin-home-stat-label">Check-outs termines</span>
+            <span class="admin-home-stat-label">Check-outs terminés</span>
             <strong>{{ finishedCheckouts|length }}</strong>
-            <small>Derniers inventaires clotures</small>
+            <small>Derniers inventaires clôturés</small>
         </article>
     </section>
 
@@ -43,7 +43,7 @@
                 <article class="employee-card admin-apartment-card admin-home-card {{ card.openCheckout ? 'is-maintenance' : '' }}">
                     <div class="apartment-topline">
                         <span class="status-badge {{ card.openCheckout ? 'is-warning' : 'is-success' }}">
-                            {{ card.openCheckout ? card.openCheckout.status.label : 'Pret' }}
+                            {{ card.openCheckout ? card.openCheckout.status.label : 'Prêt' }}
                         </span>
                         <div class="card-top-actions">
                             {% if card.openAnomalyCount > 0 %}
@@ -81,13 +81,13 @@
                     <dl class="key-values">
                         <div><dt>Waze</dt><dd><a href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir</a></dd></div>
                         <div><dt>Code immeuble</dt><dd>{{ card.apartment.buildingAccessCode ?: '-' }}</dd></div>
-                        <div><dt>Code boite</dt><dd>{{ card.apartment.keyBoxCode ?: '-' }}</dd></div>
+                        <div><dt>Code boîte</dt><dd>{{ card.apartment.keyBoxCode ?: '-' }}</dd></div>
                         <div><dt>Progression</dt><dd>{{ card.openCheckout ? card.openCheckout.progressPercent ~ '%' : '0%' }}</dd></div>
                     </dl>
 
                     <div class="card-detail-list">
-                        <span>Employe : {{ card.assignedEmployeeNames }}</span>
-                        <span>Pieces : {{ card.apartment.rooms|length }}</span>
+                        <span>Employé : {{ card.assignedEmployeeNames }}</span>
+                        <span>Pièces : {{ card.apartment.rooms|length }}</span>
                     </div>
 
                     <div id="apartment-menu-{{ card.apartment.id }}" class="workflow-actions-source" hidden>
