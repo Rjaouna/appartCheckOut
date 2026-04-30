@@ -440,6 +440,17 @@ class Apartment
         return $this->rooms;
     }
 
+    /**
+     * @return list<Room>
+     */
+    public function getActiveRooms(): array
+    {
+        return array_values(array_filter(
+            $this->rooms->toArray(),
+            static fn (Room $room): bool => !$room->isDeleted()
+        ));
+    }
+
     public function addRoom(Room $room): self
     {
         if (!$this->rooms->contains($room)) {

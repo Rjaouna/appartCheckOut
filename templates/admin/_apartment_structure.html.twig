@@ -91,13 +91,38 @@
     <div class="panel span-two">
         <div class="panel-head"><h2>Structure de l'appartement</h2></div>
         <div class="room-stack">
-            {% for room in apartment.rooms %}
+            {% for room in apartment.activeRooms %}
                 <article class="room-card">
                     <div class="room-card-head">
                         <div>
                             <h3>{{ room.name }}</h3>
                             <p>{{ room.type.label }} • {{ room.roomEquipments|length }} equipements</p>
                         </div>
+                        {% if room.activeRoomEquipments|length == 0 %}
+                            <form
+                                method="post"
+                                action="{{ path('admin_room_delete', {id: room.id}) }}"
+                                data-async-form
+                                data-update-target="#apartment-structure"
+                                data-confirm-reset
+                                data-confirm-title="Supprimer la piece"
+                                data-confirm-message="Veux-tu vraiment supprimer cette piece vide ?"
+                            >
+                                <button
+                                    class="icon-action-button icon-action-button-danger"
+                                    type="submit"
+                                    aria-label="Supprimer la piece {{ room.name }}"
+                                    title="Supprimer la piece"
+                                >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M7 5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M10 5V4h4v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M9 9v7M12 9v7M15 9v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M8 7h8l-.6 11.2a2 2 0 0 1-2 1.8h-2.8a2 2 0 0 1-2-1.8L8 7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        {% endif %}
                     </div>
                     <div class="equipment-tags">
                         {% for equipment in room.activeRoomEquipments %}

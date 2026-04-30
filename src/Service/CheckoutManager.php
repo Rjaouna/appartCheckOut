@@ -34,7 +34,7 @@ class CheckoutManager
             ->setStatus(CheckoutStatus::Todo);
 
         $sequence = 1;
-        foreach ($apartment->getRooms() as $room) {
+        foreach ($apartment->getActiveRooms() as $room) {
             foreach ($room->getRoomEquipments() as $roomEquipment) {
                 if (!$roomEquipment->isActive()) {
                     continue;

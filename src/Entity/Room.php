@@ -11,6 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 class Room
 {
+    private const DELETED_MARKER = '__deleted__';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -105,6 +107,18 @@ class Room
     public function setNotes(?string $notes): self
     {
         $this->notes = $notes;
+
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return is_string($this->notes) && str_starts_with($this->notes, self::DELETED_MARKER);
+    }
+
+    public function markAsDeleted(): self
+    {
+        $this->notes = self::DELETED_MARKER;
 
         return $this;
     }

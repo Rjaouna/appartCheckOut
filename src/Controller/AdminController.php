@@ -421,6 +421,35 @@ class AdminController extends AbstractController
         return $this->structureResponse($room->getApartment(), $entityManager, 'Equipement ajoute.');
     }
 
+    #[Route('/rooms/{id}/delete', name: 'admin_room_delete', methods: ['POST'])]
+    public function deleteRoom(Room $room, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (count($room->getActiveRoomEquipments()) > 0) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Suppression impossible : retire d abord les equipements de cette piece.',
+            ], 422);
+        }
+
+        $hasCheckoutHistory = $entityManager->getRepository(CheckoutLine::class)->count(['room' => $room]) > 0;
+        $hasAnomalyHistory = $entityManager->getRepository(Anomaly::class)->count(['room' => $room]) > 0;
+
+        $apartment = $room->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
+        }
+
+        if ($hasCheckoutHistory || $hasAnomalyHistory) {
+            $room->markAsDeleted();
+        } else {
+            $apartment->removeRoom($room);
+            $entityManager->remove($room);
+        }
+        $entityManager->flush();
+
+        return $this->structureResponse($apartment, $entityManager, 'Piece supprimee.');
+    }
+
     #[Route('/room-equipments/{id}/delete', name: 'admin_room_equipment_delete', methods: ['POST'])]
     public function deleteRoomEquipment(RoomEquipment $equipment, EntityManagerInterface $entityManager): JsonResponse
     {

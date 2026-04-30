@@ -186,6 +186,7 @@ function hideModal(id) {
 document.addEventListener('click', (event) => {
     const confirmButton = event.target instanceof Element ? event.target.closest('#confirmActionModalSubmit') : null;
     if (confirmButton instanceof HTMLButtonElement && pendingConfirmationForm instanceof HTMLFormElement) {
+        confirmButton.blur();
         pendingConfirmationForm.dataset.confirmed = 'true';
         hideModal('confirmActionModal');
 
