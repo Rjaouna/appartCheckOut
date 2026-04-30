@@ -375,9 +375,9 @@ function restoreFloatingMenuPosition() {
         // ignore storage failures
     }
 
-    button.style.top = '50%';
+    button.style.top = '22px';
     button.style.bottom = 'auto';
-    button.style.transform = 'translateY(-50%)';
+    button.style.transform = 'none';
 }
 
 function startDashboardPolling() {

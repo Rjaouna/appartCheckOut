@@ -854,27 +854,29 @@ textarea {
 .floating-main-menu-button {
     position: fixed;
     right: 18px;
-    top: 50%;
+    top: 22px;
     bottom: auto;
-    transform: translateY(-50%);
+    transform: none;
     z-index: 60;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 58px;
-    height: 58px;
+    width: 68px;
+    height: 68px;
     border: none;
-    border-radius: 20px;
-    background: linear-gradient(135deg, #222222, #444444);
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ff6f91, #ff385c);
     color: #fff;
     cursor: pointer;
     touch-action: none;
     user-select: none;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(10px);
 }
 
 .floating-main-menu-button svg {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
 }
 
 .workflow-modal-grid {
@@ -1532,10 +1534,10 @@ textarea {
 
     .floating-main-menu-button {
         right: 14px;
-        top: 50%;
+        top: 18px;
         bottom: auto;
-        width: 54px;
-        height: 54px;
+        width: 62px;
+        height: 62px;
     }
 
     .panel,
