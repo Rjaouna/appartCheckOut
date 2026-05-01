@@ -880,6 +880,10 @@ class AdminController extends AbstractController
             'activeCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::InProgress], ['scheduledAt' => 'ASC'], 8),
             'finishedCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::Completed], ['completedAt' => 'DESC'], 8),
             'pendingServiceOffers' => $pendingServiceOffers,
+            'employeeCount' => count(array_filter(
+                $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
+                static fn (User $user): bool => !in_array('ROLE_ADMIN', $user->getRoles(), true)
+            )),
         ];
     }
 
