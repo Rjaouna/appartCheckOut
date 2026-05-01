@@ -3,6 +3,7 @@
 {% block title %}{{ checkout.apartment.name }}{% endblock %}
 
 {% block body %}
+    {% set dashboardRoute = dashboardRoute|default('employee_dashboard') %}
     <section class="page-head">
         <div>
             <span class="eyebrow">Check-out mobile</span>
@@ -11,7 +12,7 @@
         </div>
         <div class="head-actions">
             <button class="primary-button" type="button" data-toggle-target="#apartment-info-panel" data-toggle-label-open="Masquer infos appart" data-toggle-label-closed="Infos appart">Infos appart</button>
-            <a class="primary-button" href="{{ path('employee_dashboard') }}">Retour</a>
+            <a class="primary-button" href="{{ path(dashboardRoute) }}">Retour</a>
         </div>
     </section>
 

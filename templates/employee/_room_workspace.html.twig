@@ -1,3 +1,6 @@
+{% set checkoutShowRoute = checkoutShowRoute|default('employee_checkout_show') %}
+{% set checkoutLineUpdateRoute = checkoutLineUpdateRoute|default('employee_checkout_line_update') %}
+
 <section class="room-check-group room-detail-panel">
     <div class="room-check-head">
         <div>
@@ -5,7 +8,7 @@
             <p>{{ roomGroup.room.type.label }}</p>
         </div>
         <div class="info-cluster">
-            <a class="primary-button" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">Retour aux pièces</a>
+            <a class="primary-button" href="{{ path(checkoutShowRoute, {id: checkout.id}) }}">Retour aux pièces</a>
             <span class="progress-badge">{{ roomGroup.checkedCount }}/{{ roomGroup.totalCount }} contrôles</span>
             {% if roomGroup.anomalyCount > 0 %}
                 <span class="status-badge is-warning">{{ roomGroup.anomalyCount }} anomalie{{ roomGroup.anomalyCount > 1 ? 's' : '' }}</span>
@@ -29,7 +32,7 @@
                     <a href="{{ line.photoPath }}" target="_blank" rel="noreferrer">Photo</a>
                 {% endif %}
             </div>
-            <form method="post" enctype="multipart/form-data" action="{{ path('employee_checkout_line_update', {id: line.id}) }}" class="stack-form compact-form" data-async-form data-update-target="#room-workspace">
+            <form method="post" enctype="multipart/form-data" action="{{ path(checkoutLineUpdateRoute, {id: line.id}) }}" class="stack-form compact-form" data-async-form data-update-target="#room-workspace">
                 <div class="choice-grid">
                     {% for option in checkStatuses %}
                         <label class="choice-pill">

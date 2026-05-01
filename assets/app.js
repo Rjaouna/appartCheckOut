@@ -9,6 +9,7 @@ let dashboardPollInFlight = false;
 let lastKnownDashboardCheckoutCount = null;
 let dashboardPollingStarted = false;
 let deferredInstallPrompt = null;
+let plainModalBackdrop = null;
 
 restorePendingToast();
 restoreFloatingMenuPosition();
@@ -113,12 +114,10 @@ document.addEventListener('submit', async (event) => {
 });
 
 function openConfirmationModal(form) {
-    const modalElement = document.getElementById('confirmActionModal');
-    const titleElement = document.getElementById('confirmActionModalLabel');
-    const bodyElement = document.getElementById('confirmActionModalBody');
-    const confirmButton = document.getElementById('confirmActionModalSubmit');
+    const modal = ensureConfirmModal();
+    const { modalElement, titleElement, bodyElement, confirmButton } = modal;
 
-    if (!(modalElement instanceof HTMLElement) || !(titleElement instanceof HTMLElement) || !(bodyElement instanceof HTMLElement) || !(confirmButton instanceof HTMLButtonElement) || typeof bootstrap === 'undefined') {
+    if (!(modalElement instanceof HTMLElement) || !(titleElement instanceof HTMLElement) || !(bodyElement instanceof HTMLElement) || !(confirmButton instanceof HTMLButtonElement)) {
         form.dataset.confirmed = 'true';
         form.requestSubmit();
         return;
@@ -128,23 +127,22 @@ function openConfirmationModal(form) {
     titleElement.textContent = form.dataset.confirmTitle || "Confirmer l'action";
     bodyElement.textContent = form.dataset.confirmMessage || 'Veux-tu vraiment continuer ?';
 
-    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    showModalElement(modalElement);
 }
 
 function openWorkflowModal(trigger) {
     const sourceSelector = trigger.getAttribute('data-workflow-source');
     const source = sourceSelector ? document.querySelector(sourceSelector) : null;
-    const modalElement = document.getElementById('workflowActionModal');
-    const titleElement = document.getElementById('workflowActionModalLabel');
-    const contentElement = document.getElementById('workflowActionModalContent');
+    const modal = ensureContentModal('workflowActionModal', 'workflowActionModalLabel', 'workflowActionModalContent', 'Suivi du dossier');
+    const { modalElement, titleElement, contentElement } = modal;
 
-    if (!(source instanceof HTMLElement) || !(modalElement instanceof HTMLElement) || !(titleElement instanceof HTMLElement) || !(contentElement instanceof HTMLElement) || typeof bootstrap === 'undefined') {
+    if (!(source instanceof HTMLElement) || !(modalElement instanceof HTMLElement) || !(titleElement instanceof HTMLElement) || !(contentElement instanceof HTMLElement)) {
         return;
     }
 
     titleElement.textContent = trigger.getAttribute('data-workflow-title') || 'Suivi du dossier';
     contentElement.innerHTML = source.innerHTML;
-    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    showModalElement(modalElement);
 }
 
 function openActionMenuModal(trigger) {
@@ -154,40 +152,38 @@ function openActionMenuModal(trigger) {
 
     const sourceSelector = trigger.getAttribute('data-action-menu-source');
     const source = sourceSelector ? document.querySelector(sourceSelector) : null;
-    const modalElement = document.getElementById('actionMenuModal');
-    const titleElement = document.getElementById('actionMenuModalLabel');
-    const contentElement = document.getElementById('actionMenuModalContent');
+    const modal = ensureContentModal('actionMenuModal', 'actionMenuModalLabel', 'actionMenuModalContent', 'Actions');
+    const { modalElement, titleElement, contentElement } = modal;
 
-    if (!(source instanceof HTMLElement) || !(modalElement instanceof HTMLElement) || !(titleElement instanceof HTMLElement) || !(contentElement instanceof HTMLElement) || typeof bootstrap === 'undefined') {
+    if (!(source instanceof HTMLElement) || !(modalElement instanceof HTMLElement) || !(titleElement instanceof HTMLElement) || !(contentElement instanceof HTMLElement)) {
         return;
     }
 
     titleElement.textContent = trigger.getAttribute('data-action-menu-title') || 'Actions appartement';
     contentElement.innerHTML = source.innerHTML;
-    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    showModalElement(modalElement);
 }
 
 function openPhotoLightbox(trigger) {
     const src = trigger.getAttribute('data-lightbox-src');
     const alt = trigger.getAttribute('data-lightbox-alt') || 'Photo';
-    const modalElement = document.getElementById('photoLightboxModal');
-    const imageElement = document.getElementById('photoLightboxImage');
-    const titleElement = document.getElementById('photoLightboxModalLabel');
+    const modal = ensurePhotoModal();
+    const { modalElement, imageElement, titleElement } = modal;
 
-    if (!src || !(modalElement instanceof HTMLElement) || !(imageElement instanceof HTMLImageElement) || !(titleElement instanceof HTMLElement) || typeof bootstrap === 'undefined') {
+    if (!src || !(modalElement instanceof HTMLElement) || !(imageElement instanceof HTMLImageElement) || !(titleElement instanceof HTMLElement)) {
         return;
     }
 
     imageElement.src = src;
     imageElement.alt = alt;
     titleElement.textContent = alt;
-    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    showModalElement(modalElement);
 }
 
 function hideModal(id) {
     const modalElement = document.getElementById(id);
-    if (modalElement instanceof HTMLElement && typeof bootstrap !== 'undefined') {
-        bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+    if (modalElement instanceof HTMLElement) {
+        hideModalElement(modalElement);
     }
 }
 
@@ -196,6 +192,15 @@ function scrollToTop() {
 }
 
 document.addEventListener('click', (event) => {
+    const dismissTrigger = event.target instanceof Element ? event.target.closest('[data-bs-dismiss="modal"], [data-modal-close]') : null;
+    if (dismissTrigger instanceof HTMLElement) {
+        const modalElement = dismissTrigger.closest('.modal');
+        if (modalElement instanceof HTMLElement) {
+            hideModalElement(modalElement);
+        }
+        return;
+    }
+
     const scrollTopTrigger = event.target instanceof Element ? event.target.closest('#scroll-to-top-button') : null;
     if (scrollTopTrigger instanceof HTMLButtonElement) {
         scrollToTop();
@@ -523,13 +528,15 @@ function isIosStandaloneInstallAvailable() {
 }
 
 function openInstallHelpModal() {
-    const modalElement = document.getElementById('installHelpModal');
-    if (!(modalElement instanceof HTMLElement) || typeof bootstrap === 'undefined') {
+    const modal = ensureInstallHelpModal();
+    const { modalElement } = modal;
+
+    if (!(modalElement instanceof HTMLElement)) {
         showToast('Sur iPhone : Partager puis Sur l’écran d’accueil.');
         return;
     }
 
-    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    showModalElement(modalElement);
 }
 
 function startDashboardPolling() {
@@ -661,4 +668,187 @@ function restoreUiState(targetSelector, uiState) {
             window.scrollTo({top: uiState.scrollY});
         }
     });
+}
+
+function ensureContentModal(modalId, titleId, contentId, defaultTitle) {
+    let modalElement = document.getElementById(modalId);
+    if (!(modalElement instanceof HTMLElement)) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${titleId}" aria-hidden="true">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content action-menu-modal-content">
+                        <div class="modal-header action-menu-modal-header">
+                            <h4 class="modal-title" id="${titleId}">${defaultTitle}</h4>
+                            <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                        </div>
+                        <div class="modal-body action-menu-modal-body">
+                            <div id="${contentId}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `.trim();
+        modalElement = wrapper.firstElementChild;
+        if (modalElement instanceof HTMLElement) {
+            document.body.appendChild(modalElement);
+        }
+    }
+
+    return {
+        modalElement,
+        titleElement: document.getElementById(titleId),
+        contentElement: document.getElementById(contentId),
+    };
+}
+
+function ensureConfirmModal() {
+    let modalElement = document.getElementById('confirmActionModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmActionModalLabel">Confirmer l'action</h5>
+                            <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                        </div>
+                        <div class="modal-body" id="confirmActionModalBody">Veux-tu vraiment continuer ?</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-modal-close>Annuler</button>
+                            <button type="button" class="btn btn-danger" id="confirmActionModalSubmit">Confirmer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `.trim();
+        modalElement = wrapper.firstElementChild;
+        if (modalElement instanceof HTMLElement) {
+            document.body.appendChild(modalElement);
+        }
+    }
+
+    return {
+        modalElement,
+        titleElement: document.getElementById('confirmActionModalLabel'),
+        bodyElement: document.getElementById('confirmActionModalBody'),
+        confirmButton: document.getElementById('confirmActionModalSubmit'),
+    };
+}
+
+function ensurePhotoModal() {
+    let modalElement = document.getElementById('photoLightboxModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="modal fade" id="photoLightboxModal" tabindex="-1" aria-labelledby="photoLightboxModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content lightbox-modal-content">
+                        <div class="modal-header lightbox-modal-header">
+                            <h5 class="modal-title" id="photoLightboxModalLabel">Photo</h5>
+                            <button type="button" class="btn-close btn-close-white" aria-label="Fermer" data-modal-close></button>
+                        </div>
+                        <div class="modal-body lightbox-modal-body">
+                            <img id="photoLightboxImage" class="lightbox-image" src="" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `.trim();
+        modalElement = wrapper.firstElementChild;
+        if (modalElement instanceof HTMLElement) {
+            document.body.appendChild(modalElement);
+        }
+    }
+
+    return {
+        modalElement,
+        imageElement: document.getElementById('photoLightboxImage'),
+        titleElement: document.getElementById('photoLightboxModalLabel'),
+    };
+}
+
+function ensureInstallHelpModal() {
+    let modalElement = document.getElementById('installHelpModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="modal fade" id="installHelpModal" tabindex="-1" aria-labelledby="installHelpModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="installHelpModalLabel">Installer l’application</h5>
+                            <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Sur iPhone avec Safari, l’installation se fait en quelques secondes :</p>
+                            <ol class="install-help-list">
+                                <li>Appuie sur le bouton <strong>Partager</strong> de Safari.</li>
+                                <li>Choisis <strong>Sur l’écran d’accueil</strong>.</li>
+                                <li>Valide avec <strong>Ajouter</strong>.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `.trim();
+        modalElement = wrapper.firstElementChild;
+        if (modalElement instanceof HTMLElement) {
+            document.body.appendChild(modalElement);
+        }
+    }
+
+    return { modalElement };
+}
+
+function showModalElement(modalElement) {
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    if (typeof bootstrap !== 'undefined' && bootstrap?.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        return;
+    }
+
+    modalElement.style.display = 'block';
+    modalElement.removeAttribute('aria-hidden');
+    modalElement.setAttribute('aria-modal', 'true');
+    modalElement.classList.add('show');
+    document.body.classList.add('modal-open');
+
+    if (!(plainModalBackdrop instanceof HTMLElement)) {
+        plainModalBackdrop = document.createElement('div');
+        plainModalBackdrop.className = 'modal-backdrop fade show';
+    }
+
+    if (!document.body.contains(plainModalBackdrop)) {
+        document.body.appendChild(plainModalBackdrop);
+    }
+}
+
+function hideModalElement(modalElement) {
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    if (typeof bootstrap !== 'undefined' && bootstrap?.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+        return;
+    }
+
+    modalElement.classList.remove('show');
+    modalElement.style.display = 'none';
+    modalElement.setAttribute('aria-hidden', 'true');
+    modalElement.removeAttribute('aria-modal');
+    document.body.classList.remove('modal-open');
+
+    if (plainModalBackdrop instanceof HTMLElement && document.body.contains(plainModalBackdrop)) {
+        plainModalBackdrop.remove();
+    }
+
+    if (modalElement.id === 'confirmActionModal') {
+        pendingConfirmationForm = null;
+    }
 }

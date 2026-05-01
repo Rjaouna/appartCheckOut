@@ -11,6 +11,7 @@ use App\Entity\Room;
 use App\Entity\RoomEquipment;
 use App\Entity\ServiceOffer;
 use App\Entity\User;
+use App\Enum\EquipmentCheckStatus;
 use App\Enum\ApartmentStatus;
 use App\Enum\CheckoutStatus;
 use App\Enum\RoomType;
@@ -659,6 +660,10 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Employé introuvable.'], 422);
         }
 
+        if (!$apartment->getAssignedEmployees()->contains($employee)) {
+            return new JsonResponse(['success' => false, 'message' => 'Choisis un employé assigné à cet appartement.'], 422);
+        }
+
         $scheduledAtRaw = (string) $request->request->get('scheduledAt');
         $scheduledAt = $scheduledAtRaw !== '' ? new \DateTimeImmutable($scheduledAtRaw) : new \DateTimeImmutable();
         $checkoutManager->createCheckout($apartment, $employee, (string) $request->request->get('priority', 'normal'), $scheduledAt);
@@ -673,6 +678,103 @@ class AdminController extends AbstractController
         }
 
         return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out créé et assigné.');
+    }
+
+    #[Route('/checkouts/{id}', name: 'admin_checkout_show', methods: ['GET'])]
+    public function showCheckout(Checkout $checkout): Response
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+
+        return $this->render('employee/checkout_show.html.twig', [
+            'checkout' => $checkout,
+            'roomGroups' => $this->buildCheckoutRoomGroups($checkout),
+            'dashboardRoute' => 'admin_dashboard',
+            'checkoutShowRoute' => 'admin_checkout_show',
+            'checkoutRoomRoute' => 'admin_checkout_room_show',
+            'checkoutPauseRoute' => 'admin_checkout_pause',
+            'checkoutResumeRoute' => 'admin_checkout_resume',
+            'checkoutCompleteRoute' => 'admin_checkout_complete',
+            'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
+        ]);
+    }
+
+    #[Route('/checkouts/{checkout}/rooms/{room}', name: 'admin_checkout_room_show', methods: ['GET'])]
+    public function showCheckoutRoom(Checkout $checkout, Room $room): Response
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+
+        $group = $this->findCheckoutRoomGroup($checkout, $room);
+        if ($group === null) {
+            throw $this->createNotFoundException('Pièce introuvable pour ce check-out.');
+        }
+
+        return $this->render('employee/room_show.html.twig', [
+            'checkout' => $checkout,
+            'roomGroup' => $group,
+            'checkStatuses' => EquipmentCheckStatus::cases(),
+            'checkoutShowRoute' => 'admin_checkout_show',
+            'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
+        ]);
+    }
+
+    #[Route('/checkouts/lines/{id}', name: 'admin_checkout_line_update', methods: ['POST'])]
+    public function updateCheckoutLine(CheckoutLine $line, Request $request, CheckoutManager $checkoutManager, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $checkout = $line->getCheckout();
+        if (!$checkout instanceof Checkout) {
+            return new JsonResponse(['success' => false, 'message' => 'Check-out introuvable.'], 404);
+        }
+
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+
+        try {
+            $checkoutManager->updateLine(
+                $line,
+                EquipmentCheckStatus::from((string) $request->request->get('status')),
+                $request->request->get('comment'),
+                $request->files->get('photo')
+            );
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        return $this->adminRoomWorkspaceResponse($checkout, $line->getRoom(), 'Équipement mis à jour.');
+    }
+
+    #[Route('/checkouts/{id}/pause', name: 'admin_checkout_pause', methods: ['POST'])]
+    public function pauseCheckout(Checkout $checkout, Request $request, CheckoutManager $checkoutManager, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+        $checkoutManager->pause($checkout, (string) $request->request->get('reason'));
+        $entityManager->flush();
+
+        return $this->adminCheckoutRedirectResponse($checkout, 'Check-out mis en pause.');
+    }
+
+    #[Route('/checkouts/{id}/resume', name: 'admin_checkout_resume', methods: ['POST'])]
+    public function resumeCheckout(Checkout $checkout, CheckoutManager $checkoutManager, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+        $checkoutManager->resume($checkout);
+        $entityManager->flush();
+
+        return $this->adminCheckoutRedirectResponse($checkout, 'Check-out repris.');
+    }
+
+    #[Route('/checkouts/{id}/complete', name: 'admin_checkout_complete', methods: ['POST'])]
+    public function completeCheckout(Checkout $checkout, CheckoutManager $checkoutManager, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+
+        try {
+            $checkoutManager->complete($checkout);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        return $this->adminRedirectToDashboardResponse('Check-out terminé.');
     }
 
     #[Route('/checkouts/{id}/schedule', name: 'admin_checkout_schedule_update', methods: ['POST'])]
@@ -700,10 +802,10 @@ class AdminController extends AbstractController
     }
 
     #[Route('/checkouts/{id}/cancel', name: 'admin_checkout_cancel', methods: ['POST'])]
-    public function cancelCheckout(Checkout $checkout, EntityManagerInterface $entityManager): JsonResponse
+    public function cancelCheckout(Checkout $checkout, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         if (in_array($checkout->getStatus(), [CheckoutStatus::Completed, CheckoutStatus::Cancelled], true)) {
-            return new JsonResponse(['success' => false, 'message' => 'Ce check-out ne peut plus etre annule.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Ce check-out ne peut plus être annulé.'], 422);
         }
 
         $checkout
@@ -719,7 +821,15 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out annule.');
+        if ((string) $request->request->get('context') === 'dashboard') {
+            return new JsonResponse([
+                'success' => true,
+                'html' => $this->renderView('admin/_dashboard_content.html.twig', $this->buildDashboardData($entityManager)),
+                'message' => 'Check-out annulé.',
+            ]);
+        }
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out annulé.');
     }
 
     private function apartmentDetailResponse(Apartment $apartment, EntityManagerInterface $entityManager, string $message): JsonResponse
@@ -844,6 +954,70 @@ class AdminController extends AbstractController
             ->setParameter('closedStatus', AnomalyStatus::Closed)
             ->getQuery()
             ->getSingleScalarResult() > 0;
+    }
+
+    private function denyAccessUnlessGrantedToAdminCheckout(Checkout $checkout): void
+    {
+        $apartment = $checkout->getApartment();
+        if (!$apartment instanceof Apartment || $apartment->getStatus() !== ApartmentStatus::Active) {
+            throw $this->createAccessDeniedException();
+        }
+    }
+
+    private function adminRoomWorkspaceResponse(Checkout $checkout, ?Room $room, string $message): JsonResponse
+    {
+        if (!$room instanceof Room) {
+            return $this->adminCheckoutRedirectResponse($checkout, $message);
+        }
+
+        $group = $this->findCheckoutRoomGroup($checkout, $room);
+        if ($group === null) {
+            return $this->adminCheckoutRedirectResponse($checkout, $message);
+        }
+
+        if ($group['totalCount'] > 0 && $group['checkedCount'] >= $group['totalCount']) {
+            return new JsonResponse([
+                'success' => true,
+                'redirect' => $this->generateUrl('admin_checkout_show', ['id' => $checkout->getId()]),
+                'message' => 'Pièce terminée. Retour à la liste des pièces.',
+            ]);
+        }
+
+        $html = $this->renderView('employee/_room_workspace.html.twig', [
+            'checkout' => $checkout,
+            'checkStatuses' => EquipmentCheckStatus::cases(),
+            'roomGroup' => $group,
+            'checkoutShowRoute' => 'admin_checkout_show',
+            'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
+        ]);
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $html,
+            'message' => $message,
+        ]);
+    }
+
+    private function adminCheckoutRedirectResponse(Checkout $checkout, string $message): JsonResponse
+    {
+        $this->addFlash('success', $message);
+
+        return new JsonResponse([
+            'success' => true,
+            'redirect' => $this->generateUrl('admin_checkout_show', ['id' => $checkout->getId()]),
+            'message' => $message,
+        ]);
+    }
+
+    private function adminRedirectToDashboardResponse(string $message): JsonResponse
+    {
+        $this->addFlash('success', $message);
+
+        return new JsonResponse([
+            'success' => true,
+            'redirect' => $this->generateUrl('admin_dashboard'),
+            'message' => $message,
+        ]);
     }
 
     /**
@@ -990,7 +1164,17 @@ class AdminController extends AbstractController
 
     /**
      * @param list<Apartment> $apartments
-     * @return list<array{apartment: Apartment, openCheckout: ?Checkout, anomalyCount: int, openAnomalyCount: int, assignedEmployeeNames: string, firstAssignedEmployeeId: ?int, canQuickLaunch: bool}>
+     * @return list<array{
+     *     apartment: Apartment,
+     *     openCheckout: ?Checkout,
+     *     anomalyCount: int,
+     *     openAnomalyCount: int,
+     *     assignedEmployeeNames: string,
+     *     assignedEmployees: list<User>,
+     *     firstAssignedEmployeeId: ?int,
+     *     canQuickLaunch: bool,
+     *     canLaunchCheckout: bool
+     * }>
      */
     private function buildApartmentCards(array $apartments, EntityManagerInterface $entityManager): array
     {
@@ -1026,8 +1210,10 @@ class AdminController extends AbstractController
                 'anomalyCount' => $entityManager->getRepository(Anomaly::class)->count(['apartment' => $apartment]),
                 'openAnomalyCount' => $openAnomalyCount,
                 'assignedEmployeeNames' => $employeeNames !== [] ? implode(', ', $employeeNames) : 'Aucun employé assigné',
+                'assignedEmployees' => $assignedEmployees,
                 'firstAssignedEmployeeId' => count($assignedEmployees) === 1 ? $assignedEmployees[0]->getId() : null,
                 'canQuickLaunch' => $openCheckout === null && count($assignedEmployees) === 1,
+                'canLaunchCheckout' => $openCheckout === null,
             ];
         }
 
@@ -1090,6 +1276,96 @@ class AdminController extends AbstractController
         }
 
         return $counts;
+    }
+
+    /**
+     * @return array<int, array{room: Room, lines: array<int, CheckoutLine>, checkedCount:int, anomalyCount:int, totalCount:int, completionPercent:int}>
+     */
+    private function buildCheckoutRoomGroups(Checkout $checkout): array
+    {
+        $groups = [];
+        foreach ($checkout->getLines() as $line) {
+            $room = $line->getRoom();
+            if (!$room instanceof Room) {
+                continue;
+            }
+
+            $roomId = $room->getId() ?? spl_object_id($room);
+            if (!isset($groups[$roomId])) {
+                $groups[$roomId] = [
+                    'room' => $room,
+                    'lines' => [],
+                    'checkedCount' => 0,
+                    'anomalyCount' => 0,
+                    'totalCount' => 0,
+                ];
+            }
+
+            $groups[$roomId]['lines'][] = $line;
+            ++$groups[$roomId]['totalCount'];
+            if ($line->getStatus() !== null) {
+                ++$groups[$roomId]['checkedCount'];
+                if ($line->getStatus() !== EquipmentCheckStatus::Ok) {
+                    ++$groups[$roomId]['anomalyCount'];
+                }
+            }
+        }
+
+        foreach ($groups as &$group) {
+            usort($group['lines'], static function (CheckoutLine $left, CheckoutLine $right): int {
+                $leftPending = $left->getStatus() === null;
+                $rightPending = $right->getStatus() === null;
+
+                if ($leftPending !== $rightPending) {
+                    return $leftPending ? -1 : 1;
+                }
+
+                return $left->getSequence() <=> $right->getSequence();
+            });
+        }
+        unset($group);
+
+        $groups = array_values($groups);
+        foreach ($groups as &$group) {
+            $group['completionPercent'] = $group['totalCount'] > 0
+                ? (int) floor(($group['checkedCount'] / $group['totalCount']) * 100)
+                : 0;
+        }
+        unset($group);
+
+        usort($groups, static function (array $left, array $right): int {
+            $leftCompleted = $left['totalCount'] > 0 && $left['checkedCount'] >= $left['totalCount'];
+            $rightCompleted = $right['totalCount'] > 0 && $right['checkedCount'] >= $right['totalCount'];
+
+            if ($leftCompleted !== $rightCompleted) {
+                return $leftCompleted ? 1 : -1;
+            }
+
+            $leftPending = $left['totalCount'] - $left['checkedCount'];
+            $rightPending = $right['totalCount'] - $right['checkedCount'];
+            if ($leftPending !== $rightPending) {
+                return $rightPending <=> $leftPending;
+            }
+
+            return ($left['room']->getDisplayOrder() <=> $right['room']->getDisplayOrder())
+                ?: (($left['room']->getId() ?? 0) <=> ($right['room']->getId() ?? 0));
+        });
+
+        return $groups;
+    }
+
+    /**
+     * @return array{room: Room, lines: array<int, CheckoutLine>, checkedCount:int, anomalyCount:int, totalCount:int, completionPercent:int}|null
+     */
+    private function findCheckoutRoomGroup(Checkout $checkout, Room $room): ?array
+    {
+        foreach ($this->buildCheckoutRoomGroups($checkout) as $group) {
+            if (($group['room']->getId() ?? null) === $room->getId()) {
+                return $group;
+            }
+        }
+
+        return null;
     }
 
     private function countAnomalyOccurrences(Anomaly $anomaly, EntityManagerInterface $entityManager): int
