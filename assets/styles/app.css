@@ -2313,17 +2313,6 @@ body.nav-compact .floating-main-menu-button {
     gap: 10px;
 }
 
-.admin-dashboard-hero-kicker {
-    display: inline-flex;
-    width: fit-content;
-    padding: 8px 13px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.16);
-    color: #fff;
-    font-size: 0.84rem;
-    font-weight: 700;
-}
-
 .admin-dashboard-hero h1 {
     font-size: clamp(2.1rem, 4vw, 3rem);
     line-height: 0.98;
@@ -2349,6 +2338,19 @@ body.nav-compact .floating-main-menu-button {
     background: rgba(255, 255, 255, 0.14);
     border-color: rgba(255, 255, 255, 0.24);
     color: #fff;
+}
+
+.admin-dashboard-hero-secondary.is-disabled,
+.admin-dashboard-disabled-button {
+    background: linear-gradient(180deg, #f4efe7 0%, #ece4d8 100%);
+    border-color: #e1d6c8;
+    color: #75695b;
+    cursor: not-allowed;
+}
+
+.admin-dashboard-hero-secondary.is-disabled:hover,
+.admin-dashboard-disabled-button:hover {
+    transform: none;
 }
 
 .admin-dashboard-entry-grid {
@@ -2415,6 +2417,16 @@ body.nav-compact .floating-main-menu-button {
     color: #c66a00;
 }
 
+.admin-dashboard-entry-icon-soft {
+    background: linear-gradient(180deg, #eef1ff 0%, #e3e9ff 100%);
+    color: #4966cb;
+}
+
+.admin-dashboard-entry-icon-accent {
+    background: linear-gradient(180deg, #ffe6ed 0%, #ffd7e2 100%);
+    color: var(--accent-dark);
+}
+
 .admin-dashboard-entry-icon svg,
 .admin-dashboard-wide-art svg {
     width: 30px;
@@ -2466,13 +2478,21 @@ body.nav-compact .floating-main-menu-button {
     font-weight: 700;
 }
 
+.admin-dashboard-title-link {
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
+    color: inherit;
+}
+
 .admin-dashboard-stack {
     display: grid;
     gap: 18px;
 }
 
 .admin-dashboard-wide-card {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
     align-items: center;
 }
 
@@ -2523,6 +2543,10 @@ body.nav-compact .floating-main-menu-button {
     gap: 8px;
 }
 
+.admin-dashboard-chip-row-start {
+    justify-content: flex-start;
+}
+
 .admin-dashboard-chip {
     display: inline-flex;
     align-items: center;
@@ -2538,6 +2562,11 @@ body.nav-compact .floating-main-menu-button {
     display: grid;
     justify-items: end;
     gap: 12px;
+}
+
+.admin-dashboard-wide-actions-inline {
+    align-items: center;
+    justify-items: start;
 }
 
 .admin-dashboard-wide-art {
@@ -3775,7 +3804,8 @@ body.nav-compact .floating-main-menu-button {
         font-size: 0.9rem;
     }
 
-    .admin-dashboard-wide-actions {
+    .admin-dashboard-wide-actions,
+    .admin-dashboard-wide-actions-inline {
         justify-items: stretch;
     }
 

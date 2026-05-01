@@ -3,21 +3,26 @@
 <div class="admin-dashboard-hub">
     <section class="admin-dashboard-hero">
         <div class="admin-dashboard-hero-copy">
-            <span class="admin-dashboard-hero-kicker">Pilotage</span>
             <h1>Espace admin</h1>
             <p>Tout le nécessaire pour gérer les appartements, les anomalies et les check-outs.</p>
         </div>
         <div class="admin-dashboard-hero-actions">
             <a class="primary-button" href="{{ path('admin_apartments') }}">Ajouter un appartement</a>
-            <button
-                class="secondary-button admin-dashboard-hero-secondary"
-                type="button"
-                data-action-menu-trigger
-                data-action-menu-title="Lancer un check-out"
-                data-action-menu-source="#dashboard-launch-checkout-menu"
-            >
-                Lancer un check-out
-            </button>
+            {% if launchableApartmentCards is empty %}
+                <button class="secondary-button admin-dashboard-hero-secondary is-disabled" type="button" disabled>
+                    Aucun check-out disponible
+                </button>
+            {% else %}
+                <button
+                    class="secondary-button admin-dashboard-hero-secondary"
+                    type="button"
+                    data-action-menu-trigger
+                    data-action-menu-title="Lancer un check-out"
+                    data-action-menu-source="#dashboard-launch-checkout-menu"
+                >
+                    Lancer un check-out
+                </button>
+            {% endif %}
         </div>
     </section>
 
@@ -32,13 +37,8 @@
                 <span class="admin-dashboard-entry-count">{{ apartmentCards|length }}</span>
             </div>
             <div class="admin-dashboard-entry-copy">
-                <h2>Appartements</h2>
+                <h2><a class="admin-dashboard-title-link" href="{{ path('admin_apartments') }}">Appartements</a></h2>
                 <p>{{ apartmentCards|length > 0 ? 'Liste complète et accès rapide aux fiches.' : 'Aucun appartement actif.' }}</p>
-                {% if apartmentCards|length == 0 %}
-                    <span class="admin-dashboard-entry-link">Ajouter un appartement</span>
-                {% else %}
-                    <span class="admin-dashboard-entry-link">Voir la liste</span>
-                {% endif %}
             </div>
         </article>
 
@@ -52,7 +52,7 @@
                 <span class="admin-dashboard-entry-count">{{ anomalyApartmentCards|length }}</span>
             </div>
             <div class="admin-dashboard-entry-copy">
-                <h2>Appartements avec anomalies</h2>
+                <h2><a class="admin-dashboard-title-link" href="{{ path('admin_anomalies') }}">Appartements avec anomalies</a></h2>
                 <p>
                     {% if anomalyApartmentCards|length > 0 %}
                         Accès direct aux appartements à surveiller.
@@ -60,7 +60,6 @@
                         Aucune anomalie ouverte.
                     {% endif %}
                 </p>
-                <span class="admin-dashboard-entry-link">Voir les anomalies</span>
             </div>
         </article>
     </section>
@@ -69,49 +68,57 @@
         <article class="admin-dashboard-wide-card admin-dashboard-wide-card-soft" data-click-url="{{ path('admin_users') }}">
             <div class="admin-dashboard-wide-copy">
                 <div class="admin-dashboard-wide-topline">
-                    <span class="admin-dashboard-wide-kicker">Gestion équipe</span>
+                    <span class="admin-dashboard-entry-icon admin-dashboard-entry-icon-soft" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm8 2c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4ZM8 13c-.29 0-.62.02-.97.05C4.42 13.27 0 14.44 0 17v3h6v-3c0-1.16.55-2.18 1.53-3A8.63 8.63 0 0 1 8 13Z" fill="currentColor"/>
+                        </svg>
+                    </span>
                     <span class="admin-dashboard-wide-badge">{{ employeeCount }} employé{{ employeeCount > 1 ? 's' : '' }}</span>
                 </div>
-                <h2>Gérer les employés</h2>
+                <h2><a class="admin-dashboard-title-link" href="{{ path('admin_users') }}">Gérer les employés</a></h2>
                 <p>Créer, modifier et autoriser le suivi des anomalies.</p>
-                <span class="admin-dashboard-entry-link">Ouvrir la gestion</span>
             </div>
-            <span class="admin-dashboard-wide-art" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm8 2c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4ZM8 13c-.29 0-.62.02-.97.05C4.42 13.27 0 14.44 0 17v3h6v-3c0-1.16.55-2.18 1.53-3A8.63 8.63 0 0 1 8 13Z" fill="currentColor"/>
-                </svg>
-            </span>
         </article>
 
         <article class="admin-dashboard-wide-card admin-dashboard-wide-card-accent">
             <div class="admin-dashboard-wide-copy">
                 <div class="admin-dashboard-wide-topline">
-                    <span class="admin-dashboard-wide-kicker">Check-outs</span>
-                    <div class="admin-dashboard-chip-row">
-                        <span class="admin-dashboard-chip">{{ scheduledCheckouts|length }} à venir</span>
-                        <span class="admin-dashboard-chip">{{ activeCheckouts|length }} en cours</span>
-                        <span class="admin-dashboard-chip">{{ finishedCheckouts|length }} terminés</span>
-                    </div>
+                    <span class="admin-dashboard-entry-icon admin-dashboard-entry-icon-accent" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6v-2Z" fill="currentColor"/>
+                        </svg>
+                    </span>
+                    <span class="admin-dashboard-wide-badge">{{ launchableApartmentCards|length }} dispo</span>
                 </div>
                 <h2>Lancer un check-out</h2>
                 <p>Choisir un appartement disponible puis créer la demande en un clic.</p>
-            </div>
-
-            <div class="admin-dashboard-wide-actions">
-                <button
-                    class="primary-button"
-                    type="button"
-                    data-action-menu-trigger
-                    data-action-menu-title="Lancer un check-out"
-                    data-action-menu-source="#dashboard-launch-checkout-menu"
-                >
-                    Lancer un check-out
-                </button>
-                {% if launchableApartmentCards is empty %}
-                    <span class="admin-dashboard-inline-note">Aucun appartement disponible pour le moment.</span>
-                {% else %}
-                    <span class="admin-dashboard-inline-note">{{ launchableApartmentCards|length }} appartement{{ launchableApartmentCards|length > 1 ? 's' : '' }} disponible{{ launchableApartmentCards|length > 1 ? 's' : '' }}</span>
-                {% endif %}
+                <div class="admin-dashboard-chip-row admin-dashboard-chip-row-start">
+                    <span class="admin-dashboard-chip">{{ scheduledCheckouts|length }} à venir</span>
+                    <span class="admin-dashboard-chip">{{ activeCheckouts|length }} en cours</span>
+                    <span class="admin-dashboard-chip">{{ finishedCheckouts|length }} terminés</span>
+                </div>
+                <div class="admin-dashboard-wide-actions admin-dashboard-wide-actions-inline">
+                    {% if launchableApartmentCards is empty %}
+                        <button class="primary-button admin-dashboard-disabled-button" type="button" disabled>
+                            Aucun appartement à lancer
+                        </button>
+                    {% else %}
+                        <button
+                            class="primary-button"
+                            type="button"
+                            data-action-menu-trigger
+                            data-action-menu-title="Lancer un check-out"
+                            data-action-menu-source="#dashboard-launch-checkout-menu"
+                        >
+                            Lancer un check-out
+                        </button>
+                    {% endif %}
+                    {% if launchableApartmentCards is empty %}
+                        <span class="admin-dashboard-inline-note">Aucun appartement disponible pour le moment.</span>
+                    {% else %}
+                        <span class="admin-dashboard-inline-note">{{ launchableApartmentCards|length }} appartement{{ launchableApartmentCards|length > 1 ? 's' : '' }} disponible{{ launchableApartmentCards|length > 1 ? 's' : '' }}</span>
+                    {% endif %}
+                </div>
             </div>
         </article>
     </section>
