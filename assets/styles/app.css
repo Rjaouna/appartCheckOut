@@ -1478,6 +1478,17 @@ body.nav-compact .floating-main-menu-button {
         linear-gradient(180deg, #fdfaf6 0%, #fff 100%);
 }
 
+.public-body .page-shell {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 32px 20px 40px;
+}
+
+.public-body .page-shell > *:first-child {
+    margin-top: 0;
+}
+
 .public-landing-shell {
     display: grid;
     width: 100%;
@@ -1489,7 +1500,8 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .public-landing-card {
-    width: min(880px, calc(100vw - 40px));
+    width: min(880px, 100%);
+    max-width: 100%;
     margin-inline: auto;
     padding: 30px;
     border-radius: 34px;
@@ -1505,7 +1517,7 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .public-landing-card-narrow {
-    width: min(560px, calc(100vw - 40px));
+    width: min(560px, 100%);
 }
 
 .public-entry-grid {
