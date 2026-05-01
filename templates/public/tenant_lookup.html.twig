@@ -15,11 +15,6 @@
         </div>
 
         <section class="public-landing-card public-landing-card-narrow">
-            <div class="auth-card-actions">
-                <a class="secondary-button" href="{{ path('app_home') }}">Retour a l accueil</a>
-                <a class="secondary-button" href="{{ path('app_login') }}">Je suis employe</a>
-            </div>
-
             <span class="eyebrow">Acces locataire</span>
             <p class="muted">Saisissez le code de la boite a cles ou le code porte transmis pour votre arrivee.</p>
 
@@ -34,6 +29,11 @@
                 </label>
                 <button class="primary-button" type="submit">Valider</button>
             </form>
+
+            <div class="auth-card-actions auth-card-actions-stacked">
+                <a class="secondary-button" href="{{ path('app_home') }}">Retour a l accueil</a>
+                <a class="secondary-button" href="{{ path('app_login') }}">Je suis employe</a>
+            </div>
         </section>
     </section>
 {% endblock %}

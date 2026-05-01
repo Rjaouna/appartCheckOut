@@ -15,9 +15,6 @@
         </div>
 
         <div class="auth-card">
-            <div class="auth-card-actions">
-                <a class="secondary-button" href="{{ path('app_home') }}">Retour a l accueil</a>
-            </div>
             <h2>Connexion</h2>
             <p class="muted">Connectez-vous avec votre compte administrateur ou employe.</p>
 
@@ -41,6 +38,10 @@
                 </label>
                 <button class="primary-button" type="submit">Se connecter</button>
             </form>
+
+            <div class="auth-card-actions auth-card-actions-stacked">
+                <a class="secondary-button" href="{{ path('app_home') }}">Retour a l accueil</a>
+            </div>
         </div>
     </section>
 {% endblock %}

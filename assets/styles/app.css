@@ -1416,6 +1416,13 @@ body.nav-compact .floating-main-menu-button {
     margin-bottom: 12px;
 }
 
+.auth-card-actions-stacked {
+    display: grid;
+    gap: 12px;
+    margin-top: 6px;
+    margin-bottom: 0;
+}
+
 .public-landing-card .auth-card-actions .secondary-button {
     width: auto;
     margin-bottom: 0;
@@ -1441,6 +1448,21 @@ body.nav-compact .floating-main-menu-button {
     background: #fff7f8;
     color: var(--accent-dark);
     box-shadow: 0 10px 24px rgba(255, 56, 92, 0.08);
+}
+
+.auth-card-actions-stacked .secondary-button,
+.public-landing-card .auth-card-actions-stacked .secondary-button,
+.auth-card .auth-card-actions-stacked .secondary-button {
+    width: 100%;
+    justify-content: center;
+}
+
+.auth-card-actions-stacked .secondary-button:last-child,
+.public-landing-card .auth-card-actions-stacked .secondary-button:last-child {
+    background: linear-gradient(135deg, #20324f 0%, #0f62fe 100%);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 14px 28px rgba(15, 98, 254, 0.18);
 }
 
 .auth-brand {
@@ -1511,6 +1533,10 @@ body.nav-compact .floating-main-menu-button {
     box-shadow: 0 26px 60px rgba(34, 34, 34, 0.08);
 }
 
+.public-landing-card-full {
+    width: 100%;
+}
+
 .public-landing-card h1,
 .public-page-head h1 {
     margin: 8px 0 10px;
@@ -1525,6 +1551,10 @@ body.nav-compact .floating-main-menu-button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
     margin-top: 24px;
+}
+
+.public-landing-card-full .public-entry-grid {
+    grid-template-columns: 1fr;
 }
 
 .public-entry-option {
