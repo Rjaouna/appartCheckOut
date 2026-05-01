@@ -24,6 +24,7 @@
 
 html,
 body {
+    height: 100%;
     max-width: 100%;
     overflow-x: clip;
 }
@@ -1386,6 +1387,7 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .auth-body {
+    height: 100%;
     display: grid;
     place-items: center;
 }
@@ -1501,6 +1503,7 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .public-body .page-shell {
+    height: 100%;
     max-width: none;
     width: 100%;
     margin: 0;
@@ -1512,12 +1515,13 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .public-landing-shell {
+    height: 100%;
     display: grid;
     width: 100%;
     justify-items: center;
+    align-items: center;
     align-content: center;
     gap: 26px;
-    padding: 32px 20px 52px;
     margin-inline: auto;
 }
 
