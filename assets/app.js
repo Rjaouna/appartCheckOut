@@ -12,6 +12,7 @@ let dashboardPollingStarted = false;
 restorePendingToast();
 restoreFloatingMenuPosition();
 syncTopBarOnScroll();
+registerServiceWorker();
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -401,6 +402,18 @@ function syncTopBarOnScroll() {
     if (scrollTopButton instanceof HTMLElement) {
         scrollTopButton.classList.toggle('is-visible', window.scrollY > 280);
     }
+}
+
+function registerServiceWorker() {
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) {
+        return;
+    }
+
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // ignore service worker registration errors
+        });
+    }, {once: true});
 }
 
 function startDashboardPolling() {
