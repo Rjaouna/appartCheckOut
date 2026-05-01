@@ -1,178 +1,221 @@
-<section class="detail-grid">
-    <div class="panel span-two">
-        <div class="panel-head">
-            <h2>Gestion appartement</h2>
-            <span class="status-badge">{{ apartment.status.label }}</span>
+<section class="detail-grid admin-detail-grid">
+    <div class="admin-detail-accordion-stack span-two">
+        <button class="admin-detail-entry-card admin-detail-entry-card-primary" type="button" data-panel-open="#apartment-panel-checkout" data-panel-group="apartment-admin">
+            <span class="admin-detail-entry-kicker">Check-out</span>
+            <strong>Lancer un check-out</strong>
+            <p>Programmer, deplacer ou annuler les check-outs de cet appartement.</p>
+        </button>
+
+        <button class="admin-detail-entry-card admin-detail-entry-card-soft" type="button" data-panel-open="#apartment-panel-access" data-panel-group="apartment-admin">
+            <span class="admin-detail-entry-kicker">Acces</span>
+            <strong>Informations d acces</strong>
+            <p>Adresse, codes, contact et consignes d entree.</p>
+        </button>
+
+        <button class="admin-detail-entry-card admin-detail-entry-card-soft" type="button" data-panel-open="#apartment-panel-assignment" data-panel-group="apartment-admin">
+            <span class="admin-detail-entry-kicker">Equipe</span>
+            <strong>Assignation et priorite</strong>
+            <p>Choisir les employes assignes et regler la priorite inventaire.</p>
+        </button>
+
+        <button class="admin-detail-entry-card admin-detail-entry-card-soft" type="button" data-panel-open="#apartment-panel-rooms" data-panel-group="apartment-admin">
+            <span class="admin-detail-entry-kicker">Structure</span>
+            <strong>Pieces et equipements</strong>
+            <p>{{ apartment.activeRooms|length }} piece{{ apartment.activeRooms|length > 1 ? 's' : '' }} active{{ apartment.activeRooms|length > 1 ? 's' : '' }} a gerer.</p>
+        </button>
+
+        <button class="admin-detail-entry-card admin-detail-entry-card-soft" type="button" data-panel-open="#apartment-panel-catalog" data-panel-group="apartment-admin">
+            <span class="admin-detail-entry-kicker">Catalogue</span>
+            <strong>Catalogue d equipements</strong>
+            <p>Ajouter rapidement de nouveaux equipements par type de piece.</p>
+        </button>
+
+        <button class="admin-detail-entry-card admin-detail-entry-card-soft" type="button" data-panel-open="#apartment-panel-anomalies" data-panel-group="apartment-admin">
+            <span class="admin-detail-entry-kicker">Suivi</span>
+            <strong>Recap anomalies</strong>
+            <p>{{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }} referencee{{ anomalyCount > 1 ? 's' : '' }} sur cet appartement.</p>
+        </button>
+
+        <button class="admin-detail-entry-card admin-detail-entry-card-danger" type="button" data-panel-open="#apartment-panel-settings" data-panel-group="apartment-admin">
+            <span class="admin-detail-entry-kicker">Pilotage</span>
+            <strong>Gestion appartement</strong>
+            <p>Statut, suppression et actions de maintenance avancees.</p>
+        </button>
+    </div>
+
+    <div id="apartment-panel-checkout" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="checkout">
+        <div class="admin-detail-panel-head">
+            <div>
+                <span class="admin-detail-entry-kicker">Check-out</span>
+                <h2>Lancer un check-out</h2>
+            </div>
+            <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-checkout">Retour</button>
         </div>
-        <div class="card-action-row">
-            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
-                <input type="hidden" name="status" value="active">
-                <button class="secondary-button" type="submit">Mettre en actif</button>
+
+        {% if hasOpenCheckout %}
+            <div class="empty-state">
+                Un check-out non termine existe deja pour cet appartement. Termine ou annule le check-out actuel avant d'en creer un nouveau.
+            </div>
+        {% else %}
+            <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form" data-async-form data-update-target="#apartment-structure">
+                <label><span>Employe</span>
+                    <select name="assignedTo" required>
+                        {% for employee in apartment.assignedEmployees %}
+                            {% if 'ROLE_ADMIN' not in employee.roles %}
+                                <option value="{{ employee.id }}">{{ employee.fullName }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </label>
+                <label><span>Date prevue</span><input type="datetime-local" name="scheduledAt"></label>
+                <label><span>Priorite</span>
+                    <select name="priority">
+                        <option value="normal">Normale</option>
+                        <option value="high">Haute</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </label>
+                <button class="primary-button" type="submit">Creer le check-out</button>
             </form>
-            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
-                <input type="hidden" name="status" value="inactive">
-                <button class="secondary-button" type="submit">Mettre en inactif</button>
-            </form>
-            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
-                <input type="hidden" name="status" value="archived">
-                <button class="secondary-button" type="submit">Archiver</button>
-            </form>
-            {% if canDeleteApartment %}
-                <form
-                    method="post"
-                    action="{{ path('admin_apartment_delete', {id: apartment.id}) }}"
-                    data-async-form
-                    data-confirm-reset
-                    data-confirm-title="Supprimer l appartement"
-                    data-confirm-message="Veux-tu vraiment supprimer cet appartement ? Cette action est definitive."
-                >
-                    <button class="secondary-button" type="submit">Supprimer</button>
-                </form>
+        {% endif %}
+
+        <div class="mini-list">
+            {% for checkout in activeCheckouts %}
+                <article class="compact-card compact-card-modern">
+                    <strong>{{ checkout.assignedTo.fullName }}</strong>
+                    <p>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-' }}</p>
+                    <span class="status-badge">{{ checkout.status.label }}</span>
+                    <form method="post" action="{{ path('admin_checkout_schedule_update', {id: checkout.id}) }}" class="stack-form compact-form checkout-action-form" data-async-form data-update-target="#apartment-structure">
+                        <label>
+                            <span>Modifier la date prevue</span>
+                            <input type="datetime-local" name="scheduledAt" value="{{ checkout.scheduledAt ? checkout.scheduledAt|date('Y-m-d\\TH:i') : '' }}" required>
+                        </label>
+                        <button class="secondary-button" type="submit">Mettre a jour la date</button>
+                    </form>
+                    {% if checkout.status.value not in ['completed', 'cancelled'] %}
+                        <form
+                            method="post"
+                            action="{{ path('admin_checkout_cancel', {id: checkout.id}) }}"
+                            class="compact-form checkout-action-form"
+                            data-async-form
+                            data-update-target="#apartment-structure"
+                            data-confirm-reset
+                            data-confirm-title="Annuler le check-out"
+                            data-confirm-message="Veux-tu vraiment annuler ce check-out ?"
+                        >
+                            <button class="secondary-button danger-button" type="submit">Annuler le check-out</button>
+                        </form>
+                    {% endif %}
+                </article>
             {% else %}
-                <div class="empty-state">
-                    La suppression n est autorisee que s il n y a plus de check-out en cours ou programme, ni d anomalie ouverte.
-                </div>
-            {% endif %}
+                <p class="empty-state">Aucun check-out en cours ou programme.</p>
+            {% endfor %}
+        </div>
+
+        <div class="panel-head admin-subsection-head">
+            <h3>Historique des check-outs termines</h3>
+        </div>
+        <div class="mini-list">
+            {% for checkout in completedCheckouts %}
+                <article class="compact-card compact-card-modern">
+                    <strong>{{ checkout.assignedTo.fullName }}</strong>
+                    <p>{{ checkout.completedAt ? checkout.completedAt|date('d/m/Y H:i') : (checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-') }}</p>
+                    {% if checkout.anomalies|length > 0 %}
+                        <div class="card-detail-list">
+                            {% for anomaly in checkout.anomalies %}
+                                <span>{{ anomaly.room.name }} : {{ anomaly.roomEquipment.label }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="muted">Aucune anomalie.</p>
+                    {% endif %}
+                </article>
+            {% else %}
+                <p class="empty-state">Aucun check-out termine.</p>
+            {% endfor %}
         </div>
     </div>
 
-    <div class="panel">
-        <div class="panel-head"><h2>Informations d'acces</h2></div>
+    <div id="apartment-panel-access" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="access">
+        <div class="admin-detail-panel-head">
+            <div>
+                <span class="admin-detail-entry-kicker">Acces</span>
+                <h2>Informations d acces</h2>
+            </div>
+            <div class="admin-detail-panel-actions">
+                <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-access">Retour</button>
+            </div>
+        </div>
         <div class="info-list">
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'addressLine1',
-                label: 'Adresse',
-                value: apartment.addressLine1,
-                rawValue: apartment.addressLine1
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'addressLine2',
-                label: 'Complement d adresse',
-                value: apartment.addressLine2 ?: 'Non renseigne',
-                rawValue: apartment.addressLine2
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'city',
-                label: 'Ville',
-                value: apartment.city,
-                rawValue: apartment.city
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'postalCode',
-                label: 'Code postal',
-                value: apartment.postalCode,
-                rawValue: apartment.postalCode
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'floor',
-                label: 'Etage',
-                value: apartment.floor ?: 'Non renseigne',
-                rawValue: apartment.floor
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'doorNumber',
-                label: 'Porte',
-                value: apartment.doorNumber ?: 'Non renseigne',
-                rawValue: apartment.doorNumber
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'mailboxNumber',
-                label: 'Boite aux lettres',
-                value: apartment.mailboxNumber ?: 'Non renseigne',
-                rawValue: apartment.mailboxNumber
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'buildingAccessCode',
-                label: 'Code immeuble',
-                value: apartment.buildingAccessCode ?: 'Non renseigne',
-                rawValue: apartment.buildingAccessCode
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'keyBoxCode',
-                label: 'Code boite a cles / code porte',
-                value: apartment.keyBoxCode ?: 'Non renseigne',
-                rawValue: apartment.keyBoxCode
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'googleMapsLink',
-                label: 'Google Maps',
-                value: apartment.googleMapsLink ?: 'Non renseigne',
-                rawValue: apartment.googleMapsLink
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'entryInstructions',
-                label: 'Instructions',
-                value: apartment.entryInstructions,
-                rawValue: apartment.entryInstructions,
-                multiline: true
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'ownerName',
-                label: 'Nom contact',
-                value: apartment.ownerName ?: 'Non renseigne',
-                rawValue: apartment.ownerName
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'ownerPhone',
-                label: 'Telephone contact',
-                value: apartment.ownerPhone ?: 'Non renseigne',
-                rawValue: apartment.ownerPhone
-            } %}
-            {% include 'admin/_editable_apartment_field.html.twig' with {
-                apartment: apartment,
-                field: 'internalNotes',
-                label: 'Notes internes',
-                value: apartment.internalNotes ?: 'Aucune note',
-                rawValue: apartment.internalNotes,
-                multiline: true
-            } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'addressLine1', label: 'Adresse', value: apartment.addressLine1, rawValue: apartment.addressLine1, compact: true, showGpsInline: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'addressLine2', label: 'Complement d adresse', value: apartment.addressLine2 ?: 'Non renseigne', rawValue: apartment.addressLine2, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'city', label: 'Ville', value: apartment.city, rawValue: apartment.city, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'postalCode', label: 'Code postal', value: apartment.postalCode, rawValue: apartment.postalCode, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'floor', label: 'Etage', value: apartment.floor ?: 'Non renseigne', rawValue: apartment.floor, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'doorNumber', label: 'Porte', value: apartment.doorNumber ?: 'Non renseigne', rawValue: apartment.doorNumber, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'mailboxNumber', label: 'Boite aux lettres', value: apartment.mailboxNumber ?: 'Non renseigne', rawValue: apartment.mailboxNumber, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'buildingAccessCode', label: 'Code immeuble', value: apartment.buildingAccessCode ?: 'Non renseigne', rawValue: apartment.buildingAccessCode, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'keyBoxCode', label: 'Code boite a cles / code porte', value: apartment.keyBoxCode ?: 'Non renseigne', rawValue: apartment.keyBoxCode, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'googleMapsLink', label: 'Google Maps', value: apartment.googleMapsLink ?: 'Non renseigne', rawValue: apartment.googleMapsLink, compact: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'entryInstructions', label: 'Instructions', value: apartment.entryInstructions, rawValue: apartment.entryInstructions, multiline: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerName', label: 'Nom contact', value: apartment.ownerName ?: 'Non renseigne', rawValue: apartment.ownerName } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerPhone', label: 'Telephone contact', value: apartment.ownerPhone ?: 'Non renseigne', rawValue: apartment.ownerPhone } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'internalNotes', label: 'Notes internes', value: apartment.internalNotes ?: 'Aucune note', rawValue: apartment.internalNotes, multiline: true } %}
         </div>
     </div>
 
-    <div class="panel">
-        <div class="panel-head"><h2>Assignation et priorite</h2></div>
-        <form method="post" action="{{ path('admin_apartment_assign', {id: apartment.id}) }}" class="stack-form" data-async-form data-update-target="#apartment-structure">
-            <label>
-                <span>Employes assignes</span>
-                <select name="assignedEmployees[]" multiple size="5">
-                    {% for employee in employees %}
-                        {% if 'ROLE_ADMIN' not in employee.roles %}
-                            <option value="{{ employee.id }}" {{ apartment.assignedEmployees.contains(employee) ? 'selected' : '' }}>{{ employee.fullName }} - {{ employee.email }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </label>
-            <button class="secondary-button admin-dark-button" type="submit">Mettre a jour l'assignation</button>
-        </form>
-        <form method="post" action="{{ path('admin_apartment_priority', {id: apartment.id}) }}" class="stack-form" data-async-form data-update-target="#apartment-structure">
-            <label class="checkbox-row">
-                <input type="checkbox" name="isInventoryPriority" value="1" {{ apartment.isInventoryPriority ? 'checked' : '' }}>
-                <span>Faire apparaitre en priorite chez l'employe</span>
-            </label>
-            <label>
-                <span>Date inventaire</span>
-                <input type="datetime-local" name="inventoryDueAt" value="{{ apartment.inventoryDueAt ? apartment.inventoryDueAt|date('Y-m-d\\TH:i') : '' }}">
-            </label>
-            <button class="secondary-button admin-dark-button" type="submit">Enregistrer la priorite</button>
-        </form>
+    <div id="apartment-panel-assignment" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="assignment">
+        <div class="admin-detail-panel-head">
+            <div>
+                <span class="admin-detail-entry-kicker">Equipe</span>
+                <h2>Assignation et priorite</h2>
+            </div>
+            <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-assignment">Retour</button>
+        </div>
+        <div class="admin-dual-stack">
+            <form method="post" action="{{ path('admin_apartment_assign', {id: apartment.id}) }}" class="stack-form employee-home-info-card employee-home-info-card-soft admin-assignment-form-card" data-async-form data-update-target="#apartment-structure">
+                <label>
+                    <span>Employes assignes</span>
+                    <select name="assignedEmployees[]" multiple size="5">
+                        {% for employee in employees %}
+                            {% if 'ROLE_ADMIN' not in employee.roles %}
+                                <option value="{{ employee.id }}" {{ apartment.assignedEmployees.contains(employee) ? 'selected' : '' }}>{{ employee.fullName }} - {{ employee.email }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </label>
+                <button class="secondary-button admin-dark-button" type="submit">Mettre a jour l assignation</button>
+            </form>
+
+            <form method="post" action="{{ path('admin_apartment_priority', {id: apartment.id}) }}" class="stack-form employee-home-primary-card" data-async-form data-update-target="#apartment-structure">
+                <div class="employee-home-primary-content">
+                    <span class="employee-home-kicker">Priorite</span>
+                    <h2>Faire ressortir cet appartement</h2>
+                    <p>Place cet appartement dans les priorites employee et fixe une date d inventaire.</p>
+                </div>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="isInventoryPriority" value="1" {{ apartment.isInventoryPriority ? 'checked' : '' }}>
+                    <span>Faire apparaitre en priorite chez l employe</span>
+                </label>
+                <label>
+                    <span>Date inventaire</span>
+                    <input type="datetime-local" name="inventoryDueAt" value="{{ apartment.inventoryDueAt ? apartment.inventoryDueAt|date('Y-m-d\\TH:i') : '' }}">
+                </label>
+                <button class="secondary-button admin-dark-button admin-inverted-button" type="submit">Enregistrer la priorite</button>
+            </form>
+        </div>
     </div>
 
-    <div class="panel span-two">
-        <div class="panel-head"><h2>Ajouter rapidement une piece</h2></div>
-        <div class="quick-actions">
+    <div id="apartment-panel-rooms" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="rooms">
+        <div class="admin-detail-panel-head">
+            <div>
+                <span class="admin-detail-entry-kicker">Structure</span>
+                <h2>Pieces et equipements</h2>
+            </div>
+            <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-rooms">Retour</button>
+        </div>
+
+        <div class="quick-actions admin-quick-actions">
             {% for roomType in roomTypes %}
                 <form method="post" action="{{ path('admin_room_create', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
                     <input type="hidden" name="type" value="{{ roomType.value }}">
@@ -181,17 +224,14 @@
                 </form>
             {% endfor %}
         </div>
-    </div>
 
-    <div class="panel span-two">
-        <div class="panel-head"><h2>Structure de l'appartement</h2></div>
         <div class="room-stack">
             {% for room in apartment.activeRooms %}
                 <article class="room-card">
                     <div class="room-card-head">
                         <div>
                             <h3>{{ room.name }}</h3>
-                            <p>{{ room.type.label }} • {{ room.roomEquipments|length }} equipements</p>
+                            <p>{{ room.type.label }} • {{ room.activeRoomEquipments|length }} equipements</p>
                         </div>
                         {% if room.activeRoomEquipments|length == 0 %}
                             <form
@@ -203,12 +243,7 @@
                                 data-confirm-title="Supprimer la piece"
                                 data-confirm-message="Veux-tu vraiment supprimer cette piece vide ?"
                             >
-                                <button
-                                    class="icon-action-button icon-action-button-danger"
-                                    type="submit"
-                                    aria-label="Supprimer la piece {{ room.name }}"
-                                    title="Supprimer la piece"
-                                >
+                                <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Supprimer la piece {{ room.name }}" title="Supprimer la piece">
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
                                         <path d="M7 5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                         <path d="M10 5V4h4v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -252,13 +287,19 @@
                     </form>
                 </article>
             {% else %}
-                <p class="empty-state">Commence par ajouter les pieces principales de l'appartement.</p>
+                <p class="empty-state">Commence par ajouter les pieces principales de l appartement.</p>
             {% endfor %}
         </div>
     </div>
 
-    <div class="panel">
-        <div class="panel-head"><h2>Catalogue d'equipements</h2></div>
+    <div id="apartment-panel-catalog" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="catalog">
+        <div class="admin-detail-panel-head">
+            <div>
+                <span class="admin-detail-entry-kicker">Catalogue</span>
+                <h2>Catalogue d equipements</h2>
+            </div>
+            <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-catalog">Retour</button>
+        </div>
         <form method="post" action="{{ path('admin_catalog_create') }}" class="stack-form tight-form" data-async-form data-update-target="#apartment-structure">
             <input type="hidden" name="apartmentId" value="{{ apartment.id }}">
             <label><span>Nom equipement</span><input name="name" required></label>
@@ -278,96 +319,16 @@
         </form>
     </div>
 
-    <div class="panel">
-        <div class="panel-head"><h2>Lancer un check-out</h2></div>
-        {% if hasOpenCheckout %}
-            <div class="empty-state">
-                Un check-out non termine existe deja pour cet appartement. Termine ou annule le check-out actuel avant d'en creer un nouveau.
+    <div id="apartment-panel-anomalies" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="anomalies">
+        <div class="admin-detail-panel-head">
+            <div>
+                <span class="admin-detail-entry-kicker">Suivi</span>
+                <h2>Recap anomalies</h2>
             </div>
-        {% else %}
-            <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form" data-async-form data-update-target="#apartment-structure">
-                <label><span>Employe</span>
-                    <select name="assignedTo" required>
-                        {% for employee in apartment.assignedEmployees %}
-                            {% if 'ROLE_ADMIN' not in employee.roles %}
-                                <option value="{{ employee.id }}">{{ employee.fullName }}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </label>
-                <label><span>Date prevue</span><input type="datetime-local" name="scheduledAt"></label>
-                <label><span>Priorite</span>
-                    <select name="priority">
-                        <option value="normal">Normale</option>
-                        <option value="high">Haute</option>
-                        <option value="urgent">Urgente</option>
-                    </select>
-                </label>
-                <button class="primary-button" type="submit">Creer le check-out</button>
-            </form>
-        {% endif %}
-
-        <div class="mini-list">
-            {% for checkout in activeCheckouts %}
-                <article class="compact-card">
-                    <strong>{{ checkout.assignedTo.fullName }}</strong>
-                    <p>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-' }}</p>
-                    <span class="status-badge">{{ checkout.status.label }}</span>
-                    <form method="post" action="{{ path('admin_checkout_schedule_update', {id: checkout.id}) }}" class="stack-form compact-form checkout-action-form" data-async-form data-update-target="#apartment-structure">
-                        <label>
-                            <span>Modifier la date prevue</span>
-                            <input type="datetime-local" name="scheduledAt" value="{{ checkout.scheduledAt ? checkout.scheduledAt|date('Y-m-d\\TH:i') : '' }}" required>
-                        </label>
-                        <button class="secondary-button" type="submit">Mettre a jour la date</button>
-                    </form>
-                    {% if checkout.status.value not in ['completed', 'cancelled'] %}
-                        <form
-                            method="post"
-                            action="{{ path('admin_checkout_cancel', {id: checkout.id}) }}"
-                            class="compact-form checkout-action-form"
-                            data-async-form
-                            data-update-target="#apartment-structure"
-                            data-confirm-reset
-                            data-confirm-title="Annuler le check-out"
-                            data-confirm-message="Veux-tu vraiment annuler ce check-out ?"
-                        >
-                            <button class="secondary-button danger-button" type="submit">Annuler le check-out</button>
-                        </form>
-                    {% endif %}
-                </article>
-            {% else %}
-                <p class="empty-state">Aucun check-out en cours ou programme.</p>
-            {% endfor %}
-        </div>
-
-        <div class="panel-head">
-            <h3>Historique des check-outs termines</h3>
-        </div>
-        <div class="mini-list">
-            {% for checkout in completedCheckouts %}
-                <article class="compact-card">
-                    <strong>{{ checkout.assignedTo.fullName }}</strong>
-                    <p>{{ checkout.completedAt ? checkout.completedAt|date('d/m/Y H:i') : (checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-') }}</p>
-                    {% if checkout.anomalies|length > 0 %}
-                        <div class="card-detail-list">
-                            {% for anomaly in checkout.anomalies %}
-                                <span>{{ anomaly.room.name }} : {{ anomaly.roomEquipment.label }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="muted">Aucune anomalie.</p>
-                    {% endif %}
-                </article>
-            {% else %}
-                <p class="empty-state">Aucun check-out termine.</p>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="panel span-two">
-        <div class="panel-head">
-            <h2>Recap anomalies</h2>
-            <a href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Ouvrir la vue anomalies</a>
+            <div class="admin-detail-panel-actions">
+                <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Ouvrir la vue anomalies</a>
+                <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-anomalies">Retour</button>
+            </div>
         </div>
         {% if anomalyCount > 0 %}
             <div class="anomaly-room-grid">
@@ -382,5 +343,49 @@
         {% else %}
             <p class="empty-state">Aucune anomalie sur cet appartement.</p>
         {% endif %}
+    </div>
+
+    <div id="apartment-panel-settings" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="settings">
+        <div class="admin-detail-panel-head">
+            <div>
+                <span class="admin-detail-entry-kicker">Pilotage</span>
+                <h2>Gestion appartement</h2>
+            </div>
+            <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-settings">Retour</button>
+        </div>
+        <div class="panel-head">
+            <h3>Statut actuel</h3>
+            <span class="status-badge">{{ apartment.status.label }}</span>
+        </div>
+        <div class="card-action-row">
+            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
+                <input type="hidden" name="status" value="active">
+                <button class="secondary-button" type="submit">Mettre en actif</button>
+            </form>
+            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
+                <input type="hidden" name="status" value="inactive">
+                <button class="secondary-button" type="submit">Mettre en inactif</button>
+            </form>
+            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
+                <input type="hidden" name="status" value="archived">
+                <button class="secondary-button" type="submit">Archiver</button>
+            </form>
+            {% if canDeleteApartment %}
+                <form
+                    method="post"
+                    action="{{ path('admin_apartment_delete', {id: apartment.id}) }}"
+                    data-async-form
+                    data-confirm-reset
+                    data-confirm-title="Supprimer l appartement"
+                    data-confirm-message="Veux-tu vraiment supprimer cet appartement ? Cette action est definitive."
+                >
+                    <button class="secondary-button danger-button" type="submit">Supprimer</button>
+                </form>
+            {% else %}
+                <div class="empty-state">
+                    La suppression n est autorisee que s il n y a plus de check-out en cours ou programme, ni d anomalie ouverte.
+                </div>
+            {% endif %}
+        </div>
     </div>
 </section>

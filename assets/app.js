@@ -77,15 +77,25 @@ document.addEventListener('submit', async (event) => {
             return;
         }
 
+        const formId = form.id;
         const targetSelector = form.getAttribute('data-update-target');
         if (targetSelector && payload.html) {
             const target = document.querySelector(targetSelector);
             if (target) {
+                const uiState = captureUiState(target);
+                if (typeof formId === 'string' && formId !== '') {
+                    uiState.formToClose = `#${formId}`;
+                }
+
+                form.classList.add('is-collapsed');
+
                 if (form.getAttribute('data-swap-mode') === 'outer') {
                     target.outerHTML = payload.html;
                 } else {
                     target.innerHTML = payload.html;
                 }
+
+                restoreUiState(targetSelector, uiState);
             }
         }
 
@@ -235,6 +245,36 @@ document.addEventListener('click', (event) => {
             }
 
             target.classList.toggle('is-collapsed');
+        }
+        return;
+    }
+
+    const panelOpenTrigger = event.target instanceof Element ? event.target.closest('[data-panel-open]') : null;
+    if (panelOpenTrigger instanceof HTMLButtonElement) {
+        const groupName = panelOpenTrigger.getAttribute('data-panel-group');
+        const targetSelector = panelOpenTrigger.getAttribute('data-panel-open');
+        const target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (target instanceof HTMLElement) {
+            if (groupName) {
+                document.querySelectorAll(`[data-panel-name][data-panel-group="${groupName}"]`).forEach((panel) => {
+                    if (panel instanceof HTMLElement) {
+                        panel.classList.add('is-collapsed');
+                    }
+                });
+            }
+
+            target.classList.remove('is-collapsed');
+            target.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+    }
+
+    const panelCloseTrigger = event.target instanceof Element ? event.target.closest('[data-panel-close]') : null;
+    if (panelCloseTrigger instanceof HTMLButtonElement) {
+        const targetSelector = panelCloseTrigger.getAttribute('data-panel-close');
+        const target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (target instanceof HTMLElement) {
+            target.classList.add('is-collapsed');
         }
         return;
     }
@@ -480,8 +520,61 @@ function startDashboardPolling() {
 
                 if (nextCount !== null) {
                     lastKnownDashboardCheckoutCount = nextCount;
+    }
+}
+
+function captureUiState(target) {
+    if (!(target instanceof HTMLElement)) {
+        return null;
+    }
+
+    return {
+        scrollY: window.scrollY,
+        openPanels: Array.from(target.querySelectorAll('[data-panel-name]:not(.is-collapsed)'))
+            .map((panel) => panel instanceof HTMLElement ? `#${panel.id}` : null)
+            .filter((selector) => typeof selector === 'string'),
+        formToClose: null,
+    };
+}
+
+function restoreUiState(targetSelector, uiState) {
+    if (!uiState) {
+        return;
+    }
+
+    window.requestAnimationFrame(() => {
+        const target = document.querySelector(targetSelector);
+        if (!(target instanceof HTMLElement)) {
+            return;
+        }
+
+        if (Array.isArray(uiState.openPanels) && uiState.openPanels.length > 0) {
+            uiState.openPanels.forEach((panelSelector) => {
+                const panel = target.querySelector(panelSelector);
+                if (panel instanceof HTMLElement) {
+                    panel.classList.remove('is-collapsed');
                 }
+            });
+        }
+
+        target.querySelectorAll('.editable-field-form').forEach((formElement) => {
+            if (formElement instanceof HTMLElement) {
+                formElement.classList.add('is-collapsed');
             }
+        });
+
+        if (typeof uiState.formToClose === 'string' && uiState.formToClose !== '') {
+            const reopenedForm = target.querySelector(uiState.formToClose);
+            if (reopenedForm instanceof HTMLElement) {
+                reopenedForm.classList.add('is-collapsed');
+            }
+        }
+
+        if (typeof uiState.scrollY === 'number') {
+            window.scrollTo({top: uiState.scrollY});
+        }
+    });
+}
         } catch (error) {
             // ignore polling failures
         } finally {

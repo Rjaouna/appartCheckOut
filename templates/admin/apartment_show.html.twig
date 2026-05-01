@@ -22,7 +22,14 @@
                     </svg>
                 </button>
             </div>
-            <p class="muted">{{ apartment.fullAddress }}</p>
+            <div class="apartment-header-address-row">
+                <p class="muted">{{ apartment.fullAddress }}</p>
+                {% include 'shared/_gps_button.html.twig' with {
+                    href: apartment.wazeLink,
+                    title: 'Lancer le GPS pour cet appartement',
+                    className: 'gps-btn-inline gps-btn-header'
+                } %}
+            </div>
             <form
                 id="apartment-name-edit-form"
                 method="post"
@@ -39,7 +46,6 @@
         </div>
         <div class="head-actions">
             <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies{% if anomalyCount > 0 %} ({{ anomalyCount }}){% endif %}</a>
-            <a class="secondary-button" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir Waze</a>
             <a class="secondary-button" href="{{ path('admin_apartments') }}">Retour liste</a>
         </div>
     </section>

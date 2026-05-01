@@ -3,11 +3,11 @@
         <div class="employee-apartment-hero-copy">
             <div class="employee-apartment-head">
                 <h2 class="employee-apartment-card-title">{{ apartment.name }}</h2>
-                <a class="employee-apartment-waze" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer" aria-label="Ouvrir dans Waze">
-                    <span class="employee-apartment-waze-icon" aria-hidden="true">
-                        {% include 'shared/_waze_icon.html.twig' %}
-                    </span>
-                </a>
+                {% include 'shared/_gps_button.html.twig' with {
+                    href: apartment.wazeLink,
+                    title: 'Lancer le GPS pour cet appartement',
+                    className: 'employee-apartment-waze employee-apartment-gps'
+                } %}
             </div>
             <p>{{ apartment.fullAddress }}</p>
         </div>

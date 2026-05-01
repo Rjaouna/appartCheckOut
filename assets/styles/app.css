@@ -175,6 +175,17 @@ select {
     margin: 8px 0;
 }
 
+.apartment-header-address-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.apartment-header-address-row p {
+    margin: 0;
+}
+
 .apartment-name-edit-form {
     max-width: 440px;
     margin-top: 12px;
@@ -942,7 +953,7 @@ textarea {
     color: #315fc9;
 }
 
-.action-menu-icon-waze {
+.action-menu-icon-gps {
     padding: 0;
     border: none;
     background: transparent;
@@ -950,9 +961,8 @@ textarea {
     overflow: hidden;
 }
 
-.action-menu-icon-waze svg {
-    width: 76px;
-    height: 76px;
+.action-menu-icon-gps .gps-btn {
+    pointer-events: none;
 }
 
 .action-menu-icon-orange {
@@ -1304,8 +1314,7 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .info-list div {
-    padding: 14px;
-    border: 1px solid var(--border);
+    padding: 5px;
     border-radius: 18px;
     background: var(--surface-soft);
 }
@@ -2639,19 +2648,9 @@ body.nav-compact .floating-main-menu-button {
     right: 20px;
 }
 
-.employee-apartment-waze-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.employee-apartment-gps svg {
     width: 74px;
     height: 74px;
-    border-radius: 22px;
-    overflow: hidden;
-}
-
-.employee-apartment-waze-icon svg {
-    width: 100%;
-    height: 100%;
     display: block;
 }
 
@@ -2691,6 +2690,90 @@ body.nav-compact .floating-main-menu-button {
     border-radius: 20px;
 }
 
+.gps-btn {
+    display: inline-flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.gps-btn svg {
+    width: 90px;
+    height: 90px;
+    overflow: visible;
+}
+
+.gps-btn .bg {
+    fill: #33ccff;
+}
+
+.gps-btn .pulse {
+    fill: none;
+    stroke: #33ccff;
+    stroke-width: 4;
+    opacity: 0;
+    transform-origin: center;
+    animation: pulseGps 1.8s infinite;
+}
+
+.gps-btn .p2 {
+    animation-delay: 0.9s;
+}
+
+.gps-btn .nav {
+    fill: #fff;
+    animation: navMove 1.4s infinite ease-in-out;
+    transform-origin: center;
+}
+
+.gps-btn-inline svg {
+    width: 60px;
+    height: 60px;
+}
+
+.gps-btn-inline-row {
+    margin-left: auto;
+}
+
+.gps-btn-inline-row svg {
+    width: 46px;
+    height: 46px;
+}
+
+.gps-btn-header {
+    margin-left: auto;
+}
+
+.gps-btn-header svg {
+    width: 44px;
+    height: 44px;
+}
+
+.gps-btn-tile svg {
+    width: 76px;
+    height: 76px;
+}
+
+@keyframes pulseGps {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.55;
+    }
+    100% {
+        transform: scale(1.35);
+        opacity: 0;
+    }
+}
+
+@keyframes navMove {
+    0%, 100% {
+        transform: translateY(0) rotate(-5deg);
+    }
+    50% {
+        transform: translateY(-4px) rotate(5deg);
+    }
+}
+
 .apartment-detail-card {
     display: grid;
     gap: 12px;
@@ -2700,8 +2783,145 @@ body.nav-compact .floating-main-menu-button {
     grid-column: 1 / -1;
 }
 
+.admin-detail-grid {
+    align-items: start;
+}
+
+.admin-detail-accordion-stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-detail-entry-card {
+    display: grid;
+    gap: 8px;
+    padding: 20px 22px;
+    text-align: left;
+    border: 1px solid transparent;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ff5a76 0%, #ff385c 55%, #df3154 100%);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-detail-entry-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px rgba(255, 56, 92, 0.2);
+}
+
+.admin-detail-entry-card strong,
+.admin-detail-entry-card p {
+    margin: 0;
+}
+
+.admin-detail-entry-card p {
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.45;
+    font-size: 0.96rem;
+}
+
+.admin-detail-entry-kicker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.admin-detail-panel {
+    display: grid;
+    gap: 16px;
+    padding: 22px;
+    border-radius: 26px;
+    background: linear-gradient(180deg, #fff 0%, #fcfbf9 100%);
+}
+
+.admin-detail-panel.is-collapsed {
+    display: none;
+}
+
+.admin-detail-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.admin-detail-panel-head h2,
+.admin-detail-panel-head p {
+    margin: 0;
+}
+
+.admin-detail-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-detail-panel-head h2 {
+    font-size: 1.45rem;
+}
+
+.admin-detail-back-button {
+    background: linear-gradient(135deg, #20324f 0%, #0f62fe 100%);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 14px 28px rgba(15, 98, 254, 0.18);
+}
+
+.admin-detail-back-button:hover {
+    color: #fff;
+}
+
+.admin-dual-stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.admin-assignment-form-card {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+}
+
+.admin-assignment-form-card label,
+.admin-assignment-form-card select {
+    width: 100%;
+}
+
+.admin-assignment-form-card .secondary-button,
+.admin-assignment-form-card .primary-button {
+    width: 100%;
+    margin-top: 4px;
+}
+
+.admin-inverted-button {
+    background: #fff;
+    color: var(--accent-dark);
+}
+
+.admin-quick-actions {
+    margin-bottom: 6px;
+}
+
+.admin-subsection-head {
+    margin-top: 6px;
+}
+
 .editable-field-row {
-    padding: 16px;
+    padding: 14px 16px;
+    border-radius: 20px;
+    background: #fff;
 }
 
 .editable-field-display {
@@ -2714,6 +2934,7 @@ body.nav-compact .floating-main-menu-button {
 .editable-field-copy {
     display: grid;
     gap: 6px;
+    min-width: 0;
 }
 
 .editable-field-label {
@@ -2725,6 +2946,36 @@ body.nav-compact .floating-main-menu-button {
 .editable-field-copy strong {
     font-size: 1.05rem;
 }
+
+.info-list .editable-field-row.editable-field-row-compact {
+    padding: 12px 14px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.info-list .editable-field-row.editable-field-row-compact .editable-field-display {
+    gap: 12px;
+    align-items: center;
+}
+
+.info-list .editable-field-row.editable-field-row-compact .editable-field-copy {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.info-list .editable-field-row.editable-field-row-compact .editable-field-label {
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.info-list .editable-field-row.editable-field-row-compact .editable-field-copy strong {
+    font-size: 1rem;
+}
+
 
 .inline-edit-button {
     flex: 0 0 auto;
@@ -2824,6 +3075,11 @@ body.nav-compact .floating-main-menu-button {
     .public-entry-grid,
     .public-apartment-grid,
     .public-contact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-detail-accordion-stack,
+    .admin-dual-stack {
         grid-template-columns: 1fr;
     }
 
@@ -2929,6 +3185,17 @@ body.nav-compact .floating-main-menu-button {
     .admin-user-list-card,
     .admin-user-hero-media {
         align-items: flex-start;
+    }
+
+    .admin-detail-panel-head,
+    .admin-detail-panel-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .editable-field-row-compact .editable-field-copy {
+        display: grid;
+        gap: 4px;
     }
 
     .public-contact-card,

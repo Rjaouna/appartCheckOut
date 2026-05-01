@@ -105,8 +105,12 @@
                                 <span>Anomalies</span>
                             </a>
                             <a class="action-menu-tile" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">
-                                <span class="action-menu-icon action-menu-icon-waze">
-                                    {% include 'shared/_waze_icon.html.twig' %}
+                                <span class="action-menu-icon action-menu-icon-gps">
+                                    {% include 'shared/_gps_button.html.twig' with {
+                                        href: card.apartment.wazeLink,
+                                        title: 'Lancer le GPS',
+                                        className: 'gps-btn-tile'
+                                    } %}
                                 </span>
                                 <span>Ouvrir Waze</span>
                             </a>
@@ -214,8 +218,12 @@
                                 <span>Fiche appartement</span>
                             </a>
                             <a class="action-menu-tile" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">
-                                <span class="action-menu-icon action-menu-icon-waze">
-                                    {% include 'shared/_waze_icon.html.twig' %}
+                                <span class="action-menu-icon action-menu-icon-gps">
+                                    {% include 'shared/_gps_button.html.twig' with {
+                                        href: card.apartment.wazeLink,
+                                        title: 'Lancer le GPS',
+                                        className: 'gps-btn-tile'
+                                    } %}
                                 </span>
                                 <span>Ouvrir Waze</span>
                             </a>

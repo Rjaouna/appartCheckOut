@@ -1,5 +1,7 @@
+{% set compact = compact|default(false) %}
 {% set multiline = multiline|default(false) %}
-<div class="editable-field-row">
+{% set showGpsInline = showGpsInline|default(false) %}
+<div class="editable-field-row {{ compact ? 'editable-field-row-compact' : '' }}">
     <div class="editable-field-display">
         <div class="editable-field-copy">
             <span class="editable-field-label">{{ label }}</span>
@@ -9,6 +11,13 @@
                 <strong>{{ value }}</strong>
             {% endif %}
         </div>
+        {% if showGpsInline %}
+            {% include 'shared/_gps_button.html.twig' with {
+                href: apartment.wazeLink,
+                title: 'Lancer le GPS pour cet appartement',
+                className: 'gps-btn-inline gps-btn-inline-row'
+            } %}
+        {% endif %}
         <button
             class="inline-edit-button"
             type="button"
