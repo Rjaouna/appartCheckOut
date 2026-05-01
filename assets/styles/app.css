@@ -195,6 +195,119 @@ select {
     margin-top: 12px;
 }
 
+.apartment-hero {
+    margin-bottom: 28px;
+}
+
+.apartment-hero-main {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(250px, 320px);
+    gap: 18px;
+    padding: 22px 24px;
+    border: 1px solid rgba(255, 56, 92, 0.14);
+    border-radius: 30px;
+    background:
+        radial-gradient(circle at top left, rgba(255, 90, 118, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 249, 250, 0.96) 100%);
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
+    align-items: start;
+}
+
+.apartment-hero-copy {
+    display: grid;
+    gap: 16px;
+}
+
+.apartment-hero-eyebrow {
+    justify-self: start;
+}
+
+.apartment-hero-title-row {
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.apartment-hero-title-row h1 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: -0.04em;
+}
+
+.apartment-hero-edit-button {
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(255, 56, 92, 0.18);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--accent-dark);
+    box-shadow: 0 10px 24px rgba(255, 56, 92, 0.12);
+}
+
+.apartment-hero-address-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 18px 18px 18px 20px;
+    border-radius: 24px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.apartment-hero-address-copy {
+    display: grid;
+    gap: 6px;
+}
+
+.apartment-hero-address-label {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.apartment-hero-address-card p {
+    margin: 0;
+    font-size: 1.02rem;
+    line-height: 1.55;
+    color: var(--text);
+}
+
+.address-link,
+.apartment-hero-address-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.address-link:hover,
+.address-link:focus-visible,
+.apartment-hero-address-link:hover,
+.apartment-hero-address-link:focus-visible {
+    color: var(--accent-dark);
+    border-bottom-color: rgba(255, 56, 92, 0.35);
+}
+
+.apartment-hero-actions {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+}
+
+.apartment-hero-action {
+    width: 100%;
+    justify-content: center;
+    min-height: 52px;
+    border-radius: 18px;
+}
+
+.apartment-hero-edit-form {
+    margin-top: 14px;
+    max-width: 560px;
+}
+
 .eyebrow {
     display: inline-flex;
     padding: 7px 12px;
@@ -224,7 +337,7 @@ select {
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 5px;
     border: none;
     border-radius: 16px;
     padding: 13px 18px;
@@ -955,18 +1068,6 @@ textarea {
 .action-menu-icon-blue {
     background: linear-gradient(180deg, #eef5ff 0%, #e1edff 100%);
     color: #315fc9;
-}
-
-.action-menu-icon-gps {
-    padding: 0;
-    border: none;
-    background: transparent;
-    border-radius: 24px;
-    overflow: hidden;
-}
-
-.action-menu-icon-gps .gps-btn {
-    pointer-events: none;
 }
 
 .action-menu-icon-orange {
@@ -2659,18 +2760,6 @@ body.nav-compact .floating-main-menu-button {
     font-size: 1rem;
 }
 
-.employee-apartment-card .employee-apartment-waze {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-}
-
-.employee-apartment-gps svg {
-    width: 74px;
-    height: 74px;
-    display: block;
-}
-
 .employee-apartment-code-block {
     display: grid;
     gap: 12px;
@@ -2699,96 +2788,6 @@ body.nav-compact .floating-main-menu-button {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 18px;
-}
-
-.waze-pill-large {
-    width: 58px;
-    height: 58px;
-    border-radius: 20px;
-}
-
-.gps-btn {
-    display: inline-flex;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-}
-
-.gps-btn svg {
-    width: 90px;
-    height: 90px;
-    overflow: visible;
-}
-
-.gps-btn .bg {
-    fill: #33ccff;
-}
-
-.gps-btn .pulse {
-    fill: none;
-    stroke: #33ccff;
-    stroke-width: 4;
-    opacity: 0;
-    transform-origin: center;
-    animation: pulseGps 1.8s infinite;
-}
-
-.gps-btn .p2 {
-    animation-delay: 0.9s;
-}
-
-.gps-btn .nav {
-    fill: #fff;
-    animation: navMove 1.4s infinite ease-in-out;
-    transform-origin: center;
-}
-
-.gps-btn-inline svg {
-    width: 60px;
-    height: 60px;
-}
-
-.gps-btn-inline-row {
-    margin-left: auto;
-}
-
-.gps-btn-inline-row svg {
-    width: 46px;
-    height: 46px;
-}
-
-.gps-btn-header {
-    margin-left: auto;
-}
-
-.gps-btn-header svg {
-    width: 44px;
-    height: 44px;
-}
-
-.gps-btn-tile svg {
-    width: 76px;
-    height: 76px;
-}
-
-@keyframes pulseGps {
-    0% {
-        transform: scale(0.9);
-        opacity: 0.55;
-    }
-    100% {
-        transform: scale(1.35);
-        opacity: 0;
-    }
-}
-
-@keyframes navMove {
-    0%, 100% {
-        transform: translateY(0) rotate(-5deg);
-    }
-    50% {
-        transform: translateY(-4px) rotate(5deg);
-    }
 }
 
 .apartment-detail-card {
@@ -3106,6 +3105,10 @@ body.nav-compact .floating-main-menu-button {
         grid-template-columns: 1fr;
     }
 
+    .apartment-hero-main {
+        grid-template-columns: 1fr;
+    }
+
     .apartment-card-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -3150,6 +3153,20 @@ body.nav-compact .floating-main-menu-button {
     .grid-two,
     .table-row {
         grid-template-columns: 1fr;
+    }
+
+    .apartment-hero-main {
+        padding: 18px;
+        border-radius: 24px;
+    }
+
+    .apartment-hero-title-row {
+        align-items: center;
+    }
+
+    .apartment-hero-address-card {
+        grid-template-columns: 1fr;
+        align-items: start;
     }
 
     .metrics-grid,

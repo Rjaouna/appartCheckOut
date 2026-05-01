@@ -79,7 +79,7 @@
                     </h2>
 
                     <dl class="key-values">
-                        <div><dt>Waze</dt><dd><a href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir</a></dd></div>
+                        <div><dt>Adresse</dt><dd><a class="address-link" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">{{ card.apartment.fullAddress }}</a></dd></div>
                         <div><dt>Code immeuble</dt><dd>{{ card.apartment.buildingAccessCode ?: '-' }}</dd></div>
                         <div><dt>Code boîte</dt><dd>{{ card.apartment.keyBoxCode ?: '-' }}</dd></div>
                         <div><dt>Progression</dt><dd>{{ card.openCheckout ? card.openCheckout.progressPercent ~ '%' : '0%' }}</dd></div>
@@ -105,14 +105,10 @@
                                 <span>Anomalies</span>
                             </a>
                             <a class="action-menu-tile" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">
-                                <span class="action-menu-icon action-menu-icon-gps">
-                                    {% include 'shared/_gps_button.html.twig' with {
-                                        href: card.apartment.wazeLink,
-                                        title: 'Lancer le GPS',
-                                        className: 'gps-btn-tile'
-                                    } %}
+                                <span class="action-menu-icon action-menu-icon-dark">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-4.9-6-10a6 6 0 1 1 12 0c0 5.1-6 10-6 10Zm0-7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Ouvrir Waze</span>
+                                <span>{{ card.apartment.fullAddress }}</span>
                             </a>
                             {% if not card.openCheckout and card.canQuickLaunch %}
                                 <form method="post" action="{{ path('admin_checkout_create', {id: card.apartment.id}) }}" data-async-form data-update-target="#admin-dashboard-content">
@@ -192,7 +188,7 @@
                     </h2>
 
                     <dl class="key-values">
-                        <div><dt>Waze</dt><dd><a href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir</a></dd></div>
+                        <div><dt>Adresse</dt><dd><a class="address-link" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">{{ card.apartment.fullAddress }}</a></dd></div>
                         <div><dt>Code immeuble</dt><dd>{{ card.apartment.buildingAccessCode ?: '-' }}</dd></div>
                         <div><dt>Code boite</dt><dd>{{ card.apartment.keyBoxCode ?: '-' }}</dd></div>
                         <div><dt>Anomalies</dt><dd>{{ card.openAnomalyCount }}</dd></div>
@@ -218,14 +214,10 @@
                                 <span>Fiche appartement</span>
                             </a>
                             <a class="action-menu-tile" href="{{ card.apartment.wazeLink }}" target="_blank" rel="noreferrer">
-                                <span class="action-menu-icon action-menu-icon-gps">
-                                    {% include 'shared/_gps_button.html.twig' with {
-                                        href: card.apartment.wazeLink,
-                                        title: 'Lancer le GPS',
-                                        className: 'gps-btn-tile'
-                                    } %}
+                                <span class="action-menu-icon action-menu-icon-dark">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-4.9-6-10a6 6 0 1 1 12 0c0 5.1-6 10-6 10Zm0-7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Ouvrir Waze</span>
+                                <span>{{ card.apartment.fullAddress }}</span>
                             </a>
                         </div>
                     </div>

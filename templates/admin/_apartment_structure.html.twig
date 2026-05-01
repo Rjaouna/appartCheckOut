@@ -147,7 +147,7 @@
             </div>
         </div>
         <div class="info-list">
-            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'addressLine1', label: 'Adresse', value: apartment.addressLine1, rawValue: apartment.addressLine1, compact: true, showGpsInline: true } %}
+            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'addressLine1', label: 'Adresse', value: apartment.addressLine1, rawValue: apartment.addressLine1, compact: true } %}
             {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'addressLine2', label: 'Complement d adresse', value: apartment.addressLine2 ?: 'Non renseigne', rawValue: apartment.addressLine2, compact: true } %}
             {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'city', label: 'Ville', value: apartment.city, rawValue: apartment.city, compact: true } %}
             {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'postalCode', label: 'Code postal', value: apartment.postalCode, rawValue: apartment.postalCode, compact: true } %}
