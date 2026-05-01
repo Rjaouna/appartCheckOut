@@ -3533,7 +3533,7 @@ body.nav-compact .floating-main-menu-button {
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-x: contain;
-        padding: 0 0 6px;
+        padding: 0 28px 6px 0;
         margin: 0;
         scrollbar-width: none;
     }
@@ -3548,9 +3548,9 @@ body.nav-compact .floating-main-menu-button {
     }
 
     .apartment-card-grid > * {
-        flex: 0 0 100%;
-        min-width: 100%;
-        max-width: 100%;
+        flex: 0 0 calc(100% - 44px);
+        min-width: calc(100% - 44px);
+        max-width: calc(100% - 44px);
         scroll-snap-align: start;
         scroll-snap-stop: always;
     }
