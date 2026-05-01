@@ -29,20 +29,37 @@
                     <span class="top-app-brand-text">Check-out</span>
                 </a>
 
-                <button
-                    id="floating-main-menu-button"
-                    class="floating-main-menu-button"
-                    type="button"
-                    title="Ouvrir le menu"
-                    aria-label="Ouvrir le menu principal"
-                    data-action-menu-trigger
-                    data-action-menu-title="Menu principal"
-                    data-action-menu-source="#global-main-menu"
-                >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
-                    </svg>
-                </button>
+                <div class="top-app-actions">
+                    <button
+                        class="top-app-install-button"
+                        type="button"
+                        title="Installer l’application"
+                        aria-label="Installer l’application"
+                        data-install-app-trigger
+                        hidden
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 4v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M8.5 10.5 12 14l3.5-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 17v1a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <button
+                        id="floating-main-menu-button"
+                        class="floating-main-menu-button"
+                        type="button"
+                        title="Ouvrir le menu"
+                        aria-label="Ouvrir le menu principal"
+                        data-action-menu-trigger
+                        data-action-menu-title="Menu principal"
+                        data-action-menu-source="#global-main-menu"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         {% endif %}
 
@@ -138,9 +155,9 @@
                         </a>
                     {% endif %}
                     <button
-                        id="install-app-button"
                         class="action-menu-tile action-menu-tile-button"
                         type="button"
+                        data-install-app-trigger
                         hidden
                     >
                         <span class="action-menu-icon action-menu-icon-pink">
@@ -217,6 +234,25 @@
                     </div>
                     <div class="modal-body lightbox-modal-body">
                         <img id="photoLightboxImage" class="lightbox-image" src="" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="installHelpModal" tabindex="-1" aria-labelledby="installHelpModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="installHelpModalLabel">Installer l’application</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Sur iPhone avec Safari, l’installation se fait en quelques secondes :</p>
+                        <ol class="install-help-list">
+                            <li>Appuie sur le bouton <strong>Partager</strong> de Safari.</li>
+                            <li>Choisis <strong>Sur l’écran d’accueil</strong>.</li>
+                            <li>Valide avec <strong>Ajouter</strong>.</li>
+                        </ol>
                     </div>
                 </div>
             </div>

@@ -109,6 +109,31 @@ select {
     letter-spacing: 0.01em;
 }
 
+.top-app-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.top-app-install-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--accent-dark);
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+}
+
+.top-app-install-button svg {
+    width: 24px;
+    height: 24px;
+}
+
 .shell-header {
     position: sticky;
     top: 0;
@@ -1042,6 +1067,16 @@ textarea {
     width: 100%;
     border: none;
     cursor: pointer;
+}
+
+.install-help-list {
+    margin: 14px 0 0;
+    padding-left: 20px;
+    color: var(--text);
+}
+
+.install-help-list li + li {
+    margin-top: 8px;
 }
 
 .action-menu-tile-muted {

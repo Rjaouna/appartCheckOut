@@ -481,7 +481,7 @@ function setupInstallPrompt() {
     });
 
     document.addEventListener('click', async (event) => {
-        const installButton = event.target instanceof Element ? event.target.closest('#install-app-button') : null;
+        const installButton = event.target instanceof Element ? event.target.closest('[data-install-app-trigger]') : null;
         if (!(installButton instanceof HTMLButtonElement)) {
             return;
         }
@@ -495,7 +495,7 @@ function setupInstallPrompt() {
         }
 
         if (isIosStandaloneInstallAvailable()) {
-            showToast('Sur iPhone : partage puis Ajouter à l’écran d’accueil.');
+            openInstallHelpModal();
             return;
         }
 
@@ -506,13 +506,12 @@ function setupInstallPrompt() {
 }
 
 function updateInstallAppButton() {
-    const button = document.getElementById('install-app-button');
-    if (!(button instanceof HTMLElement)) {
-        return;
-    }
-
     const shouldShow = deferredInstallPrompt !== null || isIosStandaloneInstallAvailable();
-    button.hidden = !shouldShow;
+    document.querySelectorAll('[data-install-app-trigger]').forEach((button) => {
+        if (button instanceof HTMLElement) {
+            button.hidden = !shouldShow;
+        }
+    });
 }
 
 function isIosStandaloneInstallAvailable() {
@@ -521,6 +520,16 @@ function isIosStandaloneInstallAvailable() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
     return isIos && !isStandalone;
+}
+
+function openInstallHelpModal() {
+    const modalElement = document.getElementById('installHelpModal');
+    if (!(modalElement instanceof HTMLElement) || typeof bootstrap === 'undefined') {
+        showToast('Sur iPhone : Partager puis Sur l’écran d’accueil.');
+        return;
+    }
+
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
 }
 
 function startDashboardPolling() {
