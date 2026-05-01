@@ -44,7 +44,7 @@ class HomeController extends AbstractController
         if ($request->isMethod('POST')) {
             $submittedCode = trim((string) $request->request->get('accessCode'));
             if ($submittedCode === '') {
-                $errorMessage = 'Renseigne le code de la boite a cles ou le code porte.';
+                $errorMessage = 'Renseigne le code de la boîte à clés ou le code porte.';
             } else {
                 $apartment = $this->findApartmentByAccessCode($submittedCode, $entityManager);
                 if ($apartment instanceof Apartment) {
@@ -55,7 +55,7 @@ class HomeController extends AbstractController
                     return $this->redirectToRoute('tenant_apartment_show', ['id' => $apartment->getId()]);
                 }
 
-                $errorMessage = 'Aucun appartement actif ne correspond a ce code.';
+                $errorMessage = 'Aucun appartement actif ne correspond à ce code.';
             }
         }
 
