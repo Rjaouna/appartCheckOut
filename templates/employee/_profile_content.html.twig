@@ -1,20 +1,43 @@
 <div class="employee-profile-layout">
     <section class="panel employee-profile-hero-card">
         <div class="employee-profile-hero">
-            <div class="admin-user-avatar admin-user-avatar-large {{ user.photoPath ? 'has-photo' : '' }}">
-                {% if user.photoPath %}
-                    <img src="{{ user.photoPath }}" alt="{{ user.fullName }}">
-                {% else %}
-                    <span>{{ user.fullName|slice(0, 1)|upper }}</span>
-                {% endif %}
-            </div>
+            <form
+                method="post"
+                action="{{ path('employee_profile_photo_update') }}"
+                enctype="multipart/form-data"
+                class="employee-profile-photo-form"
+                data-async-form
+                data-update-target="#employee-profile-content"
+            >
+                <label class="employee-profile-photo-trigger" for="employee-profile-photo-input">
+                    <span class="admin-user-avatar admin-user-avatar-large {{ user.photoPath ? 'has-photo' : '' }}">
+                        {% if user.photoPath %}
+                            <img src="{{ user.photoPath }}" alt="{{ user.fullName }}">
+                        {% else %}
+                            <span>{{ user.fullName|slice(0, 1)|upper }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="employee-profile-photo-overlay">
+                        <span class="employee-profile-photo-overlay-label">Modifier</span>
+                    </span>
+                </label>
+                <input
+                    id="employee-profile-photo-input"
+                    class="employee-profile-photo-input"
+                    type="file"
+                    name="photo"
+                    accept="image/*"
+                    data-auto-submit-file
+                >
+            </form>
             <div class="employee-profile-hero-copy">
+                <span class="employee-profile-kicker">Photo de profil modifiable</span>
                 <h2>{{ user.fullName }}</h2>
                 <p>{{ user.email }}</p>
                 {% if user.phoneNumber %}
                     <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
                 {% else %}
-                    <span class="muted">Numero non renseigne</span>
+                    <span class="muted">Numéro non renseigné</span>
                 {% endif %}
             </div>
         </div>

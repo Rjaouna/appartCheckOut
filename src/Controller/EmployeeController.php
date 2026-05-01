@@ -20,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/employee')]
@@ -163,6 +164,29 @@ class EmployeeController extends AbstractController
     public function profile(EntityManagerInterface $entityManager): Response
     {
         return $this->render('employee/profile.html.twig', $this->buildProfileData($entityManager));
+    }
+
+    #[Route('/profile/photo', name: 'employee_profile_photo_update', methods: ['POST'])]
+    public function updateProfilePhoto(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $photo = $request->files->get('photo');
+
+        if (!$photo instanceof UploadedFile) {
+            return new JsonResponse(['success' => false, 'message' => 'Ajoute une photo avant de valider.'], 422);
+        }
+
+        $previousPhotoPath = $user->getPhotoPath();
+        $user->setPhotoPath($this->storeUserPhoto($photo));
+        $entityManager->flush();
+        $this->deleteUserPhoto($previousPhotoPath);
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_profile_content.html.twig', $this->buildProfileData($entityManager)),
+            'message' => 'Photo de profil mise à jour.',
+        ]);
     }
 
     #[Route('/profile/services/{id}/toggle', name: 'employee_profile_service_toggle', methods: ['POST'])]
@@ -771,6 +795,34 @@ class EmployeeController extends AbstractController
         $label = trim(preg_replace('/\s+/', ' ', $label) ?? '');
 
         return mb_substr($label, 0, 160);
+    }
+
+    private function storeUserPhoto(UploadedFile $photo): string
+    {
+        $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/users';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $safeName = pathinfo($photo->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeName = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeName) ?: 'employe';
+        $filename = sprintf('%s-%s.%s', $safeName, bin2hex(random_bytes(4)), $photo->guessExtension() ?: 'jpg');
+
+        $photo->move($targetDir, $filename);
+
+        return '/uploads/users/' . $filename;
+    }
+
+    private function deleteUserPhoto(?string $photoPath): void
+    {
+        if (!is_string($photoPath) || $photoPath === '' || !str_starts_with($photoPath, '/uploads/users/')) {
+            return;
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $photoPath;
+        if (is_file($fullPath)) {
+            @unlink($fullPath);
+        }
     }
 
     private function formatFrenchDateTime(\DateTimeImmutable $dateTime, string $pattern): string

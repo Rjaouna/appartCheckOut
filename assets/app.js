@@ -309,6 +309,22 @@ document.addEventListener('click', (event) => {
     }
 });
 
+document.addEventListener('change', (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || !input.hasAttribute('data-auto-submit-file')) {
+        return;
+    }
+
+    if (!input.files || input.files.length === 0) {
+        return;
+    }
+
+    const form = input.closest('form');
+    if (form instanceof HTMLFormElement) {
+        form.requestSubmit();
+    }
+});
+
 document.addEventListener('pointerdown', (event) => {
     const button = event.target instanceof Element ? event.target.closest('[data-draggable-y]') : null;
     if (!(button instanceof HTMLElement)) {
@@ -428,6 +444,9 @@ function restoreFloatingMenuPosition() {
 }
 
 function syncTopBarOnScroll() {
+    const shouldCompactNav = window.scrollY > 72;
+    document.body.classList.toggle('nav-compact', shouldCompactNav);
+
     const scrollTopButton = document.getElementById('scroll-to-top-button');
     if (scrollTopButton instanceof HTMLElement) {
         scrollTopButton.classList.toggle('is-visible', window.scrollY > 280);
