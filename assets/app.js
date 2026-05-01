@@ -8,11 +8,13 @@ let dashboardPollTimer = null;
 let dashboardPollInFlight = false;
 let lastKnownDashboardCheckoutCount = null;
 let dashboardPollingStarted = false;
+let deferredInstallPrompt = null;
 
 restorePendingToast();
 restoreFloatingMenuPosition();
 syncTopBarOnScroll();
 registerServiceWorker();
+setupInstallPrompt();
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -463,6 +465,62 @@ function registerServiceWorker() {
             // ignore service worker registration errors
         });
     }, {once: true});
+}
+
+function setupInstallPrompt() {
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        updateInstallAppButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        updateInstallAppButton();
+        showToast('Application installée avec succès.');
+    });
+
+    document.addEventListener('click', async (event) => {
+        const installButton = event.target instanceof Element ? event.target.closest('#install-app-button') : null;
+        if (!(installButton instanceof HTMLButtonElement)) {
+            return;
+        }
+
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice.catch(() => null);
+            deferredInstallPrompt = null;
+            updateInstallAppButton();
+            return;
+        }
+
+        if (isIosStandaloneInstallAvailable()) {
+            showToast('Sur iPhone : partage puis Ajouter à l’écran d’accueil.');
+            return;
+        }
+
+        showToast('Installation non disponible dans ce navigateur.', 'error');
+    });
+
+    updateInstallAppButton();
+}
+
+function updateInstallAppButton() {
+    const button = document.getElementById('install-app-button');
+    if (!(button instanceof HTMLElement)) {
+        return;
+    }
+
+    const shouldShow = deferredInstallPrompt !== null || isIosStandaloneInstallAvailable();
+    button.hidden = !shouldShow;
+}
+
+function isIosStandaloneInstallAvailable() {
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIos = /iphone|ipad|ipod/.test(ua);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    return isIos && !isStandalone;
 }
 
 function startDashboardPolling() {

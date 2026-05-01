@@ -137,6 +137,21 @@
                             <span>Profil</span>
                         </a>
                     {% endif %}
+                    <button
+                        id="install-app-button"
+                        class="action-menu-tile action-menu-tile-button"
+                        type="button"
+                        hidden
+                    >
+                        <span class="action-menu-icon action-menu-icon-pink">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 3v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M8.5 9.5 12 13l3.5-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M5 15v2a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span>Installer l’application</span>
+                    </button>
                     <a class="action-menu-tile" href="{{ path('app_logout') }}">
                         <span class="action-menu-icon action-menu-icon-dark">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v-2h4V9h-4V7h6v10h-6Zm-7 4V3h9v2H5v14h7v2H3Zm13.6-6-1.4-1.4 1.6-1.6H9v-2h7.8l-1.6-1.6L16.6 7l4 4-4 4Z" fill="currentColor"/></svg>
