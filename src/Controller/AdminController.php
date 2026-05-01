@@ -356,11 +356,7 @@ class AdminController extends AbstractController
         $apartment->setName($name);
         $entityManager->flush();
 
-        return new JsonResponse([
-            'success' => true,
-            'html' => $this->renderView('admin/apartment_show.html.twig', $this->buildApartmentDetailData($apartment, $entityManager)),
-            'message' => 'Nom de l appartement mis a jour.',
-        ]);
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Nom de l appartement mis a jour.');
     }
 
     #[Route('/apartments/{id}/field', name: 'admin_apartment_field_update', methods: ['POST'])]
@@ -379,7 +375,7 @@ class AdminController extends AbstractController
             ], 422);
         }
 
-        return $this->structureResponse($apartment, $entityManager, 'Information appartement mise a jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Information appartement mise a jour.');
     }
 
     #[Route('/apartments/{id}/status', name: 'admin_apartment_status', methods: ['POST'])]
@@ -396,7 +392,7 @@ class AdminController extends AbstractController
             ]);
         }
 
-        return $this->structureResponse($apartment, $entityManager, 'Statut de l appartement mis a jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Statut de l appartement mis a jour.');
     }
 
     #[Route('/apartments/{id}/delete', name: 'admin_apartment_delete', methods: ['POST'])]
@@ -435,7 +431,7 @@ class AdminController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->structureResponse($apartment, $entityManager, 'Affectations mises à jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Affectations mises à jour.');
     }
 
     #[Route('/apartments/{id}/priority', name: 'admin_apartment_priority', methods: ['POST'])]
@@ -446,7 +442,7 @@ class AdminController extends AbstractController
         $apartment->setInventoryDueAt(is_string($due) && $due !== '' ? new \DateTimeImmutable($due) : null);
         $entityManager->flush();
 
-        return $this->structureResponse($apartment, $entityManager, 'Priorité inventaire mise à jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Priorité inventaire mise à jour.');
     }
 
     #[Route('/apartments/{id}/rooms', name: 'admin_room_create', methods: ['POST'])]
@@ -465,7 +461,7 @@ class AdminController extends AbstractController
         $entityManager->persist($room);
         $entityManager->flush();
 
-        return $this->structureResponse($apartment, $entityManager, 'Piece ajoutee.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece ajoutee.');
     }
 
     #[Route('/catalog', name: 'admin_catalog_create', methods: ['POST'])]
@@ -483,7 +479,7 @@ class AdminController extends AbstractController
 
         $apartment = $entityManager->getRepository(Apartment::class)->find((int) $request->request->get('apartmentId'));
         if ($request->isXmlHttpRequest() && $apartment instanceof Apartment) {
-            return $this->structureResponse($apartment, $entityManager, 'Catalogue mis a jour.');
+            return $this->apartmentDetailResponse($apartment, $entityManager, 'Catalogue mis a jour.');
         }
 
         return $this->redirectToRoute('admin_apartment_show', ['id' => (int) $request->request->get('apartmentId')]);
@@ -515,7 +511,7 @@ class AdminController extends AbstractController
         $entityManager->persist($equipment);
         $entityManager->flush();
 
-        return $this->structureResponse($room->getApartment(), $entityManager, 'Equipement ajoute.');
+        return $this->apartmentDetailResponse($room->getApartment(), $entityManager, 'Equipement ajoute.');
     }
 
     #[Route('/rooms/{id}/delete', name: 'admin_room_delete', methods: ['POST'])]
@@ -544,7 +540,7 @@ class AdminController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->structureResponse($apartment, $entityManager, 'Piece supprimee.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece supprimee.');
     }
 
     #[Route('/room-equipments/{id}/delete', name: 'admin_room_equipment_delete', methods: ['POST'])]
@@ -566,7 +562,7 @@ class AdminController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->structureResponse($apartment, $entityManager, 'Equipement supprime de la piece.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Equipement supprime de la piece.');
     }
 
     #[Route('/apartments/{id}/checkouts', name: 'admin_checkout_create', methods: ['POST'])]
@@ -594,7 +590,7 @@ class AdminController extends AbstractController
             ]);
         }
 
-        return $this->structureResponse($apartment, $entityManager, 'Check-out créé et assigné.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out créé et assigné.');
     }
 
     #[Route('/checkouts/{id}/schedule', name: 'admin_checkout_schedule_update', methods: ['POST'])]
@@ -618,7 +614,7 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
         }
 
-        return $this->structureResponse($apartment, $entityManager, 'Date du check-out mise a jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Date du check-out mise a jour.');
     }
 
     #[Route('/checkouts/{id}/cancel', name: 'admin_checkout_cancel', methods: ['POST'])]
@@ -641,12 +637,12 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
         }
 
-        return $this->structureResponse($apartment, $entityManager, 'Check-out annule.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out annule.');
     }
 
-    private function structureResponse(Apartment $apartment, EntityManagerInterface $entityManager, string $message): JsonResponse
+    private function apartmentDetailResponse(Apartment $apartment, EntityManagerInterface $entityManager, string $message): JsonResponse
     {
-        $html = $this->renderView('admin/_apartment_structure.html.twig', $this->buildApartmentDetailData($apartment, $entityManager));
+        $html = $this->renderView('admin/_apartment_detail_content.html.twig', $this->buildApartmentDetailData($apartment, $entityManager));
 
         return new JsonResponse([
             'success' => true,

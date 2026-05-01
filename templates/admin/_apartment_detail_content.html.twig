@@ -1,0 +1,50 @@
+<section class="page-head">
+    <div>
+        <span class="eyebrow">Appartement</span>
+        <div class="inline-title-edit">
+            <h1>{{ apartment.name }}</h1>
+            <button
+                class="icon-action-button"
+                type="button"
+                aria-label="Modifier le nom de l appartement"
+                title="Modifier le nom de l appartement"
+                data-edit-target="#apartment-name-edit-form"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M13.3 6.6 16 9.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M15.2 4.7a1.9 1.9 0 0 1 2.6 0l1.5 1.5a1.9 1.9 0 0 1 0 2.6l-1.1 1.1-4.1-4.1 1.1-1.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="apartment-header-address-row">
+            <p class="muted">{{ apartment.fullAddress }}</p>
+            {% include 'shared/_gps_button.html.twig' with {
+                href: apartment.wazeLink,
+                title: 'Lancer le GPS pour cet appartement',
+                className: 'gps-btn-inline gps-btn-header'
+            } %}
+        </div>
+        <form
+            id="apartment-name-edit-form"
+            method="post"
+            action="{{ path('admin_apartment_name_update', {id: apartment.id}) }}"
+            class="editable-field-form is-collapsed apartment-name-edit-form"
+            data-async-form
+            data-update-target="#apartment-detail-root"
+        >
+            <input type="text" name="name" value="{{ apartment.name }}" required>
+            <div class="editable-field-actions">
+                <button class="secondary-button" type="submit">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+    <div class="head-actions">
+        <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies{% if anomalyCount > 0 %} ({{ anomalyCount }}){% endif %}</a>
+        <a class="secondary-button" href="{{ path('admin_apartments') }}">Retour liste</a>
+    </div>
+</section>
+
+<section id="apartment-structure">
+    {% include 'admin/_apartment_structure.html.twig' %}
+</section>

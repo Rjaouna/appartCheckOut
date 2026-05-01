@@ -57,7 +57,7 @@
                 Un check-out non termine existe deja pour cet appartement. Termine ou annule le check-out actuel avant d'en creer un nouveau.
             </div>
         {% else %}
-            <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form" data-async-form data-update-target="#apartment-structure">
+            <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form" data-async-form data-update-target="#apartment-detail-root">
                 <label><span>Employe</span>
                     <select name="assignedTo" required>
                         {% for employee in apartment.assignedEmployees %}
@@ -85,7 +85,7 @@
                     <strong>{{ checkout.assignedTo.fullName }}</strong>
                     <p>{{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-' }}</p>
                     <span class="status-badge">{{ checkout.status.label }}</span>
-                    <form method="post" action="{{ path('admin_checkout_schedule_update', {id: checkout.id}) }}" class="stack-form compact-form checkout-action-form" data-async-form data-update-target="#apartment-structure">
+                    <form method="post" action="{{ path('admin_checkout_schedule_update', {id: checkout.id}) }}" class="stack-form compact-form checkout-action-form" data-async-form data-update-target="#apartment-detail-root">
                         <label>
                             <span>Modifier la date prevue</span>
                             <input type="datetime-local" name="scheduledAt" value="{{ checkout.scheduledAt ? checkout.scheduledAt|date('Y-m-d\\TH:i') : '' }}" required>
@@ -98,7 +98,7 @@
                             action="{{ path('admin_checkout_cancel', {id: checkout.id}) }}"
                             class="compact-form checkout-action-form"
                             data-async-form
-                            data-update-target="#apartment-structure"
+                            data-update-target="#apartment-detail-root"
                             data-confirm-reset
                             data-confirm-title="Annuler le check-out"
                             data-confirm-message="Veux-tu vraiment annuler ce check-out ?"
@@ -173,7 +173,7 @@
             <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-assignment">Retour</button>
         </div>
         <div class="admin-dual-stack">
-            <form method="post" action="{{ path('admin_apartment_assign', {id: apartment.id}) }}" class="stack-form employee-home-info-card employee-home-info-card-soft admin-assignment-form-card" data-async-form data-update-target="#apartment-structure">
+            <form method="post" action="{{ path('admin_apartment_assign', {id: apartment.id}) }}" class="stack-form employee-home-info-card employee-home-info-card-soft admin-assignment-form-card" data-async-form data-update-target="#apartment-detail-root">
                 <label>
                     <span>Employes assignes</span>
                     <select name="assignedEmployees[]" multiple size="5">
@@ -187,7 +187,7 @@
                 <button class="secondary-button admin-dark-button" type="submit">Mettre a jour l assignation</button>
             </form>
 
-            <form method="post" action="{{ path('admin_apartment_priority', {id: apartment.id}) }}" class="stack-form employee-home-primary-card" data-async-form data-update-target="#apartment-structure">
+            <form method="post" action="{{ path('admin_apartment_priority', {id: apartment.id}) }}" class="stack-form employee-home-primary-card" data-async-form data-update-target="#apartment-detail-root">
                 <div class="employee-home-primary-content">
                     <span class="employee-home-kicker">Priorite</span>
                     <h2>Faire ressortir cet appartement</h2>
@@ -217,7 +217,7 @@
 
         <div class="quick-actions admin-quick-actions">
             {% for roomType in roomTypes %}
-                <form method="post" action="{{ path('admin_room_create', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
+                <form method="post" action="{{ path('admin_room_create', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-detail-root">
                     <input type="hidden" name="type" value="{{ roomType.value }}">
                     <input type="hidden" name="name" value="{{ roomType.label }}">
                     <button class="chip-button" type="submit">Ajouter {{ roomType.label|lower }}</button>
@@ -238,7 +238,7 @@
                                 method="post"
                                 action="{{ path('admin_room_delete', {id: room.id}) }}"
                                 data-async-form
-                                data-update-target="#apartment-structure"
+                                data-update-target="#apartment-detail-root"
                                 data-confirm-reset
                                 data-confirm-title="Supprimer la piece"
                                 data-confirm-message="Veux-tu vraiment supprimer cette piece vide ?"
@@ -261,7 +261,7 @@
                                 action="{{ path('admin_room_equipment_delete', {id: equipment.id}) }}"
                                 class="equipment-tag equipment-tag-form"
                                 data-async-form
-                                data-update-target="#apartment-structure"
+                                data-update-target="#apartment-detail-root"
                                 data-confirm-reset
                                 data-confirm-title="Supprimer l equipement"
                                 data-confirm-message="Veux-tu vraiment supprimer cet equipement de la piece ?"
@@ -273,7 +273,7 @@
                             <span class="empty-inline">Aucun equipement ajoute.</span>
                         {% endfor %}
                     </div>
-                    <form method="post" action="{{ path('admin_room_equipment_add', {id: room.id}) }}" class="inline-form" data-async-form data-update-target="#apartment-structure">
+                    <form method="post" action="{{ path('admin_room_equipment_add', {id: room.id}) }}" class="inline-form" data-async-form data-update-target="#apartment-detail-root">
                         <select name="catalogEquipmentId">
                             <option value="">Choisir un equipement catalogue</option>
                             {% for item in catalog %}
@@ -300,7 +300,7 @@
             </div>
             <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-catalog">Retour</button>
         </div>
-        <form method="post" action="{{ path('admin_catalog_create') }}" class="stack-form tight-form" data-async-form data-update-target="#apartment-structure">
+        <form method="post" action="{{ path('admin_catalog_create') }}" class="stack-form tight-form" data-async-form data-update-target="#apartment-detail-root">
             <input type="hidden" name="apartmentId" value="{{ apartment.id }}">
             <label><span>Nom equipement</span><input name="name" required></label>
             <label><span>Type de piece</span>
@@ -358,15 +358,15 @@
             <span class="status-badge">{{ apartment.status.label }}</span>
         </div>
         <div class="card-action-row">
-            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
+            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-detail-root">
                 <input type="hidden" name="status" value="active">
                 <button class="secondary-button" type="submit">Mettre en actif</button>
             </form>
-            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
+            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-detail-root">
                 <input type="hidden" name="status" value="inactive">
                 <button class="secondary-button" type="submit">Mettre en inactif</button>
             </form>
-            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-structure">
+            <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartment-detail-root">
                 <input type="hidden" name="status" value="archived">
                 <button class="secondary-button" type="submit">Archiver</button>
             </form>

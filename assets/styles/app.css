@@ -24,9 +24,13 @@
 
 html,
 body {
-    height: 100%;
+    min-height: 100%;
     max-width: 100%;
     overflow-x: clip;
+}
+
+html {
+    background: linear-gradient(180deg, #fcfcfb 0%, #f4f3ef 100%);
 }
 
 body {
@@ -1396,7 +1400,7 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .auth-body {
-    height: 100%;
+    min-height: 100vh;
     display: grid;
     place-items: center;
 }
@@ -1512,7 +1516,7 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .public-body .page-shell {
-    height: 100%;
+    min-height: 100vh;
     max-width: none;
     width: 100%;
     margin: 0;
@@ -1524,7 +1528,7 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .public-landing-shell {
-    height: 100%;
+    min-height: calc(100vh - 64px);
     display: grid;
     width: 100%;
     justify-items: center;
@@ -2235,6 +2239,19 @@ body.nav-compact .floating-main-menu-button {
 .admin-form-panel,
 .admin-apartments-list-panel {
     padding: 22px;
+}
+
+.admin-anomalies-history-panel {
+    margin-top: 18px;
+}
+
+.admin-create-toggle-button {
+    width: 100%;
+    margin-bottom: 14px;
+}
+
+.admin-create-form.is-collapsed {
+    display: none;
 }
 
 .employee-list-stack {

@@ -77,17 +77,12 @@ document.addEventListener('submit', async (event) => {
             return;
         }
 
-        const formId = form.id;
         const targetSelector = form.getAttribute('data-update-target');
         if (targetSelector && payload.html) {
             const target = document.querySelector(targetSelector);
             if (target) {
                 const uiState = captureUiState(target);
-                if (typeof formId === 'string' && formId !== '') {
-                    uiState.formToClose = `#${formId}`;
-                }
-
-                form.classList.add('is-collapsed');
+                collapseEditableForm(form);
 
                 if (form.getAttribute('data-swap-mode') === 'outer') {
                     target.outerHTML = payload.html;
@@ -240,11 +235,13 @@ document.addEventListener('click', (event) => {
                 parentCard.querySelectorAll('.editable-field-form').forEach((formElement) => {
                     if (formElement instanceof HTMLElement && formElement !== target) {
                         formElement.classList.add('is-collapsed');
+                        formElement.hidden = true;
                     }
                 });
             }
 
             target.classList.toggle('is-collapsed');
+            target.hidden = target.classList.contains('is-collapsed');
         }
         return;
     }
@@ -431,13 +428,6 @@ function restoreFloatingMenuPosition() {
 }
 
 function syncTopBarOnScroll() {
-    const body = document.body;
-    if (!(body instanceof HTMLBodyElement)) {
-        return;
-    }
-
-    body.classList.toggle('nav-compact', window.scrollY > 24);
-
     const scrollTopButton = document.getElementById('scroll-to-top-button');
     if (scrollTopButton instanceof HTMLElement) {
         scrollTopButton.classList.toggle('is-visible', window.scrollY > 280);
@@ -520,7 +510,32 @@ function startDashboardPolling() {
 
                 if (nextCount !== null) {
                     lastKnownDashboardCheckoutCount = nextCount;
+                }
+            }
+        } catch (error) {
+            // ignore polling failures
+        } finally {
+            dashboardPollInFlight = false;
+        }
+    };
+
+    tick();
+    dashboardPollTimer = window.setInterval(tick, Number.isNaN(interval) ? 5000 : interval);
+    window.addEventListener('focus', tick);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            tick();
+        }
+    });
+}
+
+function collapseEditableForm(form) {
+    if (!(form instanceof HTMLElement) || !form.classList.contains('editable-field-form')) {
+        return;
     }
+
+    form.classList.add('is-collapsed');
+    form.hidden = true;
 }
 
 function captureUiState(target) {
@@ -533,7 +548,6 @@ function captureUiState(target) {
         openPanels: Array.from(target.querySelectorAll('[data-panel-name]:not(.is-collapsed)'))
             .map((panel) => panel instanceof HTMLElement ? `#${panel.id}` : null)
             .filter((selector) => typeof selector === 'string'),
-        formToClose: null,
     };
 }
 
@@ -557,37 +571,8 @@ function restoreUiState(targetSelector, uiState) {
             });
         }
 
-        target.querySelectorAll('.editable-field-form').forEach((formElement) => {
-            if (formElement instanceof HTMLElement) {
-                formElement.classList.add('is-collapsed');
-            }
-        });
-
-        if (typeof uiState.formToClose === 'string' && uiState.formToClose !== '') {
-            const reopenedForm = target.querySelector(uiState.formToClose);
-            if (reopenedForm instanceof HTMLElement) {
-                reopenedForm.classList.add('is-collapsed');
-            }
-        }
-
         if (typeof uiState.scrollY === 'number') {
             window.scrollTo({top: uiState.scrollY});
-        }
-    });
-}
-        } catch (error) {
-            // ignore polling failures
-        } finally {
-            dashboardPollInFlight = false;
-        }
-    };
-
-    tick();
-    dashboardPollTimer = window.setInterval(tick, Number.isNaN(interval) ? 5000 : interval);
-    window.addEventListener('focus', tick);
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            tick();
         }
     });
 }

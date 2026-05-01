@@ -36,7 +36,7 @@
         method="post"
         action="{{ path('admin_apartment_field_update', {id: apartment.id}) }}"
         data-async-form
-        data-update-target="#apartment-structure"
+        data-update-target="#apartment-detail-root"
     >
         <input type="hidden" name="field" value="{{ field }}">
         {% if multiline %}
