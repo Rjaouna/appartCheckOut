@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon appartement{% endblock %}
+{% block body_class %}public-body{% endblock %}
+
+{% block body %}
+    <section class="page-head public-page-head">
+        <div>
+            <span class="eyebrow">Acces locataire</span>
+            <h1>{{ apartment.name }}</h1>
+            <p class="muted">Les informations utiles pour votre arrivee sont ci-dessous.</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('tenant_lookup') }}">Rechercher un autre code</a>
+            <a class="secondary-button" href="{{ path('app_home') }}">Accueil</a>
+        </div>
+    </section>
+
+    <section class="public-apartment-shell">
+        <article class="apartment-detail-card apartment-detail-card-wide public-warning-card">
+            <h3>Important</h3>
+            <p>Ne communiquez jamais ce code a une autre personne. Si vous pensez qu il a ete partage par erreur, contactez immediatement l employe assigne a cet appartement.</p>
+        </article>
+
+        <div class="public-apartment-grid">
+            <article class="apartment-detail-card apartment-detail-card-wide">
+                <h3>Votre equipe de contact</h3>
+                <div class="public-contact-grid">
+                    {% for employee in assignedEmployees %}
+                        <div class="public-contact-card">
+                            <div class="admin-user-avatar public-contact-avatar {{ employee.photoPath ? 'has-photo' : '' }}">
+                                {% if employee.photoPath %}
+                                    <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
+                                {% else %}
+                                    <span>{{ employee.fullName|slice(0, 1)|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="public-contact-copy">
+                                <strong>{{ employee.fullName }}</strong>
+                                {% if employee.phoneNumber %}
+                                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ employee.phoneNumber }}">{{ employee.phoneNumber }}</a>
+                                {% else %}
+                                    <span class="muted">Numero non renseigne</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="empty-state">Aucun employe actif n est encore assigne a cet appartement.</p>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="apartment-detail-card">
+                <h3>Adresse et acces</h3>
+                <div class="editable-field-row">
+                    <div class="editable-field-display">
+                        <div class="editable-field-copy">
+                            <span class="editable-field-label">Adresse</span>
+                            <strong>{{ apartment.fullAddress }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="editable-field-row">
+                    <div class="editable-field-display">
+                        <div class="editable-field-copy">
+                            <span class="editable-field-label">Etage</span>
+                            <strong>{{ apartment.floor ?: '-' }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="editable-field-row">
+                    <div class="editable-field-display">
+                        <div class="editable-field-copy">
+                            <span class="editable-field-label">Porte</span>
+                            <strong>{{ apartment.doorNumber ?: '-' }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="editable-field-row">
+                    <div class="editable-field-display">
+                        <div class="editable-field-copy">
+                            <span class="editable-field-label">Code immeuble</span>
+                            <strong>{{ apartment.buildingAccessCode ?: '-' }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="editable-field-row">
+                    <div class="editable-field-display">
+                        <div class="editable-field-copy">
+                            <span class="editable-field-label">Code boite a cles / porte</span>
+                            <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="apartment-detail-card">
+                <h3>Informations utiles</h3>
+                <div class="editable-field-row">
+                    <div class="editable-field-display">
+                        <div class="editable-field-copy">
+                            <span class="editable-field-label">Consignes</span>
+                            <strong>{{ apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="public-share-actions">
+                    {% if apartment.googleMapsLink %}
+                        <a class="secondary-button" href="{{ apartment.googleMapsLink }}" target="_blank" rel="noreferrer">Ouvrir dans Google Maps</a>
+                    {% endif %}
+                    <a class="primary-button" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l adresse de mon appart sur WhatsApp</a>
+                </div>
+            </article>
+        </div>
+    </section>
+{% endblock %}

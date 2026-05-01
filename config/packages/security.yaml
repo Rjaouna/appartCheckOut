@@ -26,14 +26,16 @@ security:
                 enable_csrf: true
             logout:
                 path: app_logout
-                target: app_login
+                target: app_home
             remember_me:
                 secret: '%kernel.secret%'
                 lifetime: 604800
                 path: /
 
     access_control:
+        - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/locataire, roles: PUBLIC_ACCESS }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/employee, roles: ROLE_EMPLOYEE }
         - { path: ^/, roles: ROLE_USER }

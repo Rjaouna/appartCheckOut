@@ -1409,6 +1409,40 @@ body.nav-compact .floating-main-menu-button {
     width: 100%;
 }
 
+.auth-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.public-landing-card .auth-card-actions .secondary-button {
+    width: auto;
+    margin-bottom: 0;
+    padding-inline: 18px;
+    border: 1px solid rgba(255, 56, 92, 0.18);
+    background: #fff7f8;
+    color: var(--accent-dark);
+    box-shadow: 0 10px 24px rgba(255, 56, 92, 0.08);
+}
+
+.public-landing-card .auth-card-actions .secondary-button:last-child {
+    background: linear-gradient(135deg, #20324f 0%, #0f62fe 100%);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 14px 28px rgba(15, 98, 254, 0.18);
+}
+
+.auth-card .auth-card-actions .secondary-button {
+    width: auto;
+    margin-bottom: 0;
+    padding-inline: 18px;
+    border: 1px solid rgba(255, 56, 92, 0.18);
+    background: #fff7f8;
+    color: var(--accent-dark);
+    box-shadow: 0 10px 24px rgba(255, 56, 92, 0.08);
+}
+
 .auth-brand {
     display: grid;
     justify-items: center;
@@ -1435,6 +1469,157 @@ body.nav-compact .floating-main-menu-button {
 .hero-points {
     padding-left: 18px;
     color: var(--muted);
+}
+
+.public-body {
+    background:
+        radial-gradient(circle at top left, rgba(255, 56, 92, 0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(15, 98, 254, 0.1), transparent 26%),
+        linear-gradient(180deg, #fdfaf6 0%, #fff 100%);
+}
+
+.public-landing-shell {
+    min-height: calc(100vh - 48px);
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 26px;
+    padding: 32px 20px 52px;
+}
+
+.public-landing-card {
+    width: min(880px, calc(100vw - 40px));
+    padding: 30px;
+    border-radius: 34px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 252, 248, 0.98) 100%);
+    border: 1px solid rgba(227, 220, 209, 0.92);
+    box-shadow: 0 26px 60px rgba(34, 34, 34, 0.08);
+}
+
+.public-landing-card h1,
+.public-page-head h1 {
+    margin: 8px 0 10px;
+}
+
+.public-landing-card-narrow {
+    width: min(560px, calc(100vw - 40px));
+}
+
+.public-entry-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 24px;
+}
+
+.public-entry-option {
+    display: grid;
+    gap: 12px;
+    padding: 24px;
+    border-radius: 26px;
+    text-decoration: none;
+    color: var(--text);
+    background:
+        radial-gradient(circle at top left, rgba(255, 56, 92, 0.1), transparent 36%),
+        #fff;
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.public-entry-option:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 56, 92, 0.26);
+    box-shadow: 0 18px 34px rgba(255, 56, 92, 0.1);
+}
+
+.public-entry-option strong,
+.public-contact-copy strong {
+    font-size: 1.08rem;
+}
+
+.public-entry-option span:last-child,
+.public-contact-copy span {
+    color: var(--muted);
+}
+
+.public-entry-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff7a93 0%, #ff385c 100%);
+    color: #fff;
+}
+
+.public-entry-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.public-entry-icon-soft {
+    background: linear-gradient(135deg, #20324f 0%, #0f62fe 100%);
+}
+
+.public-page-head {
+    margin-bottom: 26px;
+}
+
+.public-apartment-shell {
+    display: grid;
+    gap: 20px;
+}
+
+.public-apartment-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.public-warning-card {
+    background: linear-gradient(180deg, #fff7f8 0%, #fffdfa 100%);
+    border-color: rgba(255, 56, 92, 0.18);
+}
+
+.public-warning-card p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.public-contact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.public-contact-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 22px;
+    background: #fff;
+    border: 1px solid var(--border);
+}
+
+.public-contact-avatar {
+    width: 78px;
+    height: 78px;
+    border-radius: 26px;
+}
+
+.public-contact-copy {
+    display: grid;
+    gap: 6px;
+}
+
+.public-share-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
 }
 
 .demo-accounts,
@@ -2588,6 +2773,12 @@ body.nav-compact .floating-main-menu-button {
         grid-template-columns: 1fr;
     }
 
+    .public-entry-grid,
+    .public-apartment-grid,
+    .public-contact-grid {
+        grid-template-columns: 1fr;
+    }
+
     .admin-home-stats-grid,
     .admin-home-checkout-grid,
     .admin-apartments-layout {
@@ -2690,6 +2881,11 @@ body.nav-compact .floating-main-menu-button {
     .admin-user-list-card,
     .admin-user-hero-media {
         align-items: flex-start;
+    }
+
+    .public-contact-card,
+    .public-entry-option {
+        padding: 18px;
     }
 
     .employee-apartment-hero {
@@ -2837,6 +3033,11 @@ body.nav-compact .floating-main-menu-button {
     .apartment-detail-hero,
     .apartment-detail-card {
         padding: 16px;
+    }
+
+    .public-landing-card {
+        padding: 22px;
+        border-radius: 28px;
     }
 
     .action-menu-grid,
