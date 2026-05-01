@@ -9,6 +9,7 @@ use App\Entity\CheckoutLine;
 use App\Entity\EquipmentCatalog;
 use App\Entity\Room;
 use App\Entity\RoomEquipment;
+use App\Entity\ServiceOffer;
 use App\Entity\User;
 use App\Enum\ApartmentStatus;
 use App\Enum\CheckoutStatus;
@@ -151,11 +152,11 @@ class AdminController extends AbstractController
     }
 
     #[Route('/users/{id}', name: 'admin_user_show', methods: ['GET'])]
-    public function showUser(User $user): Response
+    public function showUser(User $user, EntityManagerInterface $entityManager): Response
     {
         $this->assertManageableEmployee($user);
 
-        return $this->render('admin/user_show.html.twig', $this->buildUserDetailData($user));
+        return $this->render('admin/user_show.html.twig', $this->buildUserDetailData($user, $entityManager));
     }
 
     #[Route('/users', name: 'admin_user_create', methods: ['POST'])]
@@ -250,7 +251,7 @@ class AdminController extends AbstractController
             ], 422);
         }
 
-        return $this->userDetailResponse($user, 'Information employe mise a jour.');
+        return $this->userDetailResponse($user, $entityManager, 'Information employe mise a jour.');
     }
 
     #[Route('/users/{id}/photo', name: 'admin_user_photo_update', methods: ['POST'])]
@@ -268,7 +269,88 @@ class AdminController extends AbstractController
         $entityManager->flush();
         $this->deleteUserPhoto($previousPhotoPath);
 
-        return $this->userDetailResponse($user, 'Photo employe mise a jour.');
+        return $this->userDetailResponse($user, $entityManager, 'Photo employe mise a jour.');
+    }
+
+    #[Route('/services/{id}/label', name: 'admin_service_offer_label_update', methods: ['POST'])]
+    public function updateServiceOfferLabel(ServiceOffer $serviceOffer, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $label = $this->normalizeServiceOfferLabel((string) $request->request->get('label'));
+        if ($label === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Le nom du service est obligatoire.'], 422);
+        }
+
+        $serviceOffer->setLabel($label);
+        $entityManager->flush();
+
+        return $this->serviceOfferResponse($serviceOffer, $entityManager, (string) $request->request->get('context', 'dashboard'), 'Libelle du service mis a jour.');
+    }
+
+    #[Route('/services/{id}/approve', name: 'admin_service_offer_approve', methods: ['POST'])]
+    public function approveServiceOffer(ServiceOffer $serviceOffer, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $actor = $this->getUser();
+        $serviceOffer
+            ->setStatus(ServiceOffer::STATUS_APPROVED)
+            ->setApprovedAt(new \DateTimeImmutable())
+            ->setApprovedBy($actor instanceof User ? $actor : null);
+
+        $entityManager->flush();
+
+        return $this->serviceOfferResponse($serviceOffer, $entityManager, (string) $request->request->get('context', 'dashboard'), 'Service valide.');
+    }
+
+    #[Route('/services/{id}/reject', name: 'admin_service_offer_reject', methods: ['POST'])]
+    public function rejectServiceOffer(ServiceOffer $serviceOffer, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $serviceOffer->getCreatedBy();
+        if ($user instanceof User) {
+            $user->removeServiceOffer($serviceOffer);
+        }
+
+        $serviceOffer
+            ->setStatus(ServiceOffer::STATUS_REJECTED)
+            ->setApprovedAt(null)
+            ->setApprovedBy(null);
+
+        $entityManager->flush();
+
+        return $this->serviceOfferResponse($serviceOffer, $entityManager, (string) $request->request->get('context', 'dashboard'), 'Service refuse.');
+    }
+
+    #[Route('/services/{id}/delete', name: 'admin_service_offer_delete', methods: ['POST'])]
+    public function deleteServiceOffer(ServiceOffer $serviceOffer, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if ($serviceOffer->isStandard()) {
+            return new JsonResponse(['success' => false, 'message' => 'Un service standard ne peut pas etre supprime ici.'], 422);
+        }
+
+        $owner = $serviceOffer->getCreatedBy();
+
+        foreach ($serviceOffer->getUsers()->toArray() as $user) {
+            if ($user instanceof User) {
+                $user->removeServiceOffer($serviceOffer);
+            }
+        }
+
+        $entityManager->remove($serviceOffer);
+        $entityManager->flush();
+
+        $context = (string) $request->request->get('context', 'dashboard');
+        $message = 'Service supprime.';
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView(
+                $context === 'user-detail' && $owner instanceof User
+                    ? 'admin/_user_detail_content.html.twig'
+                    : 'admin/_dashboard_content.html.twig',
+                $context === 'user-detail' && $owner instanceof User
+                    ? $this->buildUserDetailData($owner, $entityManager)
+                    : $this->buildDashboardData($entityManager)
+            ),
+            'message' => $message,
+        ]);
     }
 
     #[Route('/users/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
@@ -660,11 +742,25 @@ class AdminController extends AbstractController
         ]);
     }
 
-    private function userDetailResponse(User $user, string $message): JsonResponse
+    private function userDetailResponse(User $user, EntityManagerInterface $entityManager, string $message): JsonResponse
     {
         return new JsonResponse([
             'success' => true,
-            'html' => $this->renderView('admin/_user_detail_content.html.twig', $this->buildUserDetailData($user)),
+            'html' => $this->renderView('admin/_user_detail_content.html.twig', $this->buildUserDetailData($user, $entityManager)),
+            'message' => $message,
+        ]);
+    }
+
+    private function serviceOfferResponse(ServiceOffer $serviceOffer, EntityManagerInterface $entityManager, string $context, string $message): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView(
+                $context === 'user-detail' ? 'admin/_user_detail_content.html.twig' : 'admin/_dashboard_content.html.twig',
+                $context === 'user-detail' && $serviceOffer->getCreatedBy() instanceof User
+                    ? $this->buildUserDetailData($serviceOffer->getCreatedBy(), $entityManager)
+                    : $this->buildDashboardData($entityManager)
+            ),
             'message' => $message,
         ]);
     }
@@ -757,6 +853,10 @@ class AdminController extends AbstractController
     {
         $apartmentRepository = $entityManager->getRepository(Apartment::class);
         $checkoutRepository = $entityManager->getRepository(Checkout::class);
+        $pendingServiceOffers = $entityManager->getRepository(ServiceOffer::class)->findBy(
+            ['status' => ServiceOffer::STATUS_PENDING],
+            ['createdAt' => 'DESC']
+        );
 
         $apartmentsWithAnomalies = $entityManager->createQueryBuilder()
     ->select('DISTINCT apartment')
@@ -779,6 +879,7 @@ class AdminController extends AbstractController
             'scheduledCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::Todo], ['scheduledAt' => 'ASC'], 8),
             'activeCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::InProgress], ['scheduledAt' => 'ASC'], 8),
             'finishedCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::Completed], ['completedAt' => 'DESC'], 8),
+            'pendingServiceOffers' => $pendingServiceOffers,
         ];
     }
 
@@ -832,10 +933,30 @@ class AdminController extends AbstractController
     /**
      * @return array{user: User}
      */
-    private function buildUserDetailData(User $user): array
+    private function buildUserDetailData(User $user, EntityManagerInterface $entityManager): array
     {
+        $approvedStandardServices = $entityManager->getRepository(ServiceOffer::class)->findBy(
+            ['isStandard' => true, 'status' => ServiceOffer::STATUS_APPROVED],
+            ['label' => 'ASC']
+        );
+
+        $customServices = $entityManager->createQueryBuilder()
+            ->select('serviceOffer')
+            ->from(ServiceOffer::class, 'serviceOffer')
+            ->where('serviceOffer.createdBy = :user')
+            ->andWhere('serviceOffer.isStandard = :isStandard')
+            ->andWhere('serviceOffer.status IN (:statuses)')
+            ->setParameter('user', $user)
+            ->setParameter('isStandard', false)
+            ->setParameter('statuses', [ServiceOffer::STATUS_PENDING, ServiceOffer::STATUS_APPROVED])
+            ->orderBy('serviceOffer.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
         return [
             'user' => $user,
+            'approvedStandardServices' => $approvedStandardServices,
+            'customServiceOffers' => $customServices,
         ];
     }
 
@@ -1002,6 +1123,13 @@ class AdminController extends AbstractController
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function normalizeServiceOfferLabel(string $label): string
+    {
+        $label = trim(preg_replace('/\s+/', ' ', $label) ?? '');
+
+        return mb_substr($label, 0, 160);
     }
 
     private function applyAdminApartmentFieldUpdate(Apartment $apartment, string $field, string $value): void

@@ -52,6 +52,12 @@
                     </span>
                     <span>Historique</span>
                 </a>
+                <a class="employee-home-quick-link" href="{{ path('employee_profile') }}">
+                    <span class="employee-home-quick-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z" fill="currentColor"/></svg>
+                    </span>
+                    <span>Profil</span>
+                </a>
             </div>
         </article>
 
@@ -106,6 +112,19 @@
                 <span class="employee-home-card-art employee-home-card-art-neutral" aria-hidden="true">
                     <svg viewBox="0 0 64 64">
                         <path d="M10 52V18a4 4 0 0 1 4-4h16v38H10Zm24 0V10a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v42H34ZM18 22h6v6h-6v-6Zm0 12h6v6h-6v-6Zm22-18h8v8h-8v-8Zm0 14h8v8h-8v-8Z" fill="currentColor"/>
+                    </svg>
+                </span>
+            </article>
+
+            <article class="employee-home-info-card employee-home-info-card-soft" data-click-url="{{ path('employee_profile') }}">
+                <div class="employee-home-info-copy">
+                    <p class="employee-home-card-label">Mes services extras</p>
+                    <h3>{{ activeServiceCount }} service{{ activeServiceCount > 1 ? 's' : '' }} actif{{ activeServiceCount > 1 ? 's' : '' }}</h3>
+                    <span class="employee-home-inline-link">Gerer mon profil locataire</span>
+                </div>
+                <span class="employee-home-card-art employee-home-card-art-soft" aria-hidden="true">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M14 18h36a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H26l-10 8v-8h-2a6 6 0 0 1-6-6V24a6 6 0 0 1 6-6Zm8 10v4h20v-4H22Zm0 10v4h14v-4H22Z" fill="currentColor"/>
                     </svg>
                 </span>
             </article>

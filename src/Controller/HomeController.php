@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Apartment;
+use App\Entity\ServiceOffer;
 use App\Entity\User;
 use App\Enum\ApartmentStatus;
 use Doctrine\ORM\EntityManagerInterface;
@@ -71,12 +72,17 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('tenant_lookup');
         }
 
+        $assignedEmployees = array_values(array_filter(
+            $apartment->getAssignedEmployees()->toArray(),
+            static fn (User $user): bool => $user->isActive()
+        ));
+        $serviceContactEmployee = $this->findServiceContactEmployee($assignedEmployees);
+
         return $this->render('public/tenant_apartment.html.twig', [
             'apartment' => $apartment,
-            'assignedEmployees' => array_values(array_filter(
-                $apartment->getAssignedEmployees()->toArray(),
-                static fn (User $user): bool => $user->isActive()
-            )),
+            'assignedEmployees' => $assignedEmployees,
+            'serviceContactEmployee' => $serviceContactEmployee,
+            'serviceExtras' => $serviceContactEmployee instanceof User ? $this->buildTenantServiceExtras($apartment, $serviceContactEmployee) : [],
             'whatsAppShareUrl' => $this->buildApartmentWhatsAppShareUrl($apartment),
         ]);
     }
@@ -138,5 +144,63 @@ class HomeController extends AbstractController
         );
 
         return 'https://wa.me/?text=' . rawurlencode($message);
+    }
+
+    /**
+     * @param list<User> $assignedEmployees
+     */
+    private function findServiceContactEmployee(array $assignedEmployees): ?User
+    {
+        foreach ($assignedEmployees as $employee) {
+            if ($employee->getPhoneNumber() && $employee->getServiceOffers()->exists(
+                static fn (int $key, ServiceOffer $serviceOffer): bool => $serviceOffer->isApproved()
+            )) {
+                return $employee;
+            }
+        }
+
+        foreach ($assignedEmployees as $employee) {
+            if ($employee->getPhoneNumber()) {
+                return $employee;
+            }
+        }
+
+        return $assignedEmployees[0] ?? null;
+    }
+
+    /**
+     * @return list<array{label:string, whatsAppUrl:string, title:string}>
+     */
+    private function buildTenantServiceExtras(Apartment $apartment, User $employee): array
+    {
+        $phoneNumber = preg_replace('/\D+/', '', $employee->getPhoneNumber() ?? '') ?? '';
+        if ($phoneNumber === '') {
+            return [];
+        }
+
+        $extras = [];
+        foreach ($employee->getServiceOffers() as $serviceOffer) {
+            if (!$serviceOffer instanceof ServiceOffer || !$serviceOffer->isApproved()) {
+                continue;
+            }
+
+            $message = sprintf(
+                "Bonjour %s, je suis le locataire de l'appartement %s au %s. Je souhaiterais faire une demande pour le service : %s.",
+                $employee->getFullName(),
+                $apartment->getName(),
+                $apartment->getFullAddress(),
+                $serviceOffer->getLabel()
+            );
+
+            $extras[] = [
+                'label' => $serviceOffer->getLabel(),
+                'whatsAppUrl' => 'https://wa.me/' . $phoneNumber . '?text=' . rawurlencode($message),
+                'title' => sprintf('Faire une demande par WhatsApp a %s', $employee->getFullName()),
+            ];
+        }
+
+        usort($extras, static fn (array $left, array $right): int => strcmp($left['label'], $right['label']));
+
+        return $extras;
     }
 }

@@ -1,0 +1,135 @@
+<div class="employee-profile-layout">
+    <section class="panel employee-profile-hero-card">
+        <div class="employee-profile-hero">
+            <div class="admin-user-avatar admin-user-avatar-large {{ user.photoPath ? 'has-photo' : '' }}">
+                {% if user.photoPath %}
+                    <img src="{{ user.photoPath }}" alt="{{ user.fullName }}">
+                {% else %}
+                    <span>{{ user.fullName|slice(0, 1)|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="employee-profile-hero-copy">
+                <h2>{{ user.fullName }}</h2>
+                <p>{{ user.email }}</p>
+                {% if user.phoneNumber %}
+                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                {% else %}
+                    <span class="muted">Numero non renseigne</span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <div class="employee-profile-grid">
+        <article class="apartment-detail-card">
+            <div class="panel-head">
+                <div>
+                    <h3>Services standards</h3>
+                    <p class="muted">Cochez les services que vous souhaitez proposer.</p>
+                </div>
+            </div>
+            <div class="service-offer-list">
+                {% for service in approvedStandardServices %}
+                    <form method="post" action="{{ path('employee_profile_service_toggle', {id: service.id}) }}" data-async-form data-update-target="#employee-profile-content">
+                        <input type="hidden" name="enabled" value="{{ user.serviceOffers.contains(service) ? '0' : '1' }}">
+                        <button class="service-offer-toggle-button {{ user.serviceOffers.contains(service) ? 'is-active' : '' }}" type="submit">
+                            <span>{{ service.label }}</span>
+                            <span class="status-badge {{ user.serviceOffers.contains(service) ? 'is-success' : '' }}">{{ user.serviceOffers.contains(service) ? 'Actif' : 'Inactif' }}</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <p class="empty-state">Aucun service standard disponible.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="apartment-detail-card">
+            <div class="panel-head">
+                <div>
+                    <h3>Mes extras valides</h3>
+                    <p class="muted">Vos services personnels deja valides par l admin.</p>
+                </div>
+            </div>
+            <div class="service-offer-list">
+                {% for service in approvedCustomServices %}
+                    <div class="service-offer-row">
+                        <form method="post" action="{{ path('employee_profile_service_toggle', {id: service.id}) }}" data-async-form data-update-target="#employee-profile-content">
+                            <input type="hidden" name="enabled" value="{{ user.serviceOffers.contains(service) ? '0' : '1' }}">
+                            <button class="service-offer-toggle-button {{ user.serviceOffers.contains(service) ? 'is-active' : '' }}" type="submit">
+                                <span>{{ service.label }}</span>
+                                <span class="status-badge {{ user.serviceOffers.contains(service) ? 'is-success' : '' }}">{{ user.serviceOffers.contains(service) ? 'Actif' : 'Inactif' }}</span>
+                            </button>
+                        </form>
+                        <form
+                            method="post"
+                            action="{{ path('employee_profile_service_delete', {id: service.id}) }}"
+                            data-async-form
+                            data-update-target="#employee-profile-content"
+                            data-confirm-reset
+                            data-confirm-title="Supprimer ce service"
+                            data-confirm-message="Veux-tu vraiment supprimer cet extra de ton profil ?"
+                        >
+                            <button class="icon-action-button icon-action-button-danger service-offer-delete-button" type="submit" aria-label="Supprimer {{ service.label }}" title="Supprimer {{ service.label }}">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M7 5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M10 5V4h4v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M9 9v7M12 9v7M15 9v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M8 7h8l-.6 11.2a2 2 0 0 1-2 1.8h-2.8a2 2 0 0 1-2-1.8L8 7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <p class="empty-state">Aucun extra valide pour le moment.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="apartment-detail-card apartment-detail-card-wide">
+            <div class="panel-head">
+                <div>
+                    <h3>Proposer un nouveau service</h3>
+                    <p class="muted">Le service apparaitra en grise sur votre profil en attendant la validation admin.</p>
+                </div>
+            </div>
+            <form method="post" action="{{ path('employee_profile_service_suggest') }}" class="stack-form employee-service-suggest-form" data-async-form data-update-target="#employee-profile-content" data-reset-form>
+                <label>
+                    <span>Nouveau service</span>
+                    <input type="text" name="label" maxlength="160" placeholder="Exemple : transfert aeroport" required>
+                </label>
+                <button class="primary-button" type="submit">Ajouter ce service</button>
+            </form>
+
+            <div class="service-offer-list service-offer-list-muted">
+                {% for service in pendingCustomServices %}
+                    <div class="service-offer-row">
+                        <div class="service-offer-toggle-button is-pending" title="En attente de validation admin">
+                            <span>{{ service.label }}</span>
+                            <span class="status-badge">{{ service.statusLabel }}</span>
+                        </div>
+                        <form
+                            method="post"
+                            action="{{ path('employee_profile_service_delete', {id: service.id}) }}"
+                            data-async-form
+                            data-update-target="#employee-profile-content"
+                            data-confirm-reset
+                            data-confirm-title="Supprimer ce service"
+                            data-confirm-message="Veux-tu vraiment supprimer cette proposition en attente ?"
+                        >
+                            <button class="icon-action-button icon-action-button-danger service-offer-delete-button" type="submit" aria-label="Supprimer {{ service.label }}" title="Supprimer {{ service.label }}">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M7 5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M10 5V4h4v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M9 9v7M12 9v7M15 9v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M8 7h8l-.6 11.2a2 2 0 0 1-2 1.8h-2.8a2 2 0 0 1-2-1.8L8 7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <p class="muted">Aucun service en attente.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</div>

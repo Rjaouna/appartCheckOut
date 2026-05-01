@@ -115,5 +115,34 @@
             </div>
         </article>
 
+        <article class="apartment-detail-card apartment-detail-card-wide">
+            <div class="panel-head">
+                <div>
+                    <h3>Services proposes</h3>
+                    <p class="muted">Services actives, disponibles ou en attente sur ce profil.</p>
+                </div>
+            </div>
+            <div class="service-offer-list">
+                {% for service in approvedStandardServices %}
+                    <div class="service-offer-toggle-button {{ user.serviceOffers.contains(service) ? 'is-active' : '' }}">
+                        <span>{{ service.label }}</span>
+                        <span class="status-badge {{ user.serviceOffers.contains(service) ? 'is-success' : '' }}">{{ user.serviceOffers.contains(service) ? 'Actif' : 'Disponible' }}</span>
+                    </div>
+                {% endfor %}
+
+                {% for service in customServiceOffers %}
+                    {% include 'admin/_service_offer_review_card.html.twig' with {
+                        serviceOffer: service,
+                        updateTarget: '#admin-user-detail-content',
+                        context: 'user-detail'
+                    } %}
+                {% else %}
+                    {% if approvedStandardServices is empty %}
+                        <p class="empty-state">Aucun service renseigne pour le moment.</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </article>
+
     </section>
 </div>

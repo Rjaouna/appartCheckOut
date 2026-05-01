@@ -289,4 +289,25 @@
             </div>
         </div>
     </section>
+
+    <section class="admin-home-section">
+        <div class="admin-home-section-head">
+            <div>
+                <h2>Services en attente de validation</h2>
+                <p>{{ pendingServiceOffers|length }} proposition{{ pendingServiceOffers|length > 1 ? 's' : '' }} a traiter</p>
+            </div>
+        </div>
+
+        <div class="list-stack">
+            {% for serviceOffer in pendingServiceOffers %}
+                {% include 'admin/_service_offer_review_card.html.twig' with {
+                    serviceOffer: serviceOffer,
+                    updateTarget: '#admin-dashboard-content',
+                    context: 'dashboard'
+                } %}
+            {% else %}
+                <p class="empty-state">Aucun service en attente pour le moment.</p>
+            {% endfor %}
+        </div>
+    </section>
 </div>
