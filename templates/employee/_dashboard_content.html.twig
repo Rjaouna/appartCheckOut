@@ -17,7 +17,7 @@
                     <h2>{{ todayCheckout.apartment.name }}</h2>
                     <p>
                         {% if todayCheckout.scheduledAt %}
-                            Aujourd'hui à {{ todayCheckoutTimeLabel }}
+                            Aujourd’hui à {{ todayCheckoutTimeLabel }}
                         {% else %}
                             Disponible dès maintenant
                         {% endif %}
@@ -59,7 +59,7 @@
             <article class="employee-home-info-card employee-home-info-card-warm">
                 <div class="employee-home-info-copy">
                     <p class="employee-home-card-label">Mes anomalies</p>
-                    <h3>Anomalies en cours</h3>
+                    <h4>Anomalies en cours</h4>
                     <p>
                         {% if anomalyCount > 0 %}
                             {{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }} à suivre sur tes check-outs.
@@ -73,7 +73,10 @@
                 </div>
                 <span class="employee-home-card-art employee-home-card-art-warm" aria-hidden="true">
                     <svg viewBox="0 0 64 64">
-                        <path d="M18 14h28a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V20a6 6 0 0 1 6-6Zm4 10v16h20V24H22Zm22-9a8 8 0 1 1 0 16 8 8 0 0 1 0-16Z" fill="currentColor"/>
+                        <path d="M22 18h20a10 10 0 0 1 10 10v8a10 10 0 0 1-10 10H30l-10 8v-8h-2a8 8 0 0 1-8-8V28a10 10 0 0 1 10-10Z" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M24 30h16M24 38h10" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                        <circle cx="48" cy="18" r="7" fill="currentColor"/>
+                        <path d="M48 14.5v6M45 17.5h6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
                     </svg>
                 </span>
             </article>
@@ -81,7 +84,7 @@
             <article class="employee-home-info-card employee-home-info-card-soft">
                 <div class="employee-home-info-copy">
                     <p class="employee-home-card-label">Mon prochain check-out</p>
-                    <h3>{{ nextCheckout ? nextCheckout.apartment.name : 'Aucun check-out programmé' }}</h3>
+                    <h4>{{ nextCheckout ? nextCheckout.apartment.name : 'Aucun check-out programmé' }}</h4>
                     <p>
                         {% if nextCheckout and nextCheckout.scheduledAt %}
                             {{ nextCheckoutDateLabel }}
@@ -92,7 +95,11 @@
                 </div>
                 <span class="employee-home-card-art employee-home-card-art-soft" aria-hidden="true">
                     <svg viewBox="0 0 64 64">
-                        <path d="M10 48V24l12 8 10-18 10 20 12 14H10Zm22-12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor"/>
+                        <rect x="12" y="18" width="40" height="32" rx="12" fill="none" stroke="currentColor" stroke-width="4.2"/>
+                        <path d="M12 28h40" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                        <path d="M22 14v8M42 14v8" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                        <circle cx="24" cy="38" r="3.5" fill="currentColor"/>
+                        <path d="M34 38h10M24 46h20" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
                     </svg>
                 </span>
             </article>
@@ -100,12 +107,28 @@
             <article class="employee-home-info-card employee-home-info-card-neutral" data-click-url="{{ path('employee_apartments') }}">
                 <div class="employee-home-info-copy">
                     <p class="employee-home-card-label">Liste des appartements</p>
-                    <h3>{{ apartments|length }} appartement{{ apartments|length > 1 ? 's' : '' }} assigné{{ apartments|length > 1 ? 's' : '' }}</h3>
+                    <h4>{{ apartments|length }} appartement{{ apartments|length > 1 ? 's' : '' }} assigné{{ apartments|length > 1 ? 's' : '' }}</h4>
                     <span class="employee-home-inline-link">Ouvrir la liste des appartements</span>
                 </div>
                 <span class="employee-home-card-art employee-home-card-art-neutral" aria-hidden="true">
                     <svg viewBox="0 0 64 64">
-                        <path d="M10 52V18a4 4 0 0 1 4-4h16v38H10Zm24 0V10a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v42H34ZM18 22h6v6h-6v-6Zm0 12h6v6h-6v-6Zm22-18h8v8h-8v-8Zm0 14h8v8h-8v-8Z" fill="currentColor"/>
+                        <path d="M14 52V20a6 6 0 0 1 6-6h12v38H14Zm18 0V12a6 6 0 0 1 6-6h10a6 6 0 0 1 6 6v40H32Z" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linejoin="round"/>
+                        <path d="M20 26h6M20 34h6M20 42h6M40 18h6M40 28h6M40 38h6" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                    </svg>
+                </span>
+            </article>
+
+            <article class="employee-home-info-card employee-home-info-card-soft" data-click-url="{{ path('employee_profile') }}">
+                <div class="employee-home-info-copy">
+                    <p class="employee-home-card-label">Mes services extras</p>
+                    <h4>{{ activeServiceCount }} service{{ activeServiceCount > 1 ? 's' : '' }} actif{{ activeServiceCount > 1 ? 's' : '' }}</h4>
+                    <span class="employee-home-inline-link">Gérer mon profil locataire</span>
+                </div>
+                <span class="employee-home-card-art employee-home-card-art-soft" aria-hidden="true">
+                    <svg viewBox="0 0 64 64">
+                        <circle cx="24" cy="24" r="8" fill="none" stroke="currentColor" stroke-width="4.2"/>
+                        <path d="M12 46c2.4-7.5 8-12 16-12s13.6 4.5 16 12" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                        <path d="M46 20h8M46 30h6M46 40h8" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
                     </svg>
                 </span>
             </article>

@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Acces locataire{% endblock %}
+{% block title %}Accès locataire{% endblock %}
 {% block body_class %}public-body{% endblock %}
 
 {% block body %}
     <section class="public-landing-shell">
         <section class="public-landing-card public-landing-card-narrow">
-            <span class="eyebrow">Acces locataire</span>
-            <p class="muted">Saisissez le code de la boite a cles ou le code porte transmis pour votre arrivee.</p>
+            <span class="eyebrow">Accès locataire</span>
+            <p class="muted">Saisissez le code de la boîte à clés ou le code porte transmis pour votre arrivée.</p>
 
             {% if errorMessage %}
                 <div class="alert error">{{ errorMessage }}</div>
@@ -15,15 +15,14 @@
 
             <form method="post" class="stack-form">
                 <label>
-                    <span>Code d acces</span>
+                    <span>Code d’accès</span>
                     <input type="text" name="accessCode" value="{{ submittedCode }}" placeholder="Exemple : A124B" required autofocus>
                 </label>
                 <button class="primary-button" type="submit">Valider</button>
             </form>
 
             <div class="auth-card-actions auth-card-actions-stacked">
-                <a class="secondary-button" href="{{ path('app_home') }}">Retour a l accueil</a>
-                <a class="secondary-button" href="{{ path('app_login') }}">Je suis employe</a>
+                <a class="secondary-button" href="{{ path('app_login') }}">Je suis employé</a>
             </div>
         </section>
     </section>

@@ -6,14 +6,22 @@
     <section class="admin-home-intro admin-home-intro-page">
         <div>
             <h1>Appartements</h1>
-            <p>Cree un appartement, organise les infos d'acces et pilote l'affectation en gardant une presentation claire.</p>
         </div>
     </section>
 
     <section class="admin-apartments-layout">
         <div class="panel admin-form-panel">
-            <div class="admin-home-section-head compact"><div><h2>Nouvel appartement</h2><p>Une fiche propre et complete pour lancer les prochains check-outs.</p></div></div>
-            <form method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form">
+            
+            <button
+                class="primary-button admin-create-toggle-button"
+                type="button"
+                data-toggle-target="#admin-apartment-create-form"
+                data-toggle-label-closed="Ajouter"
+                data-toggle-label-open="Masquer le formulaire"
+            >
+                Ajouter
+            </button>
+            <form id="admin-apartment-create-form" method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form admin-create-form is-collapsed">
                 <label><span>Nom *</span><input name="name" required></label>
                 <label><span>Adresse *</span><input name="addressLine1" required></label>
                 <label><span>Complement</span><input name="addressLine2"></label>

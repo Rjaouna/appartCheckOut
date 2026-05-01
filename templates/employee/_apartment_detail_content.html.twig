@@ -3,19 +3,14 @@
         <div class="employee-apartment-hero-copy">
             <div class="employee-apartment-head">
                 <h2 class="employee-apartment-card-title">{{ apartment.name }}</h2>
-                <a class="employee-apartment-waze" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer" aria-label="Ouvrir dans Waze">
-                    <span class="employee-apartment-waze-icon" aria-hidden="true">
-                        {% include 'shared/_waze_icon.html.twig' %}
-                    </span>
-                </a>
             </div>
-            <p>{{ apartment.fullAddress }}</p>
+            <p><a class="address-link" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">{{ apartment.fullAddress }}</a></p>
         </div>
     </section>
 
     <div class="employee-apartment-detail-grid">
         <section class="apartment-detail-card apartment-detail-card-static">
-            <h3>Acces</h3>
+            <h3>Accès</h3>
             <div class="editable-field-row">
                 <div class="editable-field-display">
                     <div class="editable-field-copy">

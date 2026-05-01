@@ -8,11 +8,13 @@ let dashboardPollTimer = null;
 let dashboardPollInFlight = false;
 let lastKnownDashboardCheckoutCount = null;
 let dashboardPollingStarted = false;
+let deferredInstallPrompt = null;
 
 restorePendingToast();
 restoreFloatingMenuPosition();
 syncTopBarOnScroll();
 registerServiceWorker();
+setupInstallPrompt();
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -81,11 +83,16 @@ document.addEventListener('submit', async (event) => {
         if (targetSelector && payload.html) {
             const target = document.querySelector(targetSelector);
             if (target) {
+                const uiState = captureUiState(target);
+                collapseEditableForm(form);
+
                 if (form.getAttribute('data-swap-mode') === 'outer') {
                     target.outerHTML = payload.html;
                 } else {
                     target.innerHTML = payload.html;
                 }
+
+                restoreUiState(targetSelector, uiState);
             }
         }
 
@@ -230,11 +237,43 @@ document.addEventListener('click', (event) => {
                 parentCard.querySelectorAll('.editable-field-form').forEach((formElement) => {
                     if (formElement instanceof HTMLElement && formElement !== target) {
                         formElement.classList.add('is-collapsed');
+                        formElement.hidden = true;
                     }
                 });
             }
 
             target.classList.toggle('is-collapsed');
+            target.hidden = target.classList.contains('is-collapsed');
+        }
+        return;
+    }
+
+    const panelOpenTrigger = event.target instanceof Element ? event.target.closest('[data-panel-open]') : null;
+    if (panelOpenTrigger instanceof HTMLButtonElement) {
+        const groupName = panelOpenTrigger.getAttribute('data-panel-group');
+        const targetSelector = panelOpenTrigger.getAttribute('data-panel-open');
+        const target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (target instanceof HTMLElement) {
+            if (groupName) {
+                document.querySelectorAll(`[data-panel-name][data-panel-group="${groupName}"]`).forEach((panel) => {
+                    if (panel instanceof HTMLElement) {
+                        panel.classList.add('is-collapsed');
+                    }
+                });
+            }
+
+            target.classList.remove('is-collapsed');
+            target.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+    }
+
+    const panelCloseTrigger = event.target instanceof Element ? event.target.closest('[data-panel-close]') : null;
+    if (panelCloseTrigger instanceof HTMLButtonElement) {
+        const targetSelector = panelCloseTrigger.getAttribute('data-panel-close');
+        const target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (target instanceof HTMLElement) {
+            target.classList.add('is-collapsed');
         }
         return;
     }
@@ -269,6 +308,22 @@ document.addEventListener('click', (event) => {
     const url = card.dataset.clickUrl;
     if (url) {
         window.location.href = url;
+    }
+});
+
+document.addEventListener('change', (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || !input.hasAttribute('data-auto-submit-file')) {
+        return;
+    }
+
+    if (!input.files || input.files.length === 0) {
+        return;
+    }
+
+    const form = input.closest('form');
+    if (form instanceof HTMLFormElement) {
+        form.requestSubmit();
     }
 });
 
@@ -391,12 +446,8 @@ function restoreFloatingMenuPosition() {
 }
 
 function syncTopBarOnScroll() {
-    const body = document.body;
-    if (!(body instanceof HTMLBodyElement)) {
-        return;
-    }
-
-    body.classList.toggle('nav-compact', window.scrollY > 24);
+    const shouldCompactNav = window.scrollY > 72;
+    document.body.classList.toggle('nav-compact', shouldCompactNav);
 
     const scrollTopButton = document.getElementById('scroll-to-top-button');
     if (scrollTopButton instanceof HTMLElement) {
@@ -414,6 +465,71 @@ function registerServiceWorker() {
             // ignore service worker registration errors
         });
     }, {once: true});
+}
+
+function setupInstallPrompt() {
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        updateInstallAppButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        updateInstallAppButton();
+        showToast('Application installée avec succès.');
+    });
+
+    document.addEventListener('click', async (event) => {
+        const installButton = event.target instanceof Element ? event.target.closest('[data-install-app-trigger]') : null;
+        if (!(installButton instanceof HTMLButtonElement)) {
+            return;
+        }
+
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice.catch(() => null);
+            deferredInstallPrompt = null;
+            updateInstallAppButton();
+            return;
+        }
+
+        if (isIosStandaloneInstallAvailable()) {
+            openInstallHelpModal();
+            return;
+        }
+
+        showToast('Installation non disponible dans ce navigateur.', 'error');
+    });
+
+    updateInstallAppButton();
+}
+
+function updateInstallAppButton() {
+    const shouldShow = deferredInstallPrompt !== null || isIosStandaloneInstallAvailable();
+    document.querySelectorAll('[data-install-app-trigger]').forEach((button) => {
+        if (button instanceof HTMLElement) {
+            button.hidden = !shouldShow;
+        }
+    });
+}
+
+function isIosStandaloneInstallAvailable() {
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIos = /iphone|ipad|ipod/.test(ua);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    return isIos && !isStandalone;
+}
+
+function openInstallHelpModal() {
+    const modalElement = document.getElementById('installHelpModal');
+    if (!(modalElement instanceof HTMLElement) || typeof bootstrap === 'undefined') {
+        showToast('Sur iPhone : Partager puis Sur l’écran d’accueil.');
+        return;
+    }
+
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
 }
 
 function startDashboardPolling() {
@@ -495,6 +611,54 @@ function startDashboardPolling() {
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             tick();
+        }
+    });
+}
+
+function collapseEditableForm(form) {
+    if (!(form instanceof HTMLElement) || !form.classList.contains('editable-field-form')) {
+        return;
+    }
+
+    form.classList.add('is-collapsed');
+    form.hidden = true;
+}
+
+function captureUiState(target) {
+    if (!(target instanceof HTMLElement)) {
+        return null;
+    }
+
+    return {
+        scrollY: window.scrollY,
+        openPanels: Array.from(target.querySelectorAll('[data-panel-name]:not(.is-collapsed)'))
+            .map((panel) => panel instanceof HTMLElement ? `#${panel.id}` : null)
+            .filter((selector) => typeof selector === 'string'),
+    };
+}
+
+function restoreUiState(targetSelector, uiState) {
+    if (!uiState) {
+        return;
+    }
+
+    window.requestAnimationFrame(() => {
+        const target = document.querySelector(targetSelector);
+        if (!(target instanceof HTMLElement)) {
+            return;
+        }
+
+        if (Array.isArray(uiState.openPanels) && uiState.openPanels.length > 0) {
+            uiState.openPanels.forEach((panelSelector) => {
+                const panel = target.querySelector(panelSelector);
+                if (panel instanceof HTMLElement) {
+                    panel.classList.remove('is-collapsed');
+                }
+            });
+        }
+
+        if (typeof uiState.scrollY === 'number') {
+            window.scrollTo({top: uiState.scrollY});
         }
     });
 }

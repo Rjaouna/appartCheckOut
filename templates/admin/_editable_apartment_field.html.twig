@@ -1,9 +1,12 @@
+{% set compact = compact|default(false) %}
 {% set multiline = multiline|default(false) %}
-<div class="editable-field-row">
+<div class="editable-field-row {{ compact ? 'editable-field-row-compact' : '' }}">
     <div class="editable-field-display">
         <div class="editable-field-copy">
             <span class="editable-field-label">{{ label }}</span>
-            {% if field == 'googleMapsLink' and rawValue %}
+            {% if field == 'addressLine1' and apartment.wazeLink %}
+                <strong><a class="address-link" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">{{ value }}</a></strong>
+            {% elseif field == 'googleMapsLink' and rawValue %}
                 <strong><a class="inline-detail-link" href="{{ rawValue }}" target="_blank" rel="noreferrer">Ouvrir</a></strong>
             {% else %}
                 <strong>{{ value }}</strong>
@@ -27,7 +30,7 @@
         method="post"
         action="{{ path('admin_apartment_field_update', {id: apartment.id}) }}"
         data-async-form
-        data-update-target="#apartment-structure"
+        data-update-target="#apartment-detail-root"
     >
         <input type="hidden" name="field" value="{{ field }}">
         {% if multiline %}

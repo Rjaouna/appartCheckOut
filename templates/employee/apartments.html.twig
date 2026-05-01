@@ -17,13 +17,10 @@
             <article class="employee-card employee-apartment-card" data-click-url="{{ path('employee_apartment_show', {id: apartment.id}) }}">
                 <div class="employee-apartment-head">
                     <h2 class="employee-apartment-card-title">{{ apartment.name }}</h2>
-                    <a class="employee-apartment-waze" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer" title="Ouvrir dans Waze" aria-label="Ouvrir dans Waze">
-                        <span class="employee-apartment-waze-icon" aria-hidden="true">
-                            {% include 'shared/_waze_icon.html.twig' %}
-                        </span>
-                    </a>
                 </div>
-                <p class="employee-apartment-city">{{ apartment.city }}</p>
+                <p class="employee-apartment-city">
+                    <a class="address-link" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">{{ apartment.fullAddress }}</a>
+                </p>
                 <div class="employee-apartment-code-block">
                     <div>
                         <span>Code immeuble</span>

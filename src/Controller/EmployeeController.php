@@ -7,6 +7,7 @@ use App\Entity\Apartment;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
 use App\Entity\Room;
+use App\Entity\ServiceOffer;
 use App\Entity\User;
 use App\Enum\AnomalyStatus;
 use App\Enum\ApartmentStatus;
@@ -19,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/employee')]
@@ -155,6 +157,127 @@ class EmployeeController extends AbstractController
     {
         return $this->render('employee/apartments.html.twig', [
             'apartments' => $this->findAssignedApartments($entityManager),
+        ]);
+    }
+
+    #[Route('/profile', name: 'employee_profile', methods: ['GET'])]
+    public function profile(EntityManagerInterface $entityManager): Response
+    {
+        return $this->render('employee/profile.html.twig', $this->buildProfileData($entityManager));
+    }
+
+    #[Route('/profile/photo', name: 'employee_profile_photo_update', methods: ['POST'])]
+    public function updateProfilePhoto(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $photo = $request->files->get('photo');
+
+        if (!$photo instanceof UploadedFile) {
+            return new JsonResponse(['success' => false, 'message' => 'Ajoute une photo avant de valider.'], 422);
+        }
+
+        $previousPhotoPath = $user->getPhotoPath();
+        $user->setPhotoPath($this->storeUserPhoto($photo));
+        $entityManager->flush();
+        $this->deleteUserPhoto($previousPhotoPath);
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_profile_content.html.twig', $this->buildProfileData($entityManager)),
+            'message' => 'Photo de profil mise à jour.',
+        ]);
+    }
+
+    #[Route('/profile/services/{id}/toggle', name: 'employee_profile_service_toggle', methods: ['POST'])]
+    public function toggleProfileService(ServiceOffer $serviceOffer, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$serviceOffer->isApproved()) {
+            return new JsonResponse(['success' => false, 'message' => 'Ce service n est pas encore validé.'], 422);
+        }
+
+        if (!$serviceOffer->isStandard() && $serviceOffer->getCreatedBy()?->getId() !== $user->getId()) {
+            return new JsonResponse(['success' => false, 'message' => 'Service indisponible.'], 422);
+        }
+
+        if ($request->request->getBoolean('enabled')) {
+            $user->addServiceOffer($serviceOffer);
+        } else {
+            $user->removeServiceOffer($serviceOffer);
+        }
+
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_profile_content.html.twig', $this->buildProfileData($entityManager)),
+            'message' => 'Services mis a jour.',
+        ]);
+    }
+
+    #[Route('/profile/services/suggest', name: 'employee_profile_service_suggest', methods: ['POST'])]
+    public function suggestProfileService(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $label = $this->normalizeServiceOfferLabel((string) $request->request->get('label'));
+        if ($label === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne le nom du service.'], 422);
+        }
+
+        $existingPending = $entityManager->createQueryBuilder()
+            ->select('serviceOffer')
+            ->from(ServiceOffer::class, 'serviceOffer')
+            ->where('serviceOffer.createdBy = :user')
+            ->andWhere('LOWER(serviceOffer.label) = :label')
+            ->setParameter('user', $user)
+            ->setParameter('label', mb_strtolower($label))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if ($existingPending instanceof ServiceOffer) {
+            return new JsonResponse(['success' => false, 'message' => 'Ce service est deja propose sur ton profil.'], 422);
+        }
+
+        $serviceOffer = (new ServiceOffer())
+            ->setLabel($label)
+            ->setStatus(ServiceOffer::STATUS_PENDING)
+            ->setIsStandard(false)
+            ->setCreatedBy($user);
+
+        $user->addServiceOffer($serviceOffer);
+        $entityManager->persist($serviceOffer);
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_profile_content.html.twig', $this->buildProfileData($entityManager)),
+            'message' => 'Service propose pour validation.',
+        ]);
+    }
+
+    #[Route('/profile/services/{id}/delete', name: 'employee_profile_service_delete', methods: ['POST'])]
+    public function deleteProfileService(ServiceOffer $serviceOffer, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if ($serviceOffer->isStandard() || $serviceOffer->getCreatedBy()?->getId() !== $user->getId()) {
+            return new JsonResponse(['success' => false, 'message' => 'Service indisponible.'], 422);
+        }
+
+        $user->removeServiceOffer($serviceOffer);
+        $entityManager->remove($serviceOffer);
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_profile_content.html.twig', $this->buildProfileData($entityManager)),
+            'message' => 'Service supprime.',
         ]);
     }
 
@@ -531,7 +654,72 @@ class EmployeeController extends AbstractController
             'anomaliesPreview' => $anomaliesPreview,
             'anomalyCount' => count($anomaliesPreview),
             'apartments' => $apartments,
+            'activeServiceCount' => count($this->findEnabledEmployeeServices($user, $entityManager)),
         ];
+    }
+
+    /**
+     * @return array{
+     *     user: User,
+     *     approvedStandardServices: list<ServiceOffer>,
+     *     approvedCustomServices: list<ServiceOffer>,
+     *     pendingCustomServices: list<ServiceOffer>
+     * }
+     */
+    private function buildProfileData(EntityManagerInterface $entityManager): array
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return [
+            'user' => $user,
+            'approvedStandardServices' => $entityManager->getRepository(ServiceOffer::class)->findBy(
+                ['isStandard' => true, 'status' => ServiceOffer::STATUS_APPROVED],
+                ['label' => 'ASC']
+            ),
+            'approvedCustomServices' => $entityManager->createQueryBuilder()
+                ->select('serviceOffer')
+                ->from(ServiceOffer::class, 'serviceOffer')
+                ->where('serviceOffer.createdBy = :user')
+                ->andWhere('serviceOffer.status = :status')
+                ->andWhere('serviceOffer.isStandard = :isStandard')
+                ->setParameter('user', $user)
+                ->setParameter('status', ServiceOffer::STATUS_APPROVED)
+                ->setParameter('isStandard', false)
+                ->orderBy('serviceOffer.label', 'ASC')
+                ->getQuery()
+                ->getResult(),
+            'pendingCustomServices' => $entityManager->createQueryBuilder()
+                ->select('serviceOffer')
+                ->from(ServiceOffer::class, 'serviceOffer')
+                ->where('serviceOffer.createdBy = :user')
+                ->andWhere('serviceOffer.status = :status')
+                ->andWhere('serviceOffer.isStandard = :isStandard')
+                ->setParameter('user', $user)
+                ->setParameter('status', ServiceOffer::STATUS_PENDING)
+                ->setParameter('isStandard', false)
+                ->orderBy('serviceOffer.createdAt', 'DESC')
+                ->getQuery()
+                ->getResult(),
+        ];
+    }
+
+    /**
+     * @return list<ServiceOffer>
+     */
+    private function findEnabledEmployeeServices(User $user, EntityManagerInterface $entityManager): array
+    {
+        return $entityManager->createQueryBuilder()
+            ->select('serviceOffer')
+            ->from(ServiceOffer::class, 'serviceOffer')
+            ->join('serviceOffer.users', 'user')
+            ->where('user = :user')
+            ->andWhere('serviceOffer.status = :status')
+            ->setParameter('user', $user)
+            ->setParameter('status', ServiceOffer::STATUS_APPROVED)
+            ->orderBy('serviceOffer.label', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     /**
@@ -600,6 +788,41 @@ class EmployeeController extends AbstractController
             'entryInstructions' => $apartment->setEntryInstructions($value === '' ? 'Aucune consigne pour le moment.' : $value),
             default => throw new \InvalidArgumentException('Champ non modifiable.'),
         };
+    }
+
+    private function normalizeServiceOfferLabel(string $label): string
+    {
+        $label = trim(preg_replace('/\s+/', ' ', $label) ?? '');
+
+        return mb_substr($label, 0, 160);
+    }
+
+    private function storeUserPhoto(UploadedFile $photo): string
+    {
+        $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/users';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $safeName = pathinfo($photo->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeName = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeName) ?: 'employe';
+        $filename = sprintf('%s-%s.%s', $safeName, bin2hex(random_bytes(4)), $photo->guessExtension() ?: 'jpg');
+
+        $photo->move($targetDir, $filename);
+
+        return '/uploads/users/' . $filename;
+    }
+
+    private function deleteUserPhoto(?string $photoPath): void
+    {
+        if (!is_string($photoPath) || $photoPath === '' || !str_starts_with($photoPath, '/uploads/users/')) {
+            return;
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $photoPath;
+        if (is_file($fullPath)) {
+            @unlink($fullPath);
+        }
     }
 
     private function formatFrenchDateTime(\DateTimeImmutable $dateTime, string $pattern): string

@@ -47,9 +47,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Apartment::class, mappedBy: 'assignedEmployees')]
     private Collection $assignedApartments;
 
+    /**
+     * @var Collection<int, ServiceOffer>
+     */
+    #[ORM\ManyToMany(targetEntity: ServiceOffer::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_service_offer')]
+    private Collection $serviceOffers;
+
+    /**
+     * @var Collection<int, ServiceOffer>
+     */
+    #[ORM\OneToMany(mappedBy: 'createdBy', targetEntity: ServiceOffer::class)]
+    private Collection $createdServiceOffers;
+
     public function __construct()
     {
         $this->assignedApartments = new ArrayCollection();
+        $this->serviceOffers = new ArrayCollection();
+        $this->createdServiceOffers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -190,5 +205,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, ServiceOffer>
+     */
+    public function getServiceOffers(): Collection
+    {
+        return $this->serviceOffers;
+    }
+
+    public function addServiceOffer(ServiceOffer $serviceOffer): self
+    {
+        if (!$this->serviceOffers->contains($serviceOffer)) {
+            $this->serviceOffers->add($serviceOffer);
+            $serviceOffer->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeServiceOffer(ServiceOffer $serviceOffer): self
+    {
+        if ($this->serviceOffers->removeElement($serviceOffer)) {
+            $serviceOffer->removeUser($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ServiceOffer>
+     */
+    public function getCreatedServiceOffers(): Collection
+    {
+        return $this->createdServiceOffers;
     }
 }

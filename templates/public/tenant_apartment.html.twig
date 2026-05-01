@@ -111,6 +111,25 @@
                     <a class="primary-button" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l adresse de mon appart sur WhatsApp</a>
                 </div>
             </article>
+
+            {% if serviceContactEmployee and serviceExtras is not empty %}
+                <article class="apartment-detail-card apartment-detail-card-wide public-extra-card">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Extras disponibles</h3>
+                            <p class="muted">Services proposes par {{ serviceContactEmployee.fullName }} pendant votre sejour.</p>
+                        </div>
+                    </div>
+                    <div class="public-extra-grid">
+                        {% for service in serviceExtras %}
+                            <a class="public-extra-service" href="{{ service.whatsAppUrl }}" target="_blank" rel="noreferrer" title="{{ service.title }}">
+                                <strong>{{ service.label }}</strong>
+                                <span>Demander sur WhatsApp</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endif %}
         </div>
     </section>
 {% endblock %}

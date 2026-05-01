@@ -1,0 +1,48 @@
+<article class="compact-card compact-card-modern admin-service-review-card {{ serviceOffer.isPending ? 'is-pending' : '' }}">
+    <div class="admin-service-review-head">
+        <div>
+            <strong>{{ serviceOffer.label }}</strong>
+            <p>{{ serviceOffer.createdBy ? serviceOffer.createdBy.fullName : 'Service standard' }}</p>
+        </div>
+        <span class="status-badge {{ serviceOffer.isApproved ? 'is-success' : (serviceOffer.isRejected ? 'is-danger' : '') }}">{{ serviceOffer.statusLabel }}</span>
+    </div>
+
+    <form method="post" action="{{ path('admin_service_offer_label_update', {id: serviceOffer.id}) }}" class="stack-form compact-form" data-async-form data-update-target="{{ updateTarget }}">
+        <input type="hidden" name="context" value="{{ context }}">
+        <label>
+            <span>Libelle</span>
+            <input type="text" name="label" value="{{ serviceOffer.label }}" maxlength="160" required>
+        </label>
+        <button class="secondary-button" type="submit">Corriger le texte</button>
+    </form>
+
+    {% if serviceOffer.createdBy %}
+        <p class="muted">Propose le {{ serviceOffer.createdAt|date('d/m/Y H:i') }}.</p>
+    {% endif %}
+
+    {% if serviceOffer.isPending %}
+        <div class="card-action-row">
+            <form method="post" action="{{ path('admin_service_offer_approve', {id: serviceOffer.id}) }}" data-async-form data-update-target="{{ updateTarget }}">
+                <input type="hidden" name="context" value="{{ context }}">
+                <button class="primary-button" type="submit">Valider</button>
+            </form>
+            <form method="post" action="{{ path('admin_service_offer_reject', {id: serviceOffer.id}) }}" data-async-form data-update-target="{{ updateTarget }}" data-confirm-reset data-confirm-title="Refuser ce service" data-confirm-message="Veux-tu vraiment refuser cette proposition de service ?">
+                <input type="hidden" name="context" value="{{ context }}">
+                <button class="secondary-button danger-button" type="submit">Refuser</button>
+            </form>
+        </div>
+    {% elseif serviceOffer.createdBy %}
+        <form
+            method="post"
+            action="{{ path('admin_service_offer_delete', {id: serviceOffer.id}) }}"
+            data-async-form
+            data-update-target="{{ updateTarget }}"
+            data-confirm-reset
+            data-confirm-title="Supprimer ce service"
+            data-confirm-message="Veux-tu vraiment supprimer cet extra du profil employe ?"
+        >
+            <input type="hidden" name="context" value="{{ context }}">
+            <button class="secondary-button danger-button" type="submit">Supprimer ce service</button>
+        </form>
+    {% endif %}
+</article>

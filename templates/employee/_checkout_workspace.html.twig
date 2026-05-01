@@ -11,13 +11,13 @@
 
         <div class="apartment-detail-sections">
             <section class="apartment-detail-card">
-                <h3>Acces</h3>
+                <h3>Accès</h3>
                 <dl class="detail-definition-list">
                     <div><dt>Adresse</dt><dd>{{ checkout.apartment.fullAddress }}</dd></div>
                     <div><dt>Ville</dt><dd>{{ checkout.apartment.city }}</dd></div>
-                <div><dt>Étage</dt><dd>{{ checkout.apartment.floor ?: '-' }}</dd></div>
+                    <div><dt>Étage</dt><dd>{{ checkout.apartment.floor ?: '-' }}</dd></div>
                     <div><dt>Porte</dt><dd>{{ checkout.apartment.doorNumber ?: '-' }}</dd></div>
-                <div><dt>Boîte aux lettres</dt><dd>{{ checkout.apartment.mailboxNumber ?: '-' }}</dd></div>
+                    <div><dt>Boîte aux lettres</dt><dd>{{ checkout.apartment.mailboxNumber ?: '-' }}</dd></div>
                 </dl>
             </section>
 
@@ -25,7 +25,7 @@
                 <h3>Codes et navigation</h3>
                 <dl class="detail-definition-list">
                     <div><dt>Code immeuble</dt><dd>{{ checkout.apartment.buildingAccessCode ?: '-' }}</dd></div>
-                <div><dt>Code boîte à clés</dt><dd>{{ checkout.apartment.keyBoxCode ?: '-' }}</dd></div>
+                    <div><dt>Code boîte à clés</dt><dd>{{ checkout.apartment.keyBoxCode ?: '-' }}</dd></div>
                     <div>
                         <dt>Google Maps</dt>
                         <dd>
@@ -43,7 +43,7 @@
                 <h3>Contact</h3>
                 <dl class="detail-definition-list">
                     <div><dt>Nom</dt><dd>{{ checkout.apartment.ownerName ?: '-' }}</dd></div>
-                    <div><dt>Telephone</dt><dd>{{ checkout.apartment.ownerPhone ?: '-' }}</dd></div>
+                    <div><dt>Téléphone</dt><dd>{{ checkout.apartment.ownerPhone ?: '-' }}</dd></div>
                 </dl>
             </section>
 
@@ -76,8 +76,8 @@
     <section class="panel room-overview-panel">
         <div class="panel-head">
             <div>
-                <h2>Pieces de l'appartement</h2>
-            <p class="muted">Choisis une pièce pour commencer ou reprendre le contrôle.</p>
+                <h2>Pièces de l'appartement</h2>
+                <p class="muted">Choisis une pièce pour commencer ou reprendre le contrôle.</p>
             </div>
         </div>
 
@@ -96,7 +96,7 @@
                     <p>{{ group.room.type.label }}</p>
                     <div class="room-selector-meta">
                         <span class="progress-badge">{{ group.completionPercent }}%</span>
-                        <small>{{ group.checkedCount }}/{{ group.totalCount }} controles</small>
+                        <small>{{ group.checkedCount }}/{{ group.totalCount }} contrôles</small>
                     </div>
                 </a>
             {% endfor %}
@@ -108,10 +108,10 @@
                 action="{{ path('employee_checkout_complete', {id: checkout.id}) }}"
                 data-async-form
                 data-confirm-reset
-                data-confirm-title="Cloturer le check-out"
-                data-confirm-message="Veux-tu vraiment terminer ce check-out ? Tu seras redirige vers l accueil."
+                data-confirm-title="Clôturer le check-out"
+                data-confirm-message="Veux-tu vraiment terminer ce check-out ? Tu seras redirigé vers l’accueil."
             >
-<button class="primary-button full-width" type="submit">Terminer le check-out</button>
+                <button class="primary-button full-width" type="submit">Terminer le check-out</button>
             </form>
         </div>
     </section>
