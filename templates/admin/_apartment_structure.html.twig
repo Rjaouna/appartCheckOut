@@ -24,12 +24,6 @@
             <p>{{ apartment.activeRooms|length }} piece{{ apartment.activeRooms|length > 1 ? 's' : '' }} active{{ apartment.activeRooms|length > 1 ? 's' : '' }} a gerer.</p>
         </button>
 
-        <button class="admin-detail-entry-card admin-detail-entry-card-soft" type="button" data-panel-open="#apartment-panel-catalog" data-panel-group="apartment-admin">
-            <span class="admin-detail-entry-kicker">Catalogue</span>
-            <strong>Catalogue d equipements</strong>
-            <p>Ajouter rapidement de nouveaux equipements par type de piece.</p>
-        </button>
-
         <button class="admin-detail-entry-card admin-detail-entry-card-soft" type="button" data-panel-open="#apartment-panel-anomalies" data-panel-group="apartment-admin">
             <span class="admin-detail-entry-kicker">Suivi</span>
             <strong>Recap anomalies</strong>
@@ -290,33 +284,6 @@
                 <p class="empty-state">Commence par ajouter les pieces principales de l appartement.</p>
             {% endfor %}
         </div>
-    </div>
-
-    <div id="apartment-panel-catalog" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="catalog">
-        <div class="admin-detail-panel-head">
-            <div>
-                <span class="admin-detail-entry-kicker">Catalogue</span>
-                <h2>Catalogue d equipements</h2>
-            </div>
-            <button class="secondary-button admin-detail-back-button" type="button" data-panel-close="#apartment-panel-catalog">Retour</button>
-        </div>
-        <form method="post" action="{{ path('admin_catalog_create') }}" class="stack-form tight-form" data-async-form data-update-target="#apartment-detail-root">
-            <input type="hidden" name="apartmentId" value="{{ apartment.id }}">
-            <label><span>Nom equipement</span><input name="name" required></label>
-            <label><span>Type de piece</span>
-                <select name="roomType">
-                    {% for roomType in roomTypes %}
-                        <option value="{{ roomType.value }}">{{ roomType.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label><span>Description</span><textarea name="description" rows="2"></textarea></label>
-            <label class="checkbox-row">
-                <input type="checkbox" name="isRequired" value="1" checked>
-                <span>Controle obligatoire</span>
-            </label>
-            <button class="primary-button" type="submit">Ajouter au catalogue</button>
-        </form>
     </div>
 
     <div id="apartment-panel-anomalies" class="panel span-two admin-detail-panel is-collapsed" data-panel-group="apartment-admin" data-panel-name="anomalies">
