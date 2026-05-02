@@ -3067,6 +3067,47 @@ body.nav-compact .floating-main-menu-button {
     padding: 22px;
 }
 
+.admin-room-equipment-form {
+    display: grid;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.admin-room-equipment-form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+
+.admin-room-equipment-picker,
+.admin-room-equipment-manual {
+    display: grid;
+    gap: 8px;
+}
+
+.admin-room-equipment-picker select,
+.admin-room-equipment-manual input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: #fff;
+}
+
+.admin-room-equipment-picker select {
+    min-height: 220px;
+    padding-right: 8px;
+}
+
+.admin-room-equipment-picker small {
+    color: var(--muted);
+    line-height: 1.4;
+}
+
+.admin-users-create-form {
+    margin-top: 16px;
+}
+
 .admin-users-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3155,10 +3196,25 @@ body.nav-compact .floating-main-menu-button {
     min-width: 0;
 }
 
+.admin-user-list-copy h3,
 .admin-user-list-copy h2,
 .admin-user-hero-copy h2,
 .admin-user-hero-copy p {
     margin: 0;
+}
+
+.admin-user-name-link {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 4px;
+}
+
+.admin-user-name-link:hover,
+.admin-user-name-link:focus-visible {
+    color: var(--accent-dark);
 }
 
 .admin-user-phone-link {

@@ -584,30 +584,64 @@ class AdminController extends AbstractController
     #[Route('/rooms/{id}/equipments', name: 'admin_room_equipment_add', methods: ['POST'])]
     public function addRoomEquipment(Room $room, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        $equipment = new RoomEquipment();
-        $equipment
-            ->setDisplayOrder($room->getRoomEquipments()->count() + 1)
-            ->setNotes($this->nullable($request->request->get('notes')));
+        $displayOrder = $room->getRoomEquipments()->count() + 1;
+        $notes = $this->nullable($request->request->get('notes'));
+        $addedCount = 0;
 
-        $catalogId = (int) $request->request->get('catalogEquipmentId', 0);
-        if ($catalogId > 0) {
-            $catalogEquipment = $entityManager->getRepository(EquipmentCatalog::class)->find($catalogId);
-            if ($catalogEquipment !== null) {
+        $catalogIds = array_values(array_filter(
+            array_map('intval', (array) $request->request->all('catalogEquipmentIds')),
+            static fn (int $id): bool => $id > 0
+        ));
+
+        if ($catalogIds !== []) {
+            $catalogItems = $entityManager->getRepository(EquipmentCatalog::class)->findBy(['id' => $catalogIds]);
+
+            foreach ($catalogItems as $catalogEquipment) {
+                if (!$catalogEquipment instanceof EquipmentCatalog) {
+                    continue;
+                }
+
+                $equipment = new RoomEquipment();
                 $equipment
+                    ->setDisplayOrder($displayOrder++)
+                    ->setNotes($notes)
                     ->setCatalogEquipment($catalogEquipment)
                     ->setLabel($catalogEquipment->getName());
+
+                $room->addRoomEquipment($equipment);
+                $entityManager->persist($equipment);
+                $addedCount++;
             }
         }
 
-        if ($equipment->getLabel() === '') {
-            $equipment->setLabel((string) $request->request->get('manualLabel'));
+        $manualLabel = trim((string) $request->request->get('manualLabel'));
+        if ($manualLabel !== '') {
+            $equipment = new RoomEquipment();
+            $equipment
+                ->setDisplayOrder($displayOrder++)
+                ->setNotes($notes)
+                ->setLabel($manualLabel);
+
+            $room->addRoomEquipment($equipment);
+            $entityManager->persist($equipment);
+            $addedCount++;
         }
 
-        $room->addRoomEquipment($equipment);
-        $entityManager->persist($equipment);
+        if ($addedCount === 0) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Sélectionne au moins un équipement ou saisis un équipement manuel.',
+            ], 422);
+        }
+
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($room->getApartment(), $entityManager, 'Equipement ajoute.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+        return $this->apartmentDetailResponse(
+            $room->getApartment(),
+            $entityManager,
+            $addedCount > 1 ? 'Équipements ajoutés.' : 'Équipement ajouté.',
+            $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
+        );
     }
 
     #[Route('/rooms/{id}/delete', name: 'admin_room_delete', methods: ['POST'])]

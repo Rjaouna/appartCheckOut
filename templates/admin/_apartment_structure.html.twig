@@ -428,6 +428,12 @@
                 <div class="room-stack">
                     {% for room in apartment.activeRooms %}
                         <article class="room-card">
+                            {% set existingCatalogIds = [] %}
+                            {% for existingEquipment in room.activeRoomEquipments %}
+                                {% if existingEquipment.catalogEquipment %}
+                                    {% set existingCatalogIds = existingCatalogIds|merge([existingEquipment.catalogEquipment.id]) %}
+                                {% endif %}
+                            {% endfor %}
                             <div class="room-card-head">
                                 <div>
                                     <h3>{{ room.name }}</h3>
@@ -475,18 +481,26 @@
                                     <span class="empty-inline">Aucun équipement ajouté.</span>
                                 {% endfor %}
                             </div>
-                            <form method="post" action="{{ path('admin_room_equipment_add', {id: room.id}) }}" class="inline-form" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                            <form method="post" action="{{ path('admin_room_equipment_add', {id: room.id}) }}" class="admin-room-equipment-form" data-async-form data-update-target="{{ detailUpdateTarget }}">
                                 <input type="hidden" name="section" value="{{ currentSection }}">
-                                <select name="catalogEquipmentId">
-                                    <option value="">Choisir un équipement catalogue</option>
-                                    {% for item in catalog %}
-                                        {% if item.roomType.value == room.type.value %}
-                                            <option value="{{ item.id }}">{{ item.name }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                                <input type="text" name="manualLabel" placeholder="Ou ajouter un équipement manuel">
-                                <button class="secondary-button" type="submit">Ajouter</button>
+                                <div class="admin-room-equipment-form-grid">
+                                    <label class="admin-room-equipment-picker">
+                                        <span>Choisir plusieurs équipements du catalogue</span>
+                                        <select name="catalogEquipmentIds[]" multiple size="8">
+                                            {% for item in catalog %}
+                                                {% if item.roomType.value == room.type.value and item.id not in existingCatalogIds %}
+                                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <small>Maintiens `Ctrl` ou `Cmd` pour sélectionner plusieurs lignes.</small>
+                                    </label>
+                                    <label class="admin-room-equipment-manual">
+                                        <span>Ou ajouter un équipement manuel</span>
+                                        <input type="text" name="manualLabel" placeholder="Ex. miroir d’appoint">
+                                    </label>
+                                </div>
+                                <button class="secondary-button" type="submit">Ajouter la sélection</button>
                             </form>
                         </article>
                     {% else %}

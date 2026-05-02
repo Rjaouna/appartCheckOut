@@ -2,15 +2,17 @@
     <section class="panel admin-users-form-panel">
         <div class="admin-home-section-head compact">
             <div>
-                <h2>Ajouter un employe</h2>
-                <p>Creer un acces terrain avec photo et contact direct.</p>
+                <h2>Ajouter un employé</h2>
+                <p>Créer un accès terrain avec photo et contact direct.</p>
             </div>
+            <button class="primary-button" type="button" data-edit-target="#admin-create-employee-form">Ajouter un employé</button>
         </div>
 
         <form
+            id="admin-create-employee-form"
             method="post"
             action="{{ path('admin_user_create') }}"
-            class="stack-form"
+            class="stack-form editable-field-form is-collapsed admin-users-create-form"
             enctype="multipart/form-data"
             data-async-form
             data-update-target="#admin-users-content"
@@ -26,7 +28,7 @@
                     <input type="email" name="email" required>
                 </label>
                 <label>
-                    <span>Numero de telephone</span>
+                    <span>Numéro de téléphone</span>
                     <input type="tel" name="phoneNumber" placeholder="06 00 00 00 00">
                 </label>
                 <label>
@@ -47,19 +49,22 @@
                 </label>
                 <label class="checkbox-row">
                     <input type="checkbox" name="canManageAnomalyWorkflow" value="1">
-                    <span>Gerer le suivi des anomalies</span>
+                    <span>Gérer le suivi des anomalies</span>
                 </label>
             </div>
 
-            <button class="primary-button" type="submit">Creer l employe</button>
+            <div class="editable-field-actions">
+                <button class="primary-button" type="submit">Créer l’employé</button>
+                <button class="secondary-button" type="button" data-edit-target="#admin-create-employee-form">Annuler</button>
+            </div>
         </form>
     </section>
 
     <section class="panel admin-users-list-panel">
         <div class="admin-home-section-head compact">
             <div>
-                <h2>Equipe</h2>
-                <p>Photo, contact rapide et acces detail.</p>
+                <h2>Équipe</h2>
+                <p>Photo, contact rapide et accès détail.</p>
             </div>
             <span class="mini-badge">{{ users|length }} compte{{ users|length > 1 ? 's' : '' }}</span>
         </div>
@@ -77,29 +82,17 @@
                         </div>
 
                         <div class="admin-user-list-copy">
-                            <h2>{{ user.fullName }}</h2>
+                            <h3><a class="admin-user-name-link" href="{{ path('admin_user_show', {id: user.id}) }}">{{ user.fullName }}</a></h3>
                             {% if user.phoneNumber %}
                                 <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
                             {% else %}
-                                <p class="muted">Numero non renseigne</p>
+                                <p class="muted">Numéro non renseigné</p>
                             {% endif %}
                         </div>
                     </div>
-
-                    <a
-                        class="icon-action-button"
-                        href="{{ path('admin_user_show', {id: user.id}) }}"
-                        aria-label="Voir le detail de {{ user.fullName }}"
-                        title="Voir le detail"
-                    >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
-                        </svg>
-                    </a>
                 </article>
             {% else %}
-                <p class="empty-state">Aucun employe enregistre pour le moment.</p>
+                <p class="empty-state">Aucun employé enregistré pour le moment.</p>
             {% endfor %}
         </div>
     </section>
