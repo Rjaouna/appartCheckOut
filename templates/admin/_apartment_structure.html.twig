@@ -581,7 +581,6 @@
                         {% for group in anomalyGroups %}
                             <a class="compact-card room-anomaly-card" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}#room-{{ group.room.id }}">
                                 <strong>{{ group.room.name }}</strong>
-                                <p>{{ group.room.type.label }}</p>
                                 <span class="status-badge is-warning">{{ group.count }} anomalie{{ group.count > 1 ? 's' : '' }}</span>
                             </a>
                         {% endfor %}
