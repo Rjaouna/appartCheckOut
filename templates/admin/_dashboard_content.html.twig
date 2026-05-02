@@ -5,7 +5,7 @@
 <div class="admin-dashboard-hub">
     <section class="admin-dashboard-hero">
         <div class="admin-dashboard-hero-copy">
-            <h1>Espace admin</h1>
+            <h1>Bonjour {{ app.user.fullName|split(' ')|first }}</h1>
             <p>Tout le nécessaire pour gérer les appartements, les anomalies et les check-outs.</p>
         </div>
         <div class="admin-dashboard-hero-actions">
