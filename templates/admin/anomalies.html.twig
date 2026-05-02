@@ -10,11 +10,75 @@
     </section>
 
     <section class="card-grid admin-anomalies-active-grid">
-        {% for apartment in apartments %}
-            <article class="apartment-card">
-                <h2>{{ apartment.name }}</h2>
-                <p>{{ apartment.fullAddress }}</p>
-                <a class="primary-button full-width" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies</a>
+        {% for card in apartmentCards %}
+            {% set apartment = card.apartment %}
+            {% set assignedEmployees = card.assignedEmployees %}
+            {% set leadEmployee = assignedEmployees|length > 0 ? assignedEmployees|first : null %}
+            {% set extraManagers = assignedEmployees|length > 1 ? assignedEmployees|slice(1) : [] %}
+            <article class="apartment-card admin-apartment-card admin-anomaly-overview-card">
+                <div class="apartment-topline">
+                    <span class="mini-badge is-warning">{{ card.openAnomalyCount }} anomalie{{ card.openAnomalyCount > 1 ? 's' : '' }}</span>
+                    {% if card.latestOpenAnomalyAt %}
+                        <span class="status-badge is-neutral">Dernière : {{ card.latestOpenAnomalyAt|date('d/m/Y H:i') }}</span>
+                    {% endif %}
+                </div>
+
+                <h2>
+                    <a class="admin-dashboard-title-link" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">{{ apartment.name }}</a>
+                </h2>
+
+                <p>
+                    <a class="apartment-card-address-link" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">
+                        {{ apartment.fullAddress }}
+                    </a>
+                </p>
+
+                <div class="admin-anomaly-manager-block">
+                    <span class="admin-anomaly-manager-label">Responsable</span>
+                    {% if leadEmployee %}
+                        <div class="admin-anomaly-manager-inline">
+                            <a class="admin-anomaly-manager-link" href="{{ path('admin_user_show', {id: leadEmployee.id}) }}">
+                                {{ leadEmployee.fullName }}
+                            </a>
+                            {% if leadEmployee.phoneNumber %}
+                                <a class="admin-anomaly-phone-link" href="tel:{{ leadEmployee.phoneNumber }}" aria-label="Appeler {{ leadEmployee.fullName }}" title="Appeler {{ leadEmployee.fullName }}">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M6.6 10.8a15.3 15.3 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24c1.1.37 2.29.56 3.5.56a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.85 21 3 13.15 3 3a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.21.19 2.4.56 3.5a1 1 0 0 1-.24 1l-2.22 2.3Z" fill="currentColor"/>
+                                    </svg>
+                                </a>
+                            {% endif %}
+                            {% if extraManagers|length > 0 %}
+                                <button
+                                    class="apartment-hero-manager-more"
+                                    type="button"
+                                    data-manager-list-toggle
+                                    data-target="#anomaly-manager-list-{{ apartment.id }}"
+                                    aria-expanded="false"
+                                >
+                                    (+{{ extraManagers|length }} autre{{ extraManagers|length > 1 ? 's' : '' }})
+                                </button>
+                            {% endif %}
+                        </div>
+                        {% if extraManagers|length > 0 %}
+                            <div id="anomaly-manager-list-{{ apartment.id }}" class="apartment-hero-manager-list is-collapsed" hidden>
+                                {% for employee in extraManagers %}
+                                    <div class="admin-anomaly-manager-extra">
+                                        <a href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
+                                        {% if employee.phoneNumber %}
+                                            <a class="admin-anomaly-phone-link" href="tel:{{ employee.phoneNumber }}" aria-label="Appeler {{ employee.fullName }}" title="Appeler {{ employee.fullName }}">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M6.6 10.8a15.3 15.3 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24c1.1.37 2.29.56 3.5.56a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.85 21 3 13.15 3 3a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.21.19 2.4.56 3.5a1 1 0 0 1-.24 1l-2.22 2.3Z" fill="currentColor"/>
+                                                </svg>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <span class="muted">Aucun responsable assigné</span>
+                    {% endif %}
+                </div>
             </article>
         {% else %}
             <p class="empty-state">Aucune anomalie en cours.</p>
@@ -28,6 +92,33 @@
                 <p class="muted">Anomalies clôturées enregistrées pour le suivi et les statistiques.</p>
             </div>
         </div>
+        <form method="get" class="admin-history-filters">
+            <label>
+                <span>Appartement</span>
+                <select name="historyApartment" onchange="this.form.submit()">
+                    <option value="0">Tous les appartements</option>
+                    {% for apartment in historyFilterApartments %}
+                        <option value="{{ apartment.id }}" {{ selectedHistoryApartmentId == apartment.id ? 'selected' : '' }}>
+                            {{ apartment.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span>Responsable</span>
+                <select name="historyUser" onchange="this.form.submit()">
+                    <option value="0">Tous les responsables</option>
+                    {% for user in historyFilterUsers %}
+                        <option value="{{ user.id }}" {{ selectedHistoryUserId == user.id ? 'selected' : '' }}>
+                            {{ user.fullName }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+            <noscript>
+                <button class="secondary-button" type="submit">Filtrer</button>
+            </noscript>
+        </form>
         <div class="room-selector-grid">
             {% for anomaly in historyAnomalies %}
                 <a class="room-selector-card admin-apartment-card" href="{{ path('admin_anomaly_detail', {id: anomaly.id}) }}">

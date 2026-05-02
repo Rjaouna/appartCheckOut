@@ -1679,6 +1679,57 @@ body.nav-compact .floating-main-menu-button {
     border-top: 1px solid #f0eee9;
 }
 
+.admin-anomaly-overview-card {
+    align-content: start;
+}
+
+.admin-anomaly-manager-block {
+    display: grid;
+    gap: 8px;
+    padding-top: 4px;
+    border-top: 1px solid #f0eee9;
+}
+
+.admin-anomaly-manager-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.admin-anomaly-manager-inline,
+.admin-anomaly-manager-extra {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-anomaly-manager-link,
+.admin-anomaly-manager-extra a:first-child {
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.admin-anomaly-phone-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #fff3f5;
+    color: var(--accent-dark);
+}
+
+.admin-anomaly-phone-link svg {
+    width: 16px;
+    height: 16px;
+}
+
 .maintenance-pill {
     display: inline-flex;
     align-items: center;
@@ -3395,6 +3446,30 @@ body.nav-compact .floating-main-menu-button {
     margin-top: 18px;
 }
 
+.admin-history-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    border: 1px solid #f0ece6;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #fff 0%, #fcfbf8 100%);
+}
+
+.admin-history-filters label {
+    display: grid;
+    gap: 8px;
+}
+
+.admin-history-filters span {
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
 .admin-create-toggle-button {
     width: 100%;
     margin-bottom: 14px;
@@ -4050,6 +4125,9 @@ body.nav-compact .floating-main-menu-button {
 .apartment-card-address-link {
     font-weight: 600;
     line-height: 1.45;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
 }
 
 .apartment-card-meta-grid {
@@ -5178,6 +5256,10 @@ a.apartment-manager-link:focus-visible {
 
     .action-menu-shortcuts-panel {
         padding: 20px;
+    }
+
+    .admin-history-filters {
+        grid-template-columns: 1fr;
     }
 
     .action-menu-note-head {

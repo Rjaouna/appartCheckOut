@@ -40,7 +40,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/anomalies', name: 'admin_anomalies', methods: ['GET'])]
-    public function anomalies(EntityManagerInterface $entityManager): Response
+    public function anomalies(Request $request, EntityManagerInterface $entityManager): Response
     {
         $apartments = $entityManager->createQueryBuilder()
             ->select('DISTINCT apartment')
@@ -51,9 +51,85 @@ class AdminController extends AbstractController
             ->getQuery()
             ->getResult();
 
+        $latestOpenAnomalyDates = [];
+        if ($apartments !== []) {
+            $latestRows = $entityManager->createQueryBuilder()
+                ->select('IDENTITY(anomaly.apartment) AS apartmentId, MAX(anomaly.createdAt) AS latestCreatedAt')
+                ->from(Anomaly::class, 'anomaly')
+                ->where('anomaly.status != :closedStatus')
+                ->andWhere('anomaly.apartment IN (:apartments)')
+                ->groupBy('anomaly.apartment')
+                ->setParameter('closedStatus', AnomalyStatus::Closed)
+                ->setParameter('apartments', $apartments)
+                ->getQuery()
+                ->getArrayResult();
+
+            foreach ($latestRows as $row) {
+                $apartmentId = (int) ($row['apartmentId'] ?? 0);
+                $latestCreatedAt = $row['latestCreatedAt'] ?? null;
+                if ($apartmentId > 0 && is_string($latestCreatedAt) && $latestCreatedAt !== '') {
+                    $latestOpenAnomalyDates[$apartmentId] = new \DateTimeImmutable($latestCreatedAt);
+                }
+            }
+        }
+
+        $apartmentCards = $this->buildApartmentCards($apartments, $entityManager);
+        foreach ($apartmentCards as &$card) {
+            $apartmentId = $card['apartment']->getId() ?? 0;
+            $card['latestOpenAnomalyAt'] = $latestOpenAnomalyDates[$apartmentId] ?? null;
+        }
+        unset($card);
+
+        $selectedHistoryApartmentId = max(0, (int) $request->query->get('historyApartment'));
+        $selectedHistoryUserId = max(0, (int) $request->query->get('historyUser'));
+
+        $historyFilterApartments = $entityManager->createQueryBuilder()
+            ->select('DISTINCT apartment')
+            ->from(Apartment::class, 'apartment')
+            ->join(Anomaly::class, 'anomaly', 'WITH', 'anomaly.apartment = apartment')
+            ->where('anomaly.status = :closedStatus')
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
+            ->orderBy('apartment.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $historyFilterUsers = $entityManager->createQueryBuilder()
+            ->select('DISTINCT user')
+            ->from(User::class, 'user')
+            ->join(Anomaly::class, 'anomaly', 'WITH', 'anomaly.createdBy = user')
+            ->where('anomaly.status = :closedStatus')
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
+            ->orderBy('user.fullName', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $historyQueryBuilder = $entityManager->createQueryBuilder()
+            ->select('anomaly')
+            ->from(Anomaly::class, 'anomaly')
+            ->where('anomaly.status = :closedStatus')
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
+            ->orderBy('anomaly.closedAt', 'DESC')
+            ->setMaxResults(24);
+
+        if ($selectedHistoryApartmentId > 0) {
+            $historyQueryBuilder
+                ->andWhere('IDENTITY(anomaly.apartment) = :historyApartmentId')
+                ->setParameter('historyApartmentId', $selectedHistoryApartmentId);
+        }
+
+        if ($selectedHistoryUserId > 0) {
+            $historyQueryBuilder
+                ->andWhere('IDENTITY(anomaly.createdBy) = :historyUserId')
+                ->setParameter('historyUserId', $selectedHistoryUserId);
+        }
+
         return $this->render('admin/anomalies.html.twig', [
-            'apartments' => $apartments,
-            'historyAnomalies' => $entityManager->getRepository(Anomaly::class)->findBy(['status' => AnomalyStatus::Closed], ['closedAt' => 'DESC'], 12),
+            'apartmentCards' => $apartmentCards,
+            'historyAnomalies' => $historyQueryBuilder->getQuery()->getResult(),
+            'historyFilterApartments' => $historyFilterApartments,
+            'historyFilterUsers' => $historyFilterUsers,
+            'selectedHistoryApartmentId' => $selectedHistoryApartmentId,
+            'selectedHistoryUserId' => $selectedHistoryUserId,
         ]);
     }
 
