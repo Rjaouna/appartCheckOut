@@ -1135,7 +1135,7 @@ textarea {
 .action-menu-layout {
     width: min(1080px, 100%);
     display: grid;
-    gap: 28px;
+    gap: 24px;
 }
 
 .action-menu-grid {
@@ -1147,14 +1147,15 @@ textarea {
 
 .action-menu-tile {
     display: grid;
-    justify-items: center;
-    gap: 14px;
-    padding: 24px 22px;
+    justify-items: start;
+    align-content: start;
+    gap: 10px;
+    padding: 22px 22px 20px;
     border-radius: 24px;
     background: #fff;
     border: 1px solid #f0ece6;
     color: var(--text);
-    text-align: center;
+    text-align: left;
     transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
@@ -1214,16 +1215,28 @@ textarea {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
     color: var(--text);
-    background: #fff7f8;
+    background: #fff5f7;
 }
 
 .action-menu-icon svg {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
+}
+
+.action-menu-tile-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.action-menu-tile-caption {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.45;
 }
 
 .action-menu-tile-danger {
@@ -1278,14 +1291,16 @@ textarea {
 .action-menu-shortcuts a,
 .action-menu-note-card a {
     color: var(--text);
-    font-weight: 600;
-    text-decoration: none;
+    font-weight: 400;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
 }
 
 .action-menu-shortcuts a:hover,
 .action-menu-note-card a:hover {
     color: var(--accent-dark);
-    text-decoration: underline;
+    text-decoration-thickness: 1px;
 }
 
 .action-menu-note-card {
@@ -5157,6 +5172,11 @@ a.apartment-manager-link:focus-visible {
     .action-menu-grid,
     .action-menu-shortcuts {
         grid-template-columns: 1fr;
+    }
+
+    .action-menu-tile {
+        justify-items: center;
+        text-align: center;
     }
 
     .action-menu-shortcuts-panel {

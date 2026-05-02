@@ -110,25 +110,29 @@
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h7V4H4v9Zm0 7h7v-5H4v5Zm9 0h7v-9h-7v9Zm0-16v5h7V4h-7Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Dashboard</span>
+                                <span class="action-menu-tile-label">Dashboard</span>
+                                <span class="action-menu-tile-caption">Vue d’ensemble et pilotage rapide</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('admin_apartments') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3v-10.5Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Appartements</span>
+                                <span class="action-menu-tile-label">Appartements</span>
+                                <span class="action-menu-tile-caption">Liste, fiches et accès logements</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('admin_anomalies') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Anomalies</span>
+                                <span class="action-menu-tile-label">Anomalies</span>
+                                <span class="action-menu-tile-caption">Suivi des problèmes à traiter</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('admin_users') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm8 2c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4ZM8 13c-.29 0-.62.02-.97.05C4.42 13.27 0 14.44 0 17v3h6v-3c0-1.16.55-2.18 1.53-3A8.63 8.63 0 0 1 8 13Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Employés</span>
+                                <span class="action-menu-tile-label">Employés</span>
+                                <span class="action-menu-tile-caption">Profils, équipe et services</span>
                             </a>
                         {% endif %}
                         {% if is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_ADMIN') %}
@@ -136,37 +140,43 @@
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3v-10.5Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Mon espace</span>
+                                <span class="action-menu-tile-label">Mon espace</span>
+                                <span class="action-menu-tile-caption">Accueil et vue rapide du jour</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('employee_calendar') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10ZM6 8h12V6H6v2Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Calendrier</span>
+                                <span class="action-menu-tile-label">Calendrier</span>
+                                <span class="action-menu-tile-caption">Check-outs programmés et à venir</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('employee_history') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3a9 9 0 1 0 8.95 10H19.9A7 7 0 1 1 13 5v3l5-4-5-4v3Zm-1 5h2v6h-5v-2h3V8Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Historique</span>
+                                <span class="action-menu-tile-label">Historique</span>
+                                <span class="action-menu-tile-caption">Passages déjà terminés</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('employee_anomalies') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Mes anomalies</span>
+                                <span class="action-menu-tile-label">Mes anomalies</span>
+                                <span class="action-menu-tile-caption">Déclarations et suivi terrain</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('employee_apartments') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V7l9-4 9 4v14H3Zm5-2h2v-2H8v2Zm0-4h2v-2H8v2Zm0-4h2V9H8v2Zm6 8h2v-2h-2v2Zm0-4h2v-2h-2v2Zm0-4h2V9h-2v2Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Appartements</span>
+                                <span class="action-menu-tile-label">Appartements</span>
+                                <span class="action-menu-tile-caption">Codes, Waze et détails utiles</span>
                             </a>
                             <a class="action-menu-tile" href="{{ path('employee_profile') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z" fill="currentColor"/></svg>
                                 </span>
-                                <span>Profil</span>
+                                <span class="action-menu-tile-label">Profil</span>
+                                <span class="action-menu-tile-caption">Informations et services activés</span>
                             </a>
                         {% endif %}
                         <button
@@ -182,13 +192,15 @@
                                     <path d="M5 15v2a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                 </svg>
                             </span>
-                            <span>Installer l’application</span>
+                            <span class="action-menu-tile-label">Installer l’application</span>
+                            <span class="action-menu-tile-caption">Accès rapide depuis l’écran d’accueil</span>
                         </button>
                         <a class="action-menu-tile action-menu-tile-danger" href="{{ path('app_logout') }}">
                             <span class="action-menu-icon action-menu-icon-danger">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v-2h4V9h-4V7h6v10h-6Zm-7 4V3h9v2H5v14h7v2H3Zm13.6-6-1.4-1.4 1.6-1.6H9v-2h7.8l-1.6-1.6L16.6 7l4 4-4 4Z" fill="currentColor"/></svg>
                             </span>
-                            <span>Déconnexion</span>
+                            <span class="action-menu-tile-label">Déconnexion</span>
+                            <span class="action-menu-tile-caption">Fermer la session en cours</span>
                         </a>
                     </div>
 
