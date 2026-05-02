@@ -256,10 +256,16 @@ class AdminController extends AbstractController
         $user = (new User())
             ->setFullName(trim((string) $request->request->get('fullName')))
             ->setEmail($email)
-            ->setPhoneNumber($this->nullable($request->request->get('phoneNumber')))
             ->setRoles(['ROLE_EMPLOYEE'])
             ->setIsActive($request->request->getBoolean('isActive', true))
             ->setCanManageAnomalyWorkflow($request->request->getBoolean('canManageAnomalyWorkflow'));
+
+        try {
+            $user->setPhoneNumber($this->normalizeMoroccanPhoneNumber($request->request->get('phoneNumber')));
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
         $user->setPassword($passwordHasher->hashPassword($user, $password));
 
         $photo = $request->files->get('photo');
@@ -291,10 +297,15 @@ class AdminController extends AbstractController
         $user
             ->setFullName(trim((string) $request->request->get('fullName')))
             ->setEmail($email)
-            ->setPhoneNumber($this->nullable($request->request->get('phoneNumber')))
             ->setRoles(['ROLE_EMPLOYEE'])
             ->setIsActive($request->request->getBoolean('isActive'))
             ->setCanManageAnomalyWorkflow($request->request->getBoolean('canManageAnomalyWorkflow'));
+
+        try {
+            $user->setPhoneNumber($this->normalizeMoroccanPhoneNumber($request->request->get('phoneNumber')));
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
 
         $password = trim((string) $request->request->get('password'));
         if ($password !== '') {
@@ -1657,6 +1668,35 @@ class AdminController extends AbstractController
         return $value === '' ? null : $value;
     }
 
+    private function normalizeMoroccanPhoneNumber(mixed $value): ?string
+    {
+        $phoneNumber = $this->nullable($value);
+        if ($phoneNumber === null) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $phoneNumber) ?? '';
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '00212')) {
+            $digits = substr($digits, 5);
+        } elseif (str_starts_with($digits, '212')) {
+            $digits = substr($digits, 3);
+        }
+
+        if (strlen($digits) === 10 && str_starts_with($digits, '0')) {
+            $digits = substr($digits, 1);
+        }
+
+        if (preg_match('/^[5-7]\d{8}$/', $digits) !== 1) {
+            throw new \InvalidArgumentException('Le numéro doit être saisi au format 0665854858 et sera enregistré en +212.');
+        }
+
+        return '+212' . $digits;
+    }
+
     private function normalizeServiceOfferLabel(string $label): string
     {
         $label = trim(preg_replace('/\s+/', ' ', $label) ?? '');
@@ -1698,7 +1738,7 @@ class AdminController extends AbstractController
         match ($field) {
             'fullName' => $user->setFullName($value !== '' ? $value : $user->getFullName()),
             'email' => $this->updateAdminUserEmail($user, $value, $entityManager),
-            'phoneNumber' => $user->setPhoneNumber($normalizedValue),
+            'phoneNumber' => $user->setPhoneNumber($this->normalizeMoroccanPhoneNumber($normalizedValue)),
             'password' => $this->updateAdminUserPassword($user, $value, $passwordHasher),
             'isActive' => $user->setIsActive(in_array(strtolower($value), ['1', 'true', 'oui', 'actif'], true)),
             'canManageAnomalyWorkflow' => $user->setCanManageAnomalyWorkflow(in_array(strtolower($value), ['1', 'true', 'oui', 'autorise'], true)),

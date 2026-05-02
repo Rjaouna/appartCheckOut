@@ -13,7 +13,12 @@
                 <h2>{{ user.fullName }}</h2>
                 <p>{{ user.email }}</p>
                 {% if user.phoneNumber %}
-                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                    <div class="admin-user-phone-row">
+                        <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                        {% if not user.hasValidMoroccanPhoneNumber %}
+                            <span class="phone-alert-badge" title="Numéro mal enregistré">!</span>
+                        {% endif %}
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -30,7 +35,7 @@
                 <span>Changer la photo</span>
                 <input type="file" name="photo" accept="image/*" required>
             </label>
-            <button class="secondary-button" type="submit">Mettre a jour la photo</button>
+            <button class="secondary-button" type="submit">Mettre à jour la photo</button>
         </form>
     </section>
 
@@ -68,20 +73,20 @@
             {% include 'admin/_editable_user_field.html.twig' with {
                 user: user,
                 field: 'phoneNumber',
-                label: 'Numero de telephone',
-                value: user.phoneNumber ?: 'Non renseigne',
+                label: 'Numéro de téléphone',
+                value: user.phoneNumber ?: 'Non renseigné',
                 rawValue: user.phoneNumber,
                 inputType: 'tel',
-                placeholder: '06 00 00 00 00'
+                placeholder: '0665854858'
             } %}
         </article>
 
         <article class="apartment-detail-card">
-            <h3>Parametres du compte</h3>
+            <h3>Paramètres du compte</h3>
             {% include 'admin/_editable_user_field.html.twig' with {
                 user: user,
                 field: 'isActive',
-                label: 'Etat du compte',
+                label: 'État du compte',
                 value: user.isActive ? 'Actif' : 'Inactif',
                 rawValue: user.isActive ? '1' : '0',
                 inputType: 'select',
@@ -94,23 +99,23 @@
                 user: user,
                 field: 'canManageAnomalyWorkflow',
                 label: 'Suivi des anomalies',
-                value: user.canManageAnomalyWorkflow ? 'Autorise' : 'Non autorise',
+                value: user.canManageAnomalyWorkflow ? 'Autorisé' : 'Non autorisé',
                 rawValue: user.canManageAnomalyWorkflow ? '1' : '0',
                 inputType: 'select',
                 options: [
-                    { value: '1', label: 'Autorise' },
-                    { value: '0', label: 'Non autorise' }
+                    { value: '1', label: 'Autorisé' },
+                    { value: '0', label: 'Non autorisé' }
                 ]
             } %}
         </article>
 
         <article class="apartment-detail-card apartment-detail-card-wide">
-            <h3>Appartements assignes</h3>
+            <h3>Appartements assignés</h3>
             <div class="admin-user-assigned-list">
                 {% for apartment in user.assignedApartments %}
                     <a class="mini-badge admin-user-assigned-chip" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartment.name }}</a>
                 {% else %}
-                    <p class="muted">Aucun appartement assigne pour le moment.</p>
+                    <p class="muted">Aucun appartement assigné pour le moment.</p>
                 {% endfor %}
             </div>
         </article>
@@ -118,8 +123,8 @@
         <article class="apartment-detail-card apartment-detail-card-wide">
             <div class="panel-head">
                 <div>
-                    <h3>Services proposes</h3>
-                    <p class="muted">Services actives, disponibles ou en attente sur ce profil.</p>
+                    <h3>Services proposés</h3>
+                    <p class="muted">Services actifs, disponibles ou en attente sur ce profil.</p>
                 </div>
             </div>
             <div class="service-offer-list">
@@ -138,7 +143,7 @@
                     } %}
                 {% else %}
                     {% if approvedStandardServices is empty %}
-                        <p class="empty-state">Aucun service renseigne pour le moment.</p>
+                        <p class="empty-state">Aucun service renseigné pour le moment.</p>
                     {% endif %}
                 {% endfor %}
             </div>

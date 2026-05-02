@@ -144,6 +144,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function hasValidMoroccanPhoneNumber(): bool
+    {
+        if ($this->phoneNumber === null || $this->phoneNumber === '') {
+            return false;
+        }
+
+        return preg_match('/^\+212[5-7]\d{8}$/', $this->phoneNumber) === 1;
+    }
+
+    public function getPhoneNumberLocalInput(): string
+    {
+        if ($this->phoneNumber === null || $this->phoneNumber === '') {
+            return '';
+        }
+
+        if (preg_match('/^\+212(\d{9})$/', $this->phoneNumber, $matches) === 1) {
+            return '0' . $matches[1];
+        }
+
+        return $this->phoneNumber;
+    }
+
     public function getPhotoPath(): ?string
     {
         return $this->photoPath;

@@ -29,7 +29,10 @@
                 </label>
                 <label>
                     <span>Numéro de téléphone</span>
-                    <input type="tel" name="phoneNumber" placeholder="06 00 00 00 00">
+                    <div class="phone-input-shell">
+                        <span class="phone-input-prefix">+212</span>
+                        <input type="tel" name="phoneNumber" placeholder="0665854858" inputmode="numeric" maxlength="10">
+                    </div>
                 </label>
                 <label>
                     <span>Mot de passe</span>
@@ -84,7 +87,12 @@
                         <div class="admin-user-list-copy">
                             <h3><a class="admin-user-name-link" href="{{ path('admin_user_show', {id: user.id}) }}">{{ user.fullName }}</a></h3>
                             {% if user.phoneNumber %}
-                                <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                                <div class="admin-user-phone-row">
+                                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                                    {% if not user.hasValidMoroccanPhoneNumber %}
+                                        <span class="phone-alert-badge" title="Numéro mal enregistré">!</span>
+                                    {% endif %}
+                                </div>
                             {% else %}
                                 <p class="muted">Numéro non renseigné</p>
                             {% endif %}

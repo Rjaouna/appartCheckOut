@@ -10,7 +10,12 @@
             {% if field == 'email' and rawValue %}
                 <strong><a class="inline-detail-link" href="mailto:{{ rawValue }}">{{ value }}</a></strong>
             {% elseif field == 'phoneNumber' and rawValue %}
-                <strong><a class="inline-detail-link" href="tel:{{ rawValue }}">{{ value }}</a></strong>
+                <strong class="admin-user-phone-row">
+                    <a class="inline-detail-link" href="tel:{{ rawValue }}">{{ value }}</a>
+                    {% if not user.hasValidMoroccanPhoneNumber %}
+                        <span class="phone-alert-badge" title="Numéro mal enregistré">!</span>
+                    {% endif %}
+                </strong>
             {% else %}
                 <strong>{{ value }}</strong>
             {% endif %}
@@ -44,6 +49,18 @@
                     <option value="{{ option.value }}" {{ option.value == rawValue ? 'selected' : '' }}>{{ option.label }}</option>
                 {% endfor %}
             </select>
+        {% elseif field == 'phoneNumber' %}
+            <div class="phone-input-shell">
+                <span class="phone-input-prefix">+212</span>
+                <input
+                    type="tel"
+                    name="value"
+                    value="{{ user.hasValidMoroccanPhoneNumber ? user.phoneNumberLocalInput : '' }}"
+                    placeholder="{{ placeholder }}"
+                    inputmode="numeric"
+                    maxlength="10"
+                >
+            </div>
         {% else %}
             <input type="{{ inputType }}" name="value" value="{{ rawValue }}" placeholder="{{ placeholder }}">
         {% endif %}

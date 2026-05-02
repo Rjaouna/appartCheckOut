@@ -3779,6 +3779,29 @@ body.nav-compact .floating-main-menu-button {
     font-weight: 700;
 }
 
+.admin-user-phone-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.phone-alert-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff0d9;
+    color: #b45b00;
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1;
+    border: 1px solid rgba(180, 91, 0, 0.18);
+    cursor: help;
+}
+
 .admin-user-avatar {
     width: 72px;
     height: 72px;
@@ -4780,6 +4803,37 @@ a.apartment-manager-link:focus-visible {
     border-radius: 16px;
     padding: 14px 16px;
     background: #fff;
+}
+
+.phone-input-shell {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.phone-input-prefix {
+    flex: 0 0 auto;
+    padding: 0 14px 0 16px;
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(255, 56, 92, 0.06);
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.phone-input-shell input {
+    border: 0;
+    border-radius: 0;
+    padding-left: 14px;
+}
+
+.phone-input-shell input:focus {
+    outline: none;
 }
 
 .editable-field-actions {

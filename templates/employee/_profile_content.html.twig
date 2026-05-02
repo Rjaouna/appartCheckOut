@@ -35,7 +35,12 @@
                 <h2>{{ user.fullName }}</h2>
                 <p>{{ user.email }}</p>
                 {% if user.phoneNumber %}
-                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                    <div class="admin-user-phone-row">
+                        <a class="inline-detail-link admin-user-phone-link" href="tel:{{ user.phoneNumber }}">{{ user.phoneNumber }}</a>
+                        {% if not user.hasValidMoroccanPhoneNumber %}
+                            <span class="phone-alert-badge" title="Numéro mal enregistré">!</span>
+                        {% endif %}
+                    </div>
                 {% else %}
                     <span class="muted">Numéro non renseigné</span>
                 {% endif %}
