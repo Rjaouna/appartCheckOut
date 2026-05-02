@@ -1,3 +1,8 @@
+{% set checkoutPauseRoute = checkoutPauseRoute|default('employee_checkout_pause') %}
+{% set checkoutResumeRoute = checkoutResumeRoute|default('employee_checkout_resume') %}
+{% set checkoutRoomRoute = checkoutRoomRoute|default('employee_checkout_room_show') %}
+{% set checkoutCompleteRoute = checkoutCompleteRoute|default('employee_checkout_complete') %}
+
 <div class="workspace-main workspace-main-full">
     <aside id="apartment-info-panel" class="mobile-info-card is-collapsed">
         <div class="apartment-detail-hero">
@@ -61,11 +66,11 @@
 
         <div class="employee-actions">
             {% if checkout.status.value == 'paused' %}
-                <form method="post" action="{{ path('employee_checkout_resume', {id: checkout.id}) }}" data-async-form>
+                <form method="post" action="{{ path(checkoutResumeRoute, {id: checkout.id}) }}" data-async-form>
                     <button class="secondary-button full-width" type="submit">Reprendre</button>
                 </form>
             {% else %}
-                <form method="post" action="{{ path('employee_checkout_pause', {id: checkout.id}) }}" class="stack-form" data-async-form>
+                <form method="post" action="{{ path(checkoutPauseRoute, {id: checkout.id}) }}" class="stack-form" data-async-form>
                     <input type="text" name="reason" placeholder="Motif de pause" required>
                     <button class="secondary-button full-width" type="submit">Mettre en pause</button>
                 </form>
@@ -83,7 +88,7 @@
 
         <div class="room-selector-grid">
             {% for group in roomGroups %}
-                <a class="room-selector-card {{ group.completionPercent == 100 ? 'is-completed' : '' }} {{ group.anomalyCount > 0 ? 'has-anomaly' : '' }}" href="{{ path('employee_checkout_room_show', {checkout: checkout.id, room: group.room.id}) }}">
+                <a class="room-selector-card {{ group.completionPercent == 100 ? 'is-completed' : '' }} {{ group.anomalyCount > 0 ? 'has-anomaly' : '' }}" href="{{ path(checkoutRoomRoute, {checkout: checkout.id, room: group.room.id}) }}">
                     <div class="room-selector-top">
                         {% include 'employee/_room_icon.html.twig' with {room: group.room} %}
                         {% if group.anomalyCount > 0 %}
@@ -105,7 +110,7 @@
         <div class="employee-footer-actions">
             <form
                 method="post"
-                action="{{ path('employee_checkout_complete', {id: checkout.id}) }}"
+                action="{{ path(checkoutCompleteRoute, {id: checkout.id}) }}"
                 data-async-form
                 data-confirm-reset
                 data-confirm-title="Clôturer le check-out"
