@@ -72,7 +72,7 @@ document.addEventListener('submit', async (event) => {
             payload = null;
         }
 
-        if (!response.ok || !payload.success) {
+        if (!response.ok || !payload?.success) {
             throw new Error(payload?.message || 'Une erreur est survenue.');
         }
 
@@ -112,7 +112,7 @@ document.addEventListener('submit', async (event) => {
 
         hideModal('workflowActionModal');
         hideModal('actionMenuModal');
-        showToast(payload.message || 'Opération terminée.');
+        showToast(payload?.message || 'Opération terminée.');
     } catch (error) {
         showToast(error.message || 'Opération impossible.', 'error');
     } finally {
@@ -309,6 +309,37 @@ document.addEventListener('click', (event) => {
     const photoTrigger = event.target instanceof Element ? event.target.closest('[data-lightbox-src]') : null;
     if (photoTrigger instanceof HTMLElement) {
         openPhotoLightbox(photoTrigger);
+        return;
+    }
+
+    const employeeEntryTrigger = event.target instanceof Element ? event.target.closest('[data-employee-entry-trigger]') : null;
+    if (employeeEntryTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        openEmployeeEntryModal();
+        return;
+    }
+
+    const employeeEntryDigit = event.target instanceof Element ? event.target.closest('[data-employee-entry-digit]') : null;
+    if (employeeEntryDigit instanceof HTMLElement) {
+        event.preventDefault();
+        const digit = employeeEntryDigit.getAttribute('data-employee-entry-digit') || '';
+        if (digit !== '') {
+            appendEmployeeEntryDigit(digit);
+        }
+        return;
+    }
+
+    const employeeEntryClear = event.target instanceof Element ? event.target.closest('[data-employee-entry-clear]') : null;
+    if (employeeEntryClear instanceof HTMLElement) {
+        event.preventDefault();
+        clearEmployeeEntry();
+        return;
+    }
+
+    const employeeEntryBackspace = event.target instanceof Element ? event.target.closest('[data-employee-entry-backspace]') : null;
+    if (employeeEntryBackspace instanceof HTMLElement) {
+        event.preventDefault();
+        backspaceEmployeeEntry();
         return;
     }
 
@@ -563,6 +594,70 @@ function openInstallHelpModal() {
     }
 
     showModalElement(modalElement);
+}
+
+function openEmployeeEntryModal() {
+    const modalElement = document.getElementById('employeeEntryModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    resetEmployeeEntryModal();
+    showModalElement(modalElement);
+}
+
+function resetEmployeeEntryModal() {
+    const input = document.querySelector('[data-employee-entry-input]');
+    if (input instanceof HTMLInputElement) {
+        input.value = '';
+    }
+
+    syncEmployeeEntryDots();
+}
+
+function appendEmployeeEntryDigit(digit) {
+    const input = document.querySelector('[data-employee-entry-input]');
+    if (!(input instanceof HTMLInputElement)) {
+        return;
+    }
+
+    input.value = `${input.value}${digit}`.replace(/\D+/g, '').slice(0, 6);
+    syncEmployeeEntryDots();
+}
+
+function clearEmployeeEntry() {
+    const input = document.querySelector('[data-employee-entry-input]');
+    if (!(input instanceof HTMLInputElement)) {
+        return;
+    }
+
+    input.value = '';
+    syncEmployeeEntryDots();
+}
+
+function backspaceEmployeeEntry() {
+    const input = document.querySelector('[data-employee-entry-input]');
+    if (!(input instanceof HTMLInputElement)) {
+        return;
+    }
+
+    input.value = input.value.slice(0, -1);
+    syncEmployeeEntryDots();
+}
+
+function syncEmployeeEntryDots() {
+    const input = document.querySelector('[data-employee-entry-input]');
+    const dots = document.querySelectorAll('[data-employee-entry-dots] .employee-entry-dot');
+    if (!(input instanceof HTMLInputElement) || dots.length === 0) {
+        return;
+    }
+
+    const filledCount = input.value.length;
+    dots.forEach((dot, index) => {
+        if (dot instanceof HTMLElement) {
+            dot.classList.toggle('is-filled', index < filledCount);
+        }
+    });
 }
 
 function startDashboardPolling() {
@@ -915,5 +1010,9 @@ function hideModalElement(modalElement) {
 
     if (modalElement.id === 'confirmActionModal') {
         pendingConfirmationForm = null;
+    }
+
+    if (modalElement.id === 'employeeEntryModal') {
+        resetEmployeeEntryModal();
     }
 }

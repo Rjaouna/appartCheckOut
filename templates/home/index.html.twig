@@ -23,9 +23,73 @@
             </form>
 
             <div class="public-employee-access">
-                <span class="public-employee-access-label">Accès réservé à l’équipe</span>
-                <a class="public-employee-access-link" href="{{ path('app_login') }}">Connexion employé / administration</a>
+                <button
+                    class="public-employee-access-link"
+                    type="button"
+                    data-employee-entry-trigger
+                    aria-controls="employeeEntryModal"
+                    aria-haspopup="dialog"
+                >
+                    Connexion employé / administration
+                </button>
             </div>
         </section>
     </section>
+
+    <div class="modal fade" id="employeeEntryModal" tabindex="-1" aria-labelledby="employeeEntryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content employee-entry-modal-content">
+                <div class="modal-header employee-entry-modal-header">
+                    <div>
+                        <span class="eyebrow">Accès équipe</span>
+                        <h4 class="modal-title" id="employeeEntryModalLabel">Saisir le code d’accès</h4>
+                    </div>
+                    <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                </div>
+
+                <form
+                    method="post"
+                    action="{{ path('employee_entry_verify') }}"
+                    class="employee-entry-form"
+                    data-async-form
+                    data-employee-entry-form
+                >
+                    <div class="employee-entry-display" aria-live="polite">
+                        <span class="employee-entry-display-label">Code</span>
+                        <div class="employee-entry-dots" data-employee-entry-dots>
+                            <span class="employee-entry-dot"></span>
+                            <span class="employee-entry-dot"></span>
+                            <span class="employee-entry-dot"></span>
+                            <span class="employee-entry-dot"></span>
+                        </div>
+                    </div>
+
+                    <input
+                        type="password"
+                        name="entryCode"
+                        value=""
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        maxlength="6"
+                        autocomplete="one-time-code"
+                        class="employee-entry-input"
+                        data-employee-entry-input
+                        aria-label="Code d’accès équipe"
+                        readonly
+                    >
+
+                    <div class="employee-entry-keypad" aria-label="Clavier numérique">
+                        {% for digit in ['1', '2', '3', '4', '5', '6', '7', '8', '9'] %}
+                            <button type="button" class="employee-entry-key" data-employee-entry-digit="{{ digit }}">{{ digit }}</button>
+                        {% endfor %}
+                        <button type="button" class="employee-entry-key employee-entry-key-muted" data-employee-entry-clear>Effacer</button>
+                        <button type="button" class="employee-entry-key" data-employee-entry-digit="0">0</button>
+                        <button type="button" class="employee-entry-key employee-entry-key-muted" data-employee-entry-backspace>Suppr.</button>
+                    </div>
+
+                    <button class="primary-button employee-entry-submit" type="submit">Continuer</button>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock %}

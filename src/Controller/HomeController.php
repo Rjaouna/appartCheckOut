@@ -16,6 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class HomeController extends AbstractController
 {
     private const TENANT_ACCESS_SESSION_KEY = 'tenant_access_apartments';
+    private const DEFAULT_EMPLOYEE_ENTRY_CODE = '2580';
 
     #[Route('/', name: 'app_home', methods: ['GET', 'POST'])]
     public function index(Request $request, EntityManagerInterface $entityManager): Response
@@ -43,6 +44,31 @@ class HomeController extends AbstractController
     public function tenantLookup(Request $request, EntityManagerInterface $entityManager): Response
     {
         return $this->redirectToRoute('app_home');
+    }
+
+    #[Route('/acces-equipe', name: 'employee_entry_verify', methods: ['POST'])]
+    public function verifyEmployeeEntry(Request $request): Response
+    {
+        $submittedCode = preg_replace('/\D+/', '', (string) $request->request->get('entryCode')) ?? '';
+        if ($submittedCode === '') {
+            return $this->json([
+                'success' => false,
+                'message' => 'Saisissez votre code d’accès équipe.',
+            ], 422);
+        }
+
+        if (!hash_equals($this->getEmployeeEntryCode(), $submittedCode)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Code équipe invalide.',
+            ], 422);
+        }
+
+        return $this->json([
+            'success' => true,
+            'redirect' => $this->generateUrl('app_login'),
+            'message' => 'Accès équipe validé.',
+        ]);
     }
 
     #[Route('/locataire/appartement/{id}', name: 'tenant_apartment_show', methods: ['GET'])]
@@ -182,6 +208,14 @@ class HomeController extends AbstractController
         usort($extras, static fn (array $left, array $right): int => strcmp($left['label'], $right['label']));
 
         return $extras;
+    }
+
+    private function getEmployeeEntryCode(): string
+    {
+        $configuredCode = $_ENV['EMPLOYEE_ENTRY_CODE'] ?? $_SERVER['EMPLOYEE_ENTRY_CODE'] ?? self::DEFAULT_EMPLOYEE_ENTRY_CODE;
+        $normalizedCode = preg_replace('/\D+/', '', (string) $configuredCode) ?? '';
+
+        return $normalizedCode !== '' ? $normalizedCode : self::DEFAULT_EMPLOYEE_ENTRY_CODE;
     }
 
     /**
