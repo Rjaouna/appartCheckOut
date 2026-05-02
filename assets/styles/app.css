@@ -3671,7 +3671,7 @@ body.nav-compact .floating-main-menu-button {
     min-height: 190px;
     justify-content: space-between;
     padding-top: 26px;
-    padding-right: 108px;
+    padding-right: 34px;
 }
 
 .employee-apartment-head {
@@ -3698,6 +3698,84 @@ body.nav-compact .floating-main-menu-button {
     margin: 0;
     color: var(--muted);
     font-size: 1rem;
+}
+
+.apartment-card-info-stack {
+    display: grid;
+    gap: 14px;
+}
+
+.apartment-card-address-link {
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.apartment-card-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.apartment-card-meta-grid > div {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: #fbf8f2;
+    border: 1px solid #efebe3;
+}
+
+.apartment-card-meta-grid dt {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.apartment-card-meta-grid dd {
+    margin-top: 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.apartment-manager-toggle {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font: inherit;
+    font-weight: 800;
+    color: var(--accent-dark);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+}
+
+.apartment-manager-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.apartment-manager-list.is-collapsed {
+    display: none;
+}
+
+.apartment-manager-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255, 56, 92, 0.08);
+    border: 1px solid rgba(255, 56, 92, 0.12);
+    color: var(--accent-dark);
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+a.apartment-manager-link:hover,
+a.apartment-manager-link:focus-visible {
+    color: var(--accent-dark);
+    background: rgba(255, 56, 92, 0.12);
 }
 
 .employee-apartment-code-block {
@@ -4623,6 +4701,10 @@ body.nav-compact .floating-main-menu-button {
     .employee-apartment-card {
         width: 100%;
         max-width: 100%;
+    }
+
+    .apartment-card-meta-grid {
+        grid-template-columns: 1fr;
     }
 
     .admin-apartment-card .apartment-topline {
