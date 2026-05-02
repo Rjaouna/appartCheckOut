@@ -184,7 +184,7 @@
                                 <path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10ZM6 8h12V6H6v2Z" fill="currentColor"/>
                             </svg>
                         </span>
-                        {% if checkout.status != constant('App\\\\Enum\\\\CheckoutStatus::InProgress') %}
+                        {% if checkout.status.value != 'in_progress' %}
                             <form
                                 method="post"
                                 action="{{ path('admin_checkout_cancel', {id: checkout.id}) }}"
