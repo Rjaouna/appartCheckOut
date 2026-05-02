@@ -611,8 +611,16 @@ class AdminController extends AbstractController
     }
 
     #[Route('/rooms/{id}/delete', name: 'admin_room_delete', methods: ['POST'])]
-    public function deleteRoom(Room $room, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteRoom(int $id, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        $room = $entityManager->getRepository(Room::class)->find($id);
+        if (!$room instanceof Room) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Cette pièce n’existe plus. Recharge la page pour récupérer la dernière version.',
+            ], 404);
+        }
+
         if (count($room->getActiveRoomEquipments()) > 0) {
             return new JsonResponse([
                 'success' => false,
@@ -640,8 +648,16 @@ class AdminController extends AbstractController
     }
 
     #[Route('/room-equipments/{id}/delete', name: 'admin_room_equipment_delete', methods: ['POST'])]
-    public function deleteRoomEquipment(RoomEquipment $equipment, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteRoomEquipment(int $id, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        $equipment = $entityManager->getRepository(RoomEquipment::class)->find($id);
+        if (!$equipment instanceof RoomEquipment) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Cet équipement n’existe plus. Recharge la page pour récupérer la dernière version.',
+            ], 404);
+        }
+
         $hasCheckoutHistory = $entityManager->getRepository(CheckoutLine::class)->count(['roomEquipment' => $equipment]) > 0;
         $hasAnomalyHistory = $entityManager->getRepository(Anomaly::class)->count(['roomEquipment' => $equipment]) > 0;
 

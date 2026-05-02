@@ -65,9 +65,15 @@ document.addEventListener('submit', async (event) => {
             },
         });
 
-        const payload = await response.json();
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch (error) {
+            payload = null;
+        }
+
         if (!response.ok || !payload.success) {
-            throw new Error(payload.message || 'Une erreur est survenue.');
+            throw new Error(payload?.message || 'Une erreur est survenue.');
         }
 
         if (payload.redirect) {
@@ -467,6 +473,21 @@ function syncTopBarOnScroll() {
 
 function registerServiceWorker() {
     if (!('serviceWorker' in navigator) || !window.isSecureContext) {
+        return;
+    }
+
+    const hostname = window.location.hostname;
+    const isLocalHost = hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '::1';
+    if (isLocalHost) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => {
+                registration.unregister().catch(() => {
+                    // ignore unregister errors
+                });
+            });
+        }).catch(() => {
+            // ignore registration lookup failures
+        });
         return;
     }
 

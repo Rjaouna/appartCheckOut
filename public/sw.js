@@ -1,6 +1,6 @@
-const STATIC_CACHE = 'checkout-static-v1';
-const RUNTIME_CACHE = 'checkout-runtime-v1';
-const CDN_CACHE = 'checkout-cdn-v1';
+const STATIC_CACHE = 'checkout-static-v2';
+const RUNTIME_CACHE = 'checkout-runtime-v2';
+const CDN_CACHE = 'checkout-cdn-v2';
 
 const PRECACHE_URLS = [
     '/manifest.webmanifest',
@@ -43,6 +43,10 @@ self.addEventListener('fetch', (event) => {
     }
 
     const url = new URL(request.url);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+        return;
+    }
+
     const isSameOrigin = url.origin === self.location.origin;
     const isSensitive = isSameOrigin && SENSITIVE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
     const isNavigation = request.mode === 'navigate';
@@ -78,12 +82,17 @@ self.addEventListener('fetch', (event) => {
 });
 
 async function staleWhileRevalidate(request, cacheName) {
+    const url = new URL(request.url);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+        return fetch(request);
+    }
+
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(request);
 
     const networkPromise = fetch(request)
         .then((response) => {
-            if (response && response.ok) {
+            if (response && response.ok && ['http:', 'https:'].includes(url.protocol)) {
                 cache.put(request, response.clone());
             }
 
