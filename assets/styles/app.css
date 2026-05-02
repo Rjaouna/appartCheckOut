@@ -1575,6 +1575,52 @@ body.nav-compact .floating-main-menu-button {
     background: #fcfcfb;
 }
 
+.admin-history-toggle {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--accent-dark);
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+}
+
+.admin-history-list.is-collapsed {
+    display: none;
+}
+
+.admin-history-card {
+    gap: 8px;
+    padding: 14px 16px;
+    border: 1px solid #ede8e0;
+    background: linear-gradient(180deg, #fdfcfb 0%, #f8f6f2 100%);
+}
+
+.admin-history-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.admin-history-date {
+    margin: 0;
+    color: #7b766f;
+    font-style: italic;
+}
+
+.admin-history-anomalies {
+    gap: 4px;
+    color: #6f6a63;
+}
+
+.admin-history-empty {
+    font-style: italic;
+}
+
 .dashboard-stack {
     display: grid;
     gap: 36px;

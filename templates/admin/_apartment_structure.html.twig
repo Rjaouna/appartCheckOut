@@ -216,21 +216,32 @@
 
                 <div class="admin-detail-subsection">
                     <div class="panel-head admin-subsection-head">
-                        <h3>Historique des check-outs terminés</h3>
+                        <button
+                            class="admin-history-toggle"
+                            type="button"
+                            data-history-toggle
+                            data-target="#admin-checkout-history-list"
+                            aria-expanded="false"
+                        >
+                            Historique des Check Out
+                        </button>
                     </div>
-                    <div class="mini-list">
+                    <div id="admin-checkout-history-list" class="mini-list admin-history-list is-collapsed" hidden>
                         {% for checkout in completedCheckouts %}
-                            <article class="compact-card compact-card-modern">
-                                <strong>{{ checkout.assignedTo.fullName }}</strong>
-                                <p>{{ checkout.completedAt ? checkout.completedAt|date('d/m/Y H:i') : (checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-') }}</p>
+                            <article class="compact-card compact-card-modern admin-history-card">
+                                <div class="admin-history-card-head">
+                                    <strong>{{ checkout.assignedTo.fullName }}</strong>
+                                    <span class="status-badge is-neutral">Archivé</span>
+                                </div>
+                                <p class="admin-history-date">{{ checkout.completedAt ? checkout.completedAt|date('d/m/Y H:i') : (checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : '-') }}</p>
                                 {% if checkout.anomalies|length > 0 %}
-                                    <div class="card-detail-list">
+                                    <div class="card-detail-list admin-history-anomalies">
                                         {% for anomaly in checkout.anomalies %}
                                             <span>{{ anomaly.room.name }} : {{ anomaly.roomEquipment.label }}</span>
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    <p class="muted">Aucune anomalie.</p>
+                                    <p class="muted admin-history-empty">Aucune anomalie.</p>
                                 {% endif %}
                             </article>
                         {% else %}
