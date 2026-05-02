@@ -1,6 +1,8 @@
 import './stimulus_bootstrap.js';
 import './styles/app.css';
 
+document.documentElement.classList.remove('app-shell-pending');
+
 let pendingConfirmationForm = null;
 let activeDragButton = null;
 let dragOffsetY = 0;
