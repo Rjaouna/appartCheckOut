@@ -1066,48 +1066,51 @@ textarea {
 }
 
 .action-menu-modal-content {
-    background: linear-gradient(180deg, #fffdfc 0%, #f6f4ef 100%);
+    background: #fff;
 }
 
 .action-menu-modal-header {
-    border-bottom: 1px solid #ebe6de;
+    border-bottom: 0;
     padding: 22px 28px;
-    background: rgba(255, 255, 255, 0.78);
-    backdrop-filter: blur(10px);
+    background: #fff;
 }
 
 .action-menu-modal-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px;
+    display: block;
+    padding: 28px 32px 34px;
+}
+
+.action-menu-layout {
+    width: min(1080px, 100%);
+    display: grid;
+    gap: 28px;
 }
 
 .action-menu-grid {
-    width: min(1040px, 100%);
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
+    gap: 16px;
 }
 
 .action-menu-tile {
     display: grid;
     justify-items: center;
-    gap: 16px;
-    padding: 28px 24px;
-    border-radius: 28px;
-    background: linear-gradient(180deg, #ffffff 0%, #fcfbf8 100%);
-    border: 1px solid #ece7df;
+    gap: 14px;
+    padding: 24px 22px;
+    border-radius: 24px;
+    background: #fff;
+    border: 1px solid #f0ece6;
     color: var(--text);
-    box-shadow: var(--shadow);
     text-align: center;
-    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .action-menu-tile:hover {
     transform: translateY(-1px);
-    border-color: #ddd5ca;
-    background: linear-gradient(180deg, #fffefe 0%, #faf7f2 100%);
+    border-color: rgba(255, 56, 92, 0.18);
+    background: #fff8fa;
+    color: var(--accent-dark);
 }
 
 .action-menu-tile-button {
@@ -1159,36 +1162,107 @@ textarea {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 76px;
-    height: 76px;
-    border-radius: 24px;
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
     color: var(--text);
-    border: 1px solid rgba(0, 0, 0, 0.04);
+    background: #fff7f8;
 }
 
 .action-menu-icon svg {
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
 }
 
-.action-menu-icon-blue {
-    background: linear-gradient(180deg, #eef5ff 0%, #e1edff 100%);
-    color: #315fc9;
+.action-menu-tile-danger {
+    color: #c62828;
 }
 
-.action-menu-icon-orange {
-    background: linear-gradient(180deg, #fff4e6 0%, #ffe8cc 100%);
-    color: #c66a00;
+.action-menu-tile-danger:hover {
+    background: #fff7f7;
+    border-color: rgba(198, 40, 40, 0.18);
+    color: #b71c1c;
 }
 
-.action-menu-icon-pink {
-    background: linear-gradient(180deg, #fff0f4 0%, #ffe1e8 100%);
+.action-menu-icon-danger {
+    color: #c62828;
+    background: #fff6f6;
+}
+
+.action-menu-shortcuts-panel {
+    display: grid;
+    gap: 18px;
+    padding: 24px 26px;
+    border-radius: 28px;
+    background: #fff;
+    border: 1px solid #f0ece6;
+}
+
+.action-menu-shortcuts-copy {
+    display: grid;
+    gap: 6px;
+}
+
+.action-menu-section-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--accent-dark);
 }
 
-.action-menu-icon-dark {
-    background: linear-gradient(180deg, #f3f2f0 0%, #ebe8e3 100%);
-    color: #2f2b27;
+.action-menu-shortcuts-copy p,
+.action-menu-note-card p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.action-menu-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 24px;
+}
+
+.action-menu-shortcuts a,
+.action-menu-note-card a {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.action-menu-shortcuts a:hover,
+.action-menu-note-card a:hover {
+    color: var(--accent-dark);
+    text-decoration: underline;
+}
+
+.action-menu-note-card {
+    display: grid;
+    gap: 10px;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: #fff8fa;
+    border: 1px solid rgba(255, 56, 92, 0.12);
+}
+
+.action-menu-note-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.action-menu-note-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #ff385c;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
 }
 
 .floating-main-menu-button {
@@ -4976,6 +5050,23 @@ a.apartment-manager-link:focus-visible {
 
     .action-menu-modal-body {
         padding: 20px;
+    }
+
+    .action-menu-layout {
+        gap: 18px;
+    }
+
+    .action-menu-grid,
+    .action-menu-shortcuts {
+        grid-template-columns: 1fr;
+    }
+
+    .action-menu-shortcuts-panel {
+        padding: 20px;
+    }
+
+    .action-menu-note-head {
+        align-items: flex-start;
     }
 
     .floating-main-menu-button {
