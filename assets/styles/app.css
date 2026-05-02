@@ -1710,8 +1710,7 @@ body.nav-compact .floating-main-menu-button {
 .admin-anomaly-manager-extra a:first-child {
     color: var(--text);
     font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 4px;
+    text-decoration: none;
 }
 
 .admin-anomaly-phone-link {
@@ -3148,7 +3147,10 @@ body.nav-compact .floating-main-menu-button {
 
 .admin-dashboard-title-link {
     font-weight: 800;
-    color: inherit;
+    color: var(--accent-dark);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
 }
 
 .admin-dashboard-stack {
@@ -4128,6 +4130,7 @@ body.nav-compact .floating-main-menu-button {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
+    text-decoration-color: rgba(34, 34, 34, 0.25);
 }
 
 .apartment-card-meta-grid {
