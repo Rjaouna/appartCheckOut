@@ -17,8 +17,8 @@ class HomeController extends AbstractController
 {
     private const TENANT_ACCESS_SESSION_KEY = 'tenant_access_apartments';
 
-    #[Route('/', name: 'app_home', methods: ['GET'])]
-    public function index(): Response
+    #[Route('/', name: 'app_home', methods: ['GET', 'POST'])]
+    public function index(Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
         if ($user instanceof User) {
@@ -29,40 +29,20 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('employee_dashboard');
         }
 
-        return $this->render('home/index.html.twig');
+        $viewData = $this->buildTenantLookupViewData($request, $entityManager);
+        if (($viewData['apartment'] ?? null) instanceof Apartment) {
+            return $this->redirectToRoute('tenant_apartment_show', ['id' => $viewData['apartment']->getId()]);
+        }
+
+        unset($viewData['apartment']);
+
+        return $this->render('home/index.html.twig', $viewData);
     }
 
     #[Route('/locataire', name: 'tenant_lookup', methods: ['GET', 'POST'])]
     public function tenantLookup(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $session = $request->getSession();
-        $session->remove(self::TENANT_ACCESS_SESSION_KEY);
-
-        $submittedCode = '';
-        $errorMessage = null;
-
-        if ($request->isMethod('POST')) {
-            $submittedCode = trim((string) $request->request->get('accessCode'));
-            if ($submittedCode === '') {
-                $errorMessage = 'Renseigne le code de la boîte à clés ou le code porte.';
-            } else {
-                $apartment = $this->findApartmentByAccessCode($submittedCode, $entityManager);
-                if ($apartment instanceof Apartment) {
-                    $session->set(self::TENANT_ACCESS_SESSION_KEY, [
-                        $apartment->getId() => true,
-                    ]);
-
-                    return $this->redirectToRoute('tenant_apartment_show', ['id' => $apartment->getId()]);
-                }
-
-                $errorMessage = 'Aucun appartement actif ne correspond à ce code.';
-            }
-        }
-
-        return $this->render('public/tenant_lookup.html.twig', [
-            'submittedCode' => $submittedCode,
-            'errorMessage' => $errorMessage,
-        ]);
+        return $this->redirectToRoute('app_home');
     }
 
     #[Route('/locataire/appartement/{id}', name: 'tenant_apartment_show', methods: ['GET'])]
@@ -202,5 +182,42 @@ class HomeController extends AbstractController
         usort($extras, static fn (array $left, array $right): int => strcmp($left['label'], $right['label']));
 
         return $extras;
+    }
+
+    /**
+     * @return array{submittedCode:string,errorMessage:?string,apartment:?Apartment}
+     */
+    private function buildTenantLookupViewData(Request $request, EntityManagerInterface $entityManager): array
+    {
+        $session = $request->getSession();
+        $session->remove(self::TENANT_ACCESS_SESSION_KEY);
+
+        $submittedCode = '';
+        $errorMessage = null;
+        $apartment = null;
+
+        if ($request->isMethod('POST')) {
+            $submittedCode = trim((string) $request->request->get('accessCode'));
+            if ($submittedCode === '') {
+                $errorMessage = 'Renseignez le code de la boîte à clés ou le code porte.';
+            } else {
+                $apartment = $this->findApartmentByAccessCode($submittedCode, $entityManager);
+                if ($apartment instanceof Apartment) {
+                    $session->set(self::TENANT_ACCESS_SESSION_KEY, [
+                        $apartment->getId() => true,
+                    ]);
+                }
+
+                if (!$apartment instanceof Apartment) {
+                    $errorMessage = 'Aucun appartement actif ne correspond à ce code.';
+                }
+            }
+        }
+
+        return [
+            'submittedCode' => $submittedCode,
+            'errorMessage' => $errorMessage,
+            'apartment' => $apartment,
+        ];
     }
 }

@@ -5,29 +5,26 @@
 
 {% block body %}
     <section class="public-landing-shell">
-        <section class="public-landing-card public-landing-card-full">
+        <section class="public-landing-card public-landing-card-narrow public-landing-card-tenant-home">
             <span class="eyebrow">Bienvenue</span>
+            <h1>Accéder à mon appartement</h1>
+            <p class="muted">Saisissez le code reçu pour retrouver vos informations d’accès, vos consignes et les contacts utiles.</p>
 
-            <div class="public-entry-grid">
-                <a class="public-entry-option" href="{{ path('tenant_lookup') }}">
-                    <span class="public-entry-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 3 4 9v10h16V9l-8-6Zm0 2.5 6 4.5v7H6v-7l6-4.5Zm-2 4.5v5h4v-5h-4Z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <strong>Je suis locataire</strong>
-                    <span>Retrouver mon appartement a partir du code d acces.</span>
-                </a>
+            {% if errorMessage %}
+                <div class="alert error">{{ errorMessage }}</div>
+            {% endif %}
 
-                <a class="public-entry-option" href="{{ path('app_login') }}">
-                    <span class="public-entry-icon public-entry-icon-soft" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 3a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 10c-4.4 0-8 2.1-8 4.7V21h16v-3.3C20 15.1 16.4 13 12 13Z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <strong>Je suis employe</strong>
-                    <span>Me connecter a mon espace de gestion et de check-out.</span>
-                </a>
+            <form method="post" class="stack-form public-tenant-home-form">
+                <label>
+                    <span>Code d’accès</span>
+                    <input type="text" name="accessCode" value="{{ submittedCode }}" placeholder="Exemple : A124B" required autofocus>
+                </label>
+                <button class="primary-button" type="submit">Accéder à mon appartement</button>
+            </form>
+
+            <div class="public-employee-access">
+                <span class="public-employee-access-label">Accès réservé à l’équipe</span>
+                <a class="public-employee-access-link" href="{{ path('app_login') }}">Connexion employé / administration</a>
             </div>
         </section>
     </section>

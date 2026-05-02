@@ -437,7 +437,6 @@ select {
 .check-line,
 .compact-card {
     background: var(--surface);
-    border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
 }
@@ -1706,8 +1705,7 @@ body.nav-compact .floating-main-menu-button {
     border-radius: 34px;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 252, 248, 0.98) 100%);
-    border: 1px solid rgba(227, 220, 209, 0.92);
-    box-shadow: 0 26px 60px rgba(34, 34, 34, 0.08);
+
 }
 
 .public-landing-card-full {
@@ -1721,6 +1719,11 @@ body.nav-compact .floating-main-menu-button {
 
 .public-landing-card-narrow {
     width: min(560px, 100%);
+}
+
+.public-landing-card-tenant-home {
+    display: grid;
+    gap: 18px;
 }
 
 .public-entry-grid {
@@ -1773,6 +1776,36 @@ body.nav-compact .floating-main-menu-button {
     justify-content: center;
     background: linear-gradient(135deg, #ff7a93 0%, #ff385c 100%);
     color: #fff;
+}
+
+.public-tenant-home-form {
+    margin-top: 4px;
+}
+
+.public-employee-access {
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(227, 220, 209, 0.92);
+}
+
+.public-employee-access-label {
+    color: var(--muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.public-employee-access-link {
+    font-weight: 800;
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.public-employee-access-link:hover,
+.public-employee-access-link:focus-visible {
+    color: var(--accent-dark);
 }
 
 .public-entry-icon svg {
