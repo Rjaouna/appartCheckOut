@@ -190,9 +190,6 @@
                                 action="{{ path('admin_checkout_cancel', {id: checkout.id}) }}"
                                 data-async-form
                                 data-update-target="#admin-dashboard-content"
-                                data-confirm-reset
-                                data-confirm-title="Annuler le check-out"
-                                data-confirm-message="Veux-tu vraiment annuler ce check-out ?"
                             >
                                 <input type="hidden" name="context" value="dashboard">
                                 <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Annuler le check-out {{ checkout.apartment.name }}" title="Annuler le check-out">
