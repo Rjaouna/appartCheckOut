@@ -10,7 +10,6 @@
             <p class="muted">{{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }} recensée{{ anomalyCount > 1 ? 's' : '' }}</p>
         </div>
         <div class="head-actions">
-            <a class="secondary-button" href="{{ path('admin_anomalies') }}">Retour anomalies</a>
             <a class="secondary-button" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">Retour appartement</a>
         </div>
     </section>
