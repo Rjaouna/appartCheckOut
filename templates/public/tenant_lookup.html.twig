@@ -13,7 +13,7 @@
                 <div class="alert error">{{ errorMessage }}</div>
             {% endif %}
 
-            <form method="post" class="stack-form">
+            <form method="post" class="stack-form" data-turbo="false">
                 <label>
                     <span>Code d’accès</span>
                     <input type="text" name="accessCode" value="{{ submittedCode }}" placeholder="Exemple : A124B" required autofocus>
