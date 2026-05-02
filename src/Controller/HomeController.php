@@ -102,7 +102,7 @@ class HomeController extends AbstractController
 
             return $this->json([
                 'success' => false,
-                'message' => 'Code équipe invalide.',
+                'message' => 'Code non valide. Contactez l’équipe.',
             ], 422);
         }
 
