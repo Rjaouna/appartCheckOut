@@ -15,12 +15,19 @@
             {% endif %}
 
             <form method="post" class="stack-form public-tenant-home-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('tenant_lookup') }}">
                 <label>
                     <span>Code d’accès</span>
-                    <input type="text" name="accessCode" value="{{ submittedCode }}" placeholder="Exemple : A124B" required autofocus>
+                    <input type="text" name="accessCode" value="{{ submittedCode }}" placeholder="Exemple : A124B" required autofocus {{ isTenantLookupBlocked ? 'disabled' : '' }}>
                 </label>
-                <button class="primary-button" type="submit">Accéder à mon appartement</button>
+                <button class="primary-button" type="submit" {{ isTenantLookupBlocked ? 'disabled' : '' }}>
+                    {{ isTenantLookupBlocked ? 'Réessayer plus tard' : 'Accéder à mon appartement' }}
+                </button>
             </form>
+
+            {% if isTenantLookupBlocked %}
+                <p class="muted">Ce blocage temporaire concerne cet appareil, pas le logement.</p>
+            {% endif %}
 
             <div class="public-employee-access">
                 <button

@@ -9,6 +9,7 @@ use App\Enum\ApartmentStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -16,7 +17,17 @@ use Symfony\Component\Routing\Attribute\Route;
 class HomeController extends AbstractController
 {
     private const TENANT_ACCESS_SESSION_KEY = 'tenant_access_apartments';
+    private const TENANT_LOOKUP_ATTEMPTS_SESSION_KEY = 'tenant_lookup_attempts';
+    private const TENANT_LOOKUP_BLOCKED_UNTIL_SESSION_KEY = 'tenant_lookup_blocked_until';
+    private const TENANT_LOOKUP_MAX_ATTEMPTS = 3;
+    private const TENANT_LOOKUP_BLOCK_SECONDS = 3600;
+
     private const DEFAULT_EMPLOYEE_ENTRY_CODE = '2580';
+    public const EMPLOYEE_ENTRY_GRANTED_SESSION_KEY = 'employee_entry_granted';
+    private const EMPLOYEE_ENTRY_ATTEMPTS_SESSION_KEY = 'employee_entry_attempts';
+    private const EMPLOYEE_ENTRY_BLOCKED_UNTIL_SESSION_KEY = 'employee_entry_blocked_until';
+    private const EMPLOYEE_ENTRY_MAX_ATTEMPTS = 5;
+    private const EMPLOYEE_ENTRY_BLOCK_SECONDS = 900;
 
     #[Route('/', name: 'app_home', methods: ['GET', 'POST'])]
     public function index(Request $request, EntityManagerInterface $entityManager): Response
@@ -43,12 +54,36 @@ class HomeController extends AbstractController
     #[Route('/locataire', name: 'tenant_lookup', methods: ['GET', 'POST'])]
     public function tenantLookup(Request $request, EntityManagerInterface $entityManager): Response
     {
-        return $this->redirectToRoute('app_home');
+        $viewData = $this->buildTenantLookupViewData($request, $entityManager);
+        if (($viewData['apartment'] ?? null) instanceof Apartment) {
+            return $this->redirectToRoute('tenant_apartment_show', ['id' => $viewData['apartment']->getId()]);
+        }
+
+        unset($viewData['apartment']);
+
+        return $this->render('home/index.html.twig', $viewData);
     }
 
     #[Route('/acces-equipe', name: 'employee_entry_verify', methods: ['POST'])]
     public function verifyEmployeeEntry(Request $request): Response
     {
+        $session = $request->getSession();
+        $remainingBlockSeconds = $this->getBlockedSeconds($session, self::EMPLOYEE_ENTRY_BLOCKED_UNTIL_SESSION_KEY);
+        if ($remainingBlockSeconds > 0) {
+            return $this->json([
+                'success' => false,
+                'message' => $this->buildBlockedMessage($remainingBlockSeconds, 'Accès équipe temporairement bloqué'),
+            ], 429);
+        }
+
+        $configuredCode = $this->getEmployeeEntryCode();
+        if ($configuredCode === '') {
+            return $this->json([
+                'success' => false,
+                'message' => 'Code équipe non configuré sur cet environnement.',
+            ], 503);
+        }
+
         $submittedCode = preg_replace('/\D+/', '', (string) $request->request->get('entryCode')) ?? '';
         if ($submittedCode === '') {
             return $this->json([
@@ -57,12 +92,22 @@ class HomeController extends AbstractController
             ], 422);
         }
 
-        if (!hash_equals($this->getEmployeeEntryCode(), $submittedCode)) {
+        if (!hash_equals($configuredCode, $submittedCode)) {
+            if ($this->registerFailedAttempt($session, self::EMPLOYEE_ENTRY_ATTEMPTS_SESSION_KEY, self::EMPLOYEE_ENTRY_BLOCKED_UNTIL_SESSION_KEY, self::EMPLOYEE_ENTRY_MAX_ATTEMPTS, self::EMPLOYEE_ENTRY_BLOCK_SECONDS)) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $this->buildBlockedMessage(self::EMPLOYEE_ENTRY_BLOCK_SECONDS, 'Accès équipe bloqué après plusieurs essais'),
+                ], 429);
+            }
+
             return $this->json([
                 'success' => false,
                 'message' => 'Code équipe invalide.',
             ], 422);
         }
+
+        $this->clearAttemptState($session, self::EMPLOYEE_ENTRY_ATTEMPTS_SESSION_KEY, self::EMPLOYEE_ENTRY_BLOCKED_UNTIL_SESSION_KEY);
+        $session->set(self::EMPLOYEE_ENTRY_GRANTED_SESSION_KEY, true);
 
         return $this->json([
             'success' => true,
@@ -95,7 +140,7 @@ class HomeController extends AbstractController
 
     private function canAccessTenantApartment(Apartment $apartment, Request $request): bool
     {
-        if ($apartment->getStatus() !== ApartmentStatus::Active) {
+        if ($apartment->getStatus() !== ApartmentStatus::Active || !$apartment->isTenantAccessEnabled()) {
             return false;
         }
 
@@ -212,10 +257,16 @@ class HomeController extends AbstractController
 
     private function getEmployeeEntryCode(): string
     {
-        $configuredCode = $_ENV['EMPLOYEE_ENTRY_CODE'] ?? $_SERVER['EMPLOYEE_ENTRY_CODE'] ?? self::DEFAULT_EMPLOYEE_ENTRY_CODE;
+        $configuredCode = $_ENV['EMPLOYEE_ENTRY_CODE'] ?? $_SERVER['EMPLOYEE_ENTRY_CODE'] ?? '';
         $normalizedCode = preg_replace('/\D+/', '', (string) $configuredCode) ?? '';
 
-        return $normalizedCode !== '' ? $normalizedCode : self::DEFAULT_EMPLOYEE_ENTRY_CODE;
+        if ($normalizedCode !== '') {
+            return $normalizedCode;
+        }
+
+        $appEnv = $_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? 'prod';
+
+        return $appEnv === 'dev' ? self::DEFAULT_EMPLOYEE_ENTRY_CODE : '';
     }
 
     /**
@@ -229,21 +280,43 @@ class HomeController extends AbstractController
         $submittedCode = '';
         $errorMessage = null;
         $apartment = null;
+        $isTenantLookupBlocked = false;
+        $remainingTenantLookupBlockSeconds = $this->getBlockedSeconds($session, self::TENANT_LOOKUP_BLOCKED_UNTIL_SESSION_KEY);
 
-        if ($request->isMethod('POST')) {
+        if ($remainingTenantLookupBlockSeconds > 0) {
+            $errorMessage = $this->buildBlockedMessage($remainingTenantLookupBlockSeconds, 'Trop de tentatives sur cet appareil');
+            $isTenantLookupBlocked = true;
+        } elseif ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('tenant_lookup', (string) $request->request->get('_token'))) {
+                $errorMessage = 'Jeton de sécurité invalide. Rechargez la page puis recommencez.';
+            }
+
             $submittedCode = trim((string) $request->request->get('accessCode'));
-            if ($submittedCode === '') {
+            if ($errorMessage !== null) {
+                $isTenantLookupBlocked = false;
+            } elseif ($submittedCode === '') {
                 $errorMessage = 'Renseignez le code de la boîte à clés ou le code porte.';
             } else {
                 $apartment = $this->findApartmentByAccessCode($submittedCode, $entityManager);
                 if ($apartment instanceof Apartment) {
-                    $session->set(self::TENANT_ACCESS_SESSION_KEY, [
-                        $apartment->getId() => true,
-                    ]);
+                    if (!$apartment->isTenantAccessEnabled()) {
+                        $errorMessage = 'L’accès avec le code est actuellement bloqué pour ce logement.';
+                        $apartment = null;
+                    } else {
+                        $session->set(self::TENANT_ACCESS_SESSION_KEY, [
+                            $apartment->getId() => true,
+                        ]);
+                        $this->clearAttemptState($session, self::TENANT_LOOKUP_ATTEMPTS_SESSION_KEY, self::TENANT_LOOKUP_BLOCKED_UNTIL_SESSION_KEY);
+                    }
                 }
 
                 if (!$apartment instanceof Apartment) {
-                    $errorMessage = 'Aucun appartement actif ne correspond à ce code.';
+                    if ($this->registerFailedAttempt($session, self::TENANT_LOOKUP_ATTEMPTS_SESSION_KEY, self::TENANT_LOOKUP_BLOCKED_UNTIL_SESSION_KEY, self::TENANT_LOOKUP_MAX_ATTEMPTS, self::TENANT_LOOKUP_BLOCK_SECONDS)) {
+                        $errorMessage = $this->buildBlockedMessage(self::TENANT_LOOKUP_BLOCK_SECONDS, 'Trop de codes invalides saisis sur cet appareil');
+                        $isTenantLookupBlocked = true;
+                    } else {
+                        $errorMessage = 'Code inexistant. Contactez votre agence.';
+                    }
                 }
             }
         }
@@ -252,6 +325,49 @@ class HomeController extends AbstractController
             'submittedCode' => $submittedCode,
             'errorMessage' => $errorMessage,
             'apartment' => $apartment,
+            'isTenantLookupBlocked' => $isTenantLookupBlocked,
         ];
+    }
+
+    private function registerFailedAttempt(SessionInterface $session, string $attemptKey, string $blockedUntilKey, int $maxAttempts, int $blockSeconds): bool
+    {
+        $attempts = (int) $session->get($attemptKey, 0) + 1;
+        if ($attempts >= $maxAttempts) {
+            $session->set($attemptKey, 0);
+            $session->set($blockedUntilKey, (new \DateTimeImmutable(sprintf('+%d seconds', $blockSeconds)))->getTimestamp());
+
+            return true;
+        }
+
+        $session->set($attemptKey, $attempts);
+
+        return false;
+    }
+
+    private function clearAttemptState(SessionInterface $session, string $attemptKey, string $blockedUntilKey): void
+    {
+        $session->remove($attemptKey);
+        $session->remove($blockedUntilKey);
+    }
+
+    private function getBlockedSeconds(SessionInterface $session, string $blockedUntilKey): int
+    {
+        $blockedUntil = (int) $session->get($blockedUntilKey, 0);
+        if ($blockedUntil <= time()) {
+            if ($blockedUntil > 0) {
+                $session->remove($blockedUntilKey);
+            }
+
+            return 0;
+        }
+
+        return $blockedUntil - time();
+    }
+
+    private function buildBlockedMessage(int $remainingSeconds, string $prefix): string
+    {
+        $remainingMinutes = max(1, (int) ceil($remainingSeconds / 60));
+
+        return sprintf('%s. Réessayez dans %d minute%s.', $prefix, $remainingMinutes, $remainingMinutes > 1 ? 's' : '');
     }
 }

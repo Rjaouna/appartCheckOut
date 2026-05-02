@@ -7,7 +7,13 @@
     <section class="auth-layout">
         <div class="auth-card">
             <h2>Connexion</h2>
-            <p class="muted">Connectez-vous avec votre compte administrateur ou employe.</p>
+            <p class="muted">Connectez-vous avec votre compte administrateur ou employé.</p>
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert {{ label in ['error', 'danger'] ? 'error' : (label in ['success'] ? 'success' : 'info') }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
 
             {% if error %}
                 <div class="alert error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
@@ -25,13 +31,13 @@
                 </label>
                 <label class="checkbox-row">
                     <input type="checkbox" name="_remember_me" checked>
-                    <span>Rester connecte</span>
+                    <span>Rester connecté</span>
                 </label>
                 <button class="primary-button" type="submit">Se connecter</button>
             </form>
 
             <div class="auth-card-actions auth-card-actions-stacked">
-                <a class="secondary-button" href="{{ path('app_home') }}">Retour a l accueil</a>
+                <a class="secondary-button" href="{{ path('app_home') }}">Retour à l’accueil</a>
             </div>
         </div>
     </section>

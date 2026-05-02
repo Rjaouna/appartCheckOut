@@ -270,6 +270,12 @@ class AdminController extends AbstractController
 
         $photo = $request->files->get('photo');
         if ($photo instanceof UploadedFile) {
+            try {
+                $this->assertAcceptedImageUpload($photo, 8 * 1024 * 1024, 'La photo employé');
+            } catch (\InvalidArgumentException $exception) {
+                return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+            }
+
             $user->setPhotoPath($this->storeUserPhoto($photo));
         }
 
@@ -314,6 +320,12 @@ class AdminController extends AbstractController
 
         $photo = $request->files->get('photo');
         if ($photo instanceof UploadedFile) {
+            try {
+                $this->assertAcceptedImageUpload($photo, 8 * 1024 * 1024, 'La photo employé');
+            } catch (\InvalidArgumentException $exception) {
+                return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+            }
+
             $previousPhotoPath = $user->getPhotoPath();
             $user->setPhotoPath($this->storeUserPhoto($photo));
             $this->deleteUserPhoto($previousPhotoPath);
@@ -353,6 +365,12 @@ class AdminController extends AbstractController
         $photo = $request->files->get('photo');
         if (!$photo instanceof UploadedFile) {
             return new JsonResponse(['success' => false, 'message' => 'Ajoute une photo avant de valider.'], 422);
+        }
+
+        try {
+            $this->assertAcceptedImageUpload($photo, 8 * 1024 * 1024, 'La photo employé');
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
         }
 
         $previousPhotoPath = $user->getPhotoPath();
@@ -469,6 +487,10 @@ class AdminController extends AbstractController
     #[Route('/apartments', name: 'admin_apartment_create', methods: ['POST'])]
     public function createApartment(Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isCsrfTokenValid('admin_apartment_create', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton de sécurité invalide.');
+        }
+
         $addressLine1 = (string) $request->request->get('addressLine1');
         $city = (string) $request->request->get('city');
         $postalCode = trim((string) $request->request->get('postalCode'));
@@ -495,7 +517,8 @@ class AdminController extends AbstractController
             ->setOwnerPhone($this->nullable($request->request->get('ownerPhone')))
             ->setInternalNotes($this->nullable($request->request->get('internalNotes')))
             ->setStatus(ApartmentStatus::from((string) $request->request->get('status', ApartmentStatus::Active->value)))
-            ->setIsInventoryPriority($request->request->getBoolean('isInventoryPriority'));
+            ->setIsInventoryPriority($request->request->getBoolean('isInventoryPriority'))
+            ->setIsTenantAccessEnabled(true);
 
         $inventoryDueAt = $request->request->get('inventoryDueAt');
         if (is_string($inventoryDueAt) && $inventoryDueAt !== '') {
@@ -639,6 +662,23 @@ class AdminController extends AbstractController
         return $this->apartmentDetailResponse($apartment, $entityManager, 'Priorité inventaire mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
+    #[Route('/apartments/{id}/tenant-access', name: 'admin_apartment_tenant_access', methods: ['POST'])]
+    public function toggleTenantAccess(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $isEnabled = $request->request->getBoolean('isTenantAccessEnabled');
+
+        $apartment->setIsTenantAccessEnabled($isEnabled);
+        $apartment->setTenantAccessLockedAt($isEnabled ? null : new \DateTimeImmutable());
+        $entityManager->flush();
+
+        return $this->apartmentDetailResponse(
+            $apartment,
+            $entityManager,
+            $isEnabled ? 'Accès locataire réactivé.' : 'Accès locataire bloqué.',
+            $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
+        );
+    }
+
     #[Route('/apartments/{id}/access-steps', name: 'admin_apartment_access_step_create', methods: ['POST'])]
     public function createApartmentAccessStep(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -653,6 +693,12 @@ class AdminController extends AbstractController
 
         $image = $request->files->get('image');
         if ($image instanceof UploadedFile) {
+            try {
+                $this->assertAcceptedImageUpload($image, 8 * 1024 * 1024, 'L’image d’étape');
+            } catch (\InvalidArgumentException $exception) {
+                return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+            }
+
             $step->setImagePath($this->storeApartmentAccessStepImage($image));
         }
 
@@ -687,6 +733,12 @@ class AdminController extends AbstractController
         }
 
         if ($newImage instanceof UploadedFile) {
+            try {
+                $this->assertAcceptedImageUpload($newImage, 8 * 1024 * 1024, 'L’image d’étape');
+            } catch (\InvalidArgumentException $exception) {
+                return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+            }
+
             $accessStep->setImagePath($this->storeApartmentAccessStepImage($newImage));
         }
 
@@ -1817,6 +1869,18 @@ class AdminController extends AbstractController
         $image->move($targetDir, $filename);
 
         return '/uploads/apartment-access/' . $filename;
+    }
+
+    private function assertAcceptedImageUpload(UploadedFile $file, int $maxBytes, string $label): void
+    {
+        if ($file->getSize() !== null && $file->getSize() > $maxBytes) {
+            throw new \InvalidArgumentException(sprintf('%s dépasse la taille autorisée.', $label));
+        }
+
+        $mimeType = (string) ($file->getMimeType() ?? '');
+        if (!str_starts_with($mimeType, 'image/')) {
+            throw new \InvalidArgumentException(sprintf('%s doit être une image valide.', $label));
+        }
     }
 
     private function deleteUserPhoto(?string $photoPath): void

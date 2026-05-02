@@ -22,6 +22,7 @@
                 Ajouter
             </button>
             <form id="admin-apartment-create-form" method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form admin-create-form is-collapsed">
+                <input type="hidden" name="_token" value="{{ csrf_token('admin_apartment_create') }}">
                 <label><span>Nom *</span><input name="name" required></label>
                 <label><span>Adresse *</span><input name="addressLine1" required></label>
                 <label><span>Complement</span><input name="addressLine2"></label>

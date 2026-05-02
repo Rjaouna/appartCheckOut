@@ -177,6 +177,12 @@ class EmployeeController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Ajoute une photo avant de valider.'], 422);
         }
 
+        try {
+            $this->assertAcceptedImageUpload($photo, 8 * 1024 * 1024, 'La photo de profil');
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
         $previousPhotoPath = $user->getPhotoPath();
         $user->setPhotoPath($this->storeUserPhoto($photo));
         $entityManager->flush();
@@ -811,6 +817,18 @@ class EmployeeController extends AbstractController
         $photo->move($targetDir, $filename);
 
         return '/uploads/users/' . $filename;
+    }
+
+    private function assertAcceptedImageUpload(UploadedFile $file, int $maxBytes, string $label): void
+    {
+        if ($file->getSize() !== null && $file->getSize() > $maxBytes) {
+            throw new \InvalidArgumentException(sprintf('%s dépasse la taille autorisée.', $label));
+        }
+
+        $mimeType = (string) ($file->getMimeType() ?? '');
+        if (!str_starts_with($mimeType, 'image/')) {
+            throw new \InvalidArgumentException(sprintf('%s doit être une image valide.', $label));
+        }
     }
 
     private function deleteUserPhoto(?string $photoPath): void

@@ -5,6 +5,7 @@ namespace App\Security;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use App\Controller\HomeController;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
@@ -20,6 +21,10 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
     use TargetPathTrait;
 
     public const LOGIN_ROUTE = 'app_login';
+    public const LOGIN_ATTEMPTS_SESSION_KEY = 'login_attempts';
+    public const LOGIN_BLOCKED_UNTIL_SESSION_KEY = 'login_blocked_until';
+    public const LOGIN_MAX_ATTEMPTS = 5;
+    public const LOGIN_BLOCK_SECONDS = 900;
 
     public function __construct(
         private readonly UrlGeneratorInterface $urlGenerator,
@@ -28,6 +33,11 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 
     public function authenticate(Request $request): Passport
     {
+        $remainingBlockSeconds = $this->getBlockedSeconds($request);
+        if ($remainingBlockSeconds > 0) {
+            throw new CustomUserMessageAuthenticationException($this->buildBlockedMessage($remainingBlockSeconds));
+        }
+
         $email = trim((string) $request->request->get('_username', ''));
         $password = (string) $request->request->get('_password', '');
 
@@ -49,6 +59,10 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?RedirectResponse
     {
+        $request->getSession()->remove(self::LOGIN_ATTEMPTS_SESSION_KEY);
+        $request->getSession()->remove(self::LOGIN_BLOCKED_UNTIL_SESSION_KEY);
+        $request->getSession()->remove(HomeController::EMPLOYEE_ENTRY_GRANTED_SESSION_KEY);
+
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
@@ -64,5 +78,26 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
     protected function getLoginUrl(Request $request): string
     {
         return $this->urlGenerator->generate(self::LOGIN_ROUTE);
+    }
+
+    private function getBlockedSeconds(Request $request): int
+    {
+        $blockedUntil = (int) $request->getSession()->get(self::LOGIN_BLOCKED_UNTIL_SESSION_KEY, 0);
+        if ($blockedUntil <= time()) {
+            if ($blockedUntil > 0) {
+                $request->getSession()->remove(self::LOGIN_BLOCKED_UNTIL_SESSION_KEY);
+            }
+
+            return 0;
+        }
+
+        return $blockedUntil - time();
+    }
+
+    private function buildBlockedMessage(int $remainingSeconds): string
+    {
+        $remainingMinutes = max(1, (int) ceil($remainingSeconds / 60));
+
+        return sprintf('Connexion temporairement bloquée. Réessayez dans %d minute%s.', $remainingMinutes, $remainingMinutes > 1 ? 's' : '');
     }
 }

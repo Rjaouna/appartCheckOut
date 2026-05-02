@@ -67,6 +67,11 @@
                         </div>
 
                         <div class="apartment-hero-meta-item">
+                            <span class="apartment-hero-address-label">Accès locataire</span>
+                            <strong>{{ apartment.isTenantAccessEnabled ? 'Actif' : 'Bloqué' }}</strong>
+                        </div>
+
+                        <div class="apartment-hero-meta-item">
                             <a class="apartment-hero-anomaly-link" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">
                                 {{ anomalyCount }} anomal{{ anomalyCount > 1 ? 'ies' : 'ie' }} sur ce logement
                             </a>
@@ -76,6 +81,21 @@
             </div>
 
             <div class="head-actions apartment-hero-actions">
+                <form
+                    method="post"
+                    action="{{ path('admin_apartment_tenant_access', {id: apartment.id}) }}"
+                    class="apartment-hero-priority-form"
+                    data-async-form
+                    data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
+                >
+                    {% if currentSection is defined and currentSection %}
+                        <input type="hidden" name="section" value="{{ currentSection }}">
+                    {% endif %}
+                    <input type="hidden" name="isTenantAccessEnabled" value="{{ apartment.isTenantAccessEnabled ? '0' : '1' }}">
+                    <button class="{{ apartment.isTenantAccessEnabled ? 'secondary-button danger-button' : 'primary-button' }} apartment-hero-priority-button" type="submit">
+                        {{ apartment.isTenantAccessEnabled ? 'Bloquer l’accès locataire' : 'Réactiver l’accès locataire' }}
+                    </button>
+                </form>
                 <form
                     method="post"
                     action="{{ path('admin_apartment_priority', {id: apartment.id}) }}"

@@ -1288,6 +1288,11 @@ textarea {
     gap: 10px 24px;
 }
 
+.action-menu-shortcuts-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
 .action-menu-shortcuts a,
 .action-menu-note-card a {
     color: var(--text);
@@ -2067,6 +2072,12 @@ body.nav-compact .floating-main-menu-button {
     margin-top: 4px;
 }
 
+.public-tenant-home-form input:disabled,
+.public-tenant-home-form button:disabled {
+    opacity: 0.72;
+    cursor: not-allowed;
+}
+
 .public-employee-access {
     display: grid;
     justify-items: center;
@@ -2432,6 +2443,16 @@ body.nav-compact .floating-main-menu-button {
 .alert.error {
     background: #fdecec;
     color: var(--danger);
+}
+
+.alert.success {
+    background: #ecf9f0;
+    color: #18794e;
+}
+
+.alert.info {
+    background: #eef6ff;
+    color: #0f4c81;
 }
 
 .room-check-group {

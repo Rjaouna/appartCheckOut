@@ -82,6 +82,12 @@ class Apartment
     #[ORM\Column]
     private bool $isInventoryPriority = false;
 
+    #[ORM\Column]
+    private bool $isTenantAccessEnabled = true;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $tenantAccessLockedAt = null;
+
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $inventoryDueAt = null;
 
@@ -388,6 +394,30 @@ class Apartment
     public function setIsInventoryPriority(bool $isInventoryPriority): self
     {
         $this->isInventoryPriority = $isInventoryPriority;
+
+        return $this;
+    }
+
+    public function isTenantAccessEnabled(): bool
+    {
+        return $this->isTenantAccessEnabled;
+    }
+
+    public function setIsTenantAccessEnabled(bool $isTenantAccessEnabled): self
+    {
+        $this->isTenantAccessEnabled = $isTenantAccessEnabled;
+
+        return $this;
+    }
+
+    public function getTenantAccessLockedAt(): ?\DateTimeImmutable
+    {
+        return $this->tenantAccessLockedAt;
+    }
+
+    public function setTenantAccessLockedAt(?\DateTimeImmutable $tenantAccessLockedAt): self
+    {
+        $this->tenantAccessLockedAt = $tenantAccessLockedAt;
 
         return $this;
     }

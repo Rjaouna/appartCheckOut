@@ -25,13 +25,18 @@ class CheckoutManager
 
     public function createCheckout(Apartment $apartment, User $assignedTo, string $priority = 'normal', ?\DateTimeImmutable $scheduledAt = null): Checkout
     {
+        $now = new \DateTimeImmutable();
         $checkout = new Checkout();
         $checkout
             ->setApartment($apartment)
             ->setAssignedTo($assignedTo)
             ->setPriority($priority)
-            ->setScheduledAt($scheduledAt ?? new \DateTimeImmutable())
+            ->setScheduledAt($scheduledAt ?? $now)
             ->setStatus(CheckoutStatus::Todo);
+
+        $apartment
+            ->setIsTenantAccessEnabled(false)
+            ->setTenantAccessLockedAt($now);
 
         $sequence = 1;
         foreach ($apartment->getActiveRooms() as $room) {
@@ -167,6 +172,15 @@ class CheckoutManager
 
     private function storeAnomalyPhoto(UploadedFile $photo): string
     {
+        if ($photo->getSize() !== null && $photo->getSize() > 8 * 1024 * 1024) {
+            throw new \InvalidArgumentException('La photo d’anomalie dépasse la taille autorisée.');
+        }
+
+        $mimeType = (string) ($photo->getMimeType() ?? '');
+        if (!str_starts_with($mimeType, 'image/')) {
+            throw new \InvalidArgumentException('La photo d’anomalie doit être une image valide.');
+        }
+
         $targetDir = $this->projectDir . '/public/uploads/anomalies';
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0777, true);

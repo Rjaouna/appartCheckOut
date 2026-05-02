@@ -56,6 +56,7 @@ document.addEventListener('submit', async (event) => {
     }
 
     const formData = new FormData(form);
+    const csrfToken = getAppCsrfToken();
 
     try {
         const response = await fetch(form.action, {
@@ -64,6 +65,7 @@ document.addEventListener('submit', async (event) => {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
+                ...(csrfToken ? {'X-App-Csrf': csrfToken} : {}),
             },
         });
 
@@ -128,6 +130,12 @@ document.addEventListener('submit', async (event) => {
         }
     }
 });
+
+function getAppCsrfToken() {
+    const meta = document.querySelector('meta[name="app-csrf-token"]');
+
+    return meta instanceof HTMLMetaElement ? meta.content : '';
+}
 
 function openConfirmationModal(form) {
     const modal = ensureConfirmModal();

@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="app-csrf-token" content="{{ csrf_token('async_action') }}">
         <meta name="theme-color" content="#ff385c">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -102,6 +103,7 @@
         </div>
 
         {% if app.user %}
+            {% set blockedTenantAccessApartments = is_granted('ROLE_ADMIN') ? admin_blocked_tenant_access_apartments() : [] %}
             <div id="global-main-menu" class="workflow-actions-source" hidden>
                 <div class="action-menu-layout">
                     <div class="action-menu-grid">
@@ -242,6 +244,26 @@
                                 {% else %}
                                     <p>Les propositions de services des employés se valident depuis les fiches employés.</p>
                                     <a href="{{ path('admin_users') }}">Aller à l’équipe</a>
+                                {% endif %}
+                            </div>
+
+                            <div class="action-menu-note-card">
+                                <div class="action-menu-note-head">
+                                    <strong>Accès locataire</strong>
+                                    {% if blockedTenantAccessApartments|length > 0 %}
+                                        <span class="action-menu-note-badge">{{ blockedTenantAccessApartments|length }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if blockedTenantAccessApartments|length > 0 %}
+                                    <p>{{ blockedTenantAccessApartments|length }} logement{{ blockedTenantAccessApartments|length > 1 ? 's' : '' }} avec accès code bloqué.</p>
+                                    <div class="action-menu-shortcuts action-menu-shortcuts-list">
+                                        {% for apartment in blockedTenantAccessApartments|slice(0, 3) %}
+                                            <a href="{{ path('admin_apartment_section', {id: apartment.id, section: 'access'}) }}">{{ apartment.name }}</a>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p>Aucun appartement actif n’a son accès locataire bloqué actuellement.</p>
+                                    <a href="{{ path('admin_apartments') }}">Voir les appartements</a>
                                 {% endif %}
                             </div>
                         {% endif %}

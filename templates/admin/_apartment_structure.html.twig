@@ -299,6 +299,32 @@
                 <section class="admin-detail-focus-card">
                     <div class="admin-detail-focus-head">
                         <div>
+                            <span class="admin-detail-focus-kicker">Sécurité</span>
+                            <h3>Accès locataire par code</h3>
+                        </div>
+                        <span class="status-badge {{ apartment.isTenantAccessEnabled ? 'is-success' : 'is-warning' }}">
+                            {{ apartment.isTenantAccessEnabled ? 'Actif' : 'Bloqué' }}
+                        </span>
+                    </div>
+                    <p class="muted">
+                        {% if apartment.isTenantAccessEnabled %}
+                            Le locataire peut accéder à cette fiche avec le code porte ou le code de la boîte à clés.
+                        {% else %}
+                            L’accès locataire par code est coupé pour ce logement jusqu’à réactivation manuelle.
+                        {% endif %}
+                    </p>
+                    <form method="post" action="{{ path('admin_apartment_tenant_access', {id: apartment.id}) }}" class="stack-form compact-form" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                        <input type="hidden" name="section" value="{{ currentSection }}">
+                        <input type="hidden" name="isTenantAccessEnabled" value="{{ apartment.isTenantAccessEnabled ? '0' : '1' }}">
+                        <button class="{{ apartment.isTenantAccessEnabled ? 'secondary-button danger-button' : 'primary-button' }}" type="submit">
+                            {{ apartment.isTenantAccessEnabled ? 'Bloquer l’accès locataire' : 'Réactiver l’accès locataire' }}
+                        </button>
+                    </form>
+                </section>
+
+                <section class="admin-detail-focus-card">
+                    <div class="admin-detail-focus-head">
+                        <div>
                             <span class="admin-detail-focus-kicker">Contact</span>
                             <h3>Propriétaire et notes internes</h3>
                         </div>
