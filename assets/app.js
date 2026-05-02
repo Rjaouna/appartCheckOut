@@ -89,6 +89,11 @@ document.addEventListener('submit', async (event) => {
             return;
         }
 
+        const modalToClose = form.getAttribute('data-close-modal');
+        if (modalToClose) {
+            hideModal(modalToClose);
+        }
+
         const targetSelector = form.getAttribute('data-update-target');
         if (targetSelector && payload.html) {
             const target = document.querySelector(targetSelector);
@@ -187,6 +192,23 @@ function openPhotoLightbox(trigger) {
     imageElement.alt = alt;
     titleElement.textContent = alt;
     showModalElement(modalElement);
+}
+
+function openApartmentNameModal() {
+    const modalElement = document.getElementById('apartmentNameModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    showModalElement(modalElement);
+
+    window.setTimeout(() => {
+        const input = modalElement.querySelector('[data-apartment-name-modal-input]');
+        if (input instanceof HTMLInputElement) {
+            input.focus();
+            input.select();
+        }
+    }, 120);
 }
 
 function hideModal(id) {
@@ -309,6 +331,13 @@ document.addEventListener('click', (event) => {
     const photoTrigger = event.target instanceof Element ? event.target.closest('[data-lightbox-src]') : null;
     if (photoTrigger instanceof HTMLElement) {
         openPhotoLightbox(photoTrigger);
+        return;
+    }
+
+    const apartmentNameModalTrigger = event.target instanceof Element ? event.target.closest('[data-apartment-name-modal-trigger]') : null;
+    if (apartmentNameModalTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        openApartmentNameModal();
         return;
     }
 

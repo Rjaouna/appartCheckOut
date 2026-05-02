@@ -7,15 +7,9 @@
     {% endif %}
 {% endfor %}
 
-<section class="admin-apartment-workspace {{ isOverview ? '' : 'is-section-only' }}">
+<section class="admin-apartment-workspace {{ isOverview ? 'is-overview' : 'is-section-only' }}">
     {% if isOverview %}
         <aside class="admin-apartment-nav">
-            <div class="admin-apartment-nav-head">
-                <span class="eyebrow">Sommaire</span>
-                <h2>Choisir une zone de travail</h2>
-                <p>Chaque bloc ouvre maintenant une vraie page dédiée pour éviter de perdre le fil après une modification.</p>
-            </div>
-
             <div class="admin-apartment-nav-grid">
                 <a class="admin-detail-entry-card admin-detail-entry-card-primary" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'checkout'}) }}">
                     <div class="admin-detail-entry-head">
@@ -56,8 +50,8 @@
                         <span class="admin-detail-entry-metric">{{ apartment.assignedEmployees|length }}</span>
                     </div>
                     <span class="admin-detail-entry-kicker">Étape 3</span>
-                    <strong>Équipe et priorité</strong>
-                    <p>Choisir les employés et mettre l’appartement en tête de liste si nécessaire.</p>
+                    <strong>Assignation</strong>
+                    <p>Choisir les employés qui gèrent cet appartement côté terrain.</p>
                 </a>
 
                 <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'rooms'}) }}">
@@ -107,59 +101,6 @@
 
     <div class="admin-apartment-panels">
         {% if isOverview %}
-            <div class="admin-apartment-summary">
-                <article class="admin-apartment-summary-card">
-                    <span class="admin-apartment-summary-label">À faire maintenant</span>
-                    <strong>{{ activeCheckouts|length > 0 ? 'Suivre le check-out déjà ouvert' : 'Créer le prochain check-out' }}</strong>
-                </article>
-                <article class="admin-apartment-summary-card">
-                    <span class="admin-apartment-summary-label">Équipe assignée</span>
-                    <strong>{{ apartment.assignedEmployees|length > 0 ? apartment.assignedEmployees|length ~ ' employé' ~ (apartment.assignedEmployees|length > 1 ? 's' : '') : 'Aucun employé assigné' }}</strong>
-                </article>
-                <article class="admin-apartment-summary-card">
-                    <span class="admin-apartment-summary-label">Anomalies ouvertes</span>
-                    <strong>{{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }}</strong>
-                </article>
-            </div>
-        {% endif %}
-
-        {% if isOverview %}
-            <section class="admin-detail-panel">
-                <div class="admin-detail-panel-head">
-                    <div>
-                        <span class="admin-detail-entry-kicker">Vue d’ensemble</span>
-                        <h2>Choisis une page de travail</h2>
-                        <p>Chaque bloc ouvre maintenant un écran dédié. Le client reste donc dans le bon contexte après chaque enregistrement.</p>
-                    </div>
-                </div>
-
-                <div class="admin-detail-section-grid">
-                    <article class="admin-detail-focus-card admin-detail-focus-card-primary">
-                        <div class="admin-detail-focus-head">
-                            <div>
-                                <span class="admin-detail-focus-kicker">Le plus utilisé</span>
-                                <h3>Commencer par le check-out</h3>
-                            </div>
-                        </div>
-                        <p class="muted">Programme un passage, modifie sa date ou annule-le depuis une page simple, sans perdre le haut de la fiche.</p>
-                        <a class="primary-button" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'checkout'}) }}">Ouvrir la page check-out</a>
-                    </article>
-
-                    <article class="admin-detail-focus-card">
-                        <div class="admin-detail-focus-head">
-                            <div>
-                                <span class="admin-detail-focus-kicker">Mise à jour rapide</span>
-                                <h3>Accès, codes et équipe</h3>
-                            </div>
-                        </div>
-                        <p class="muted">Les codes d’accès, l’assignation et la priorité sont maintenant séparés pour éviter les allers-retours inutiles.</p>
-                        <div class="admin-detail-inline-actions">
-                            <a class="secondary-button" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'access'}) }}">Accès</a>
-                            <a class="secondary-button" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'assignment'}) }}">Équipe</a>
-                        </div>
-                    </article>
-                </div>
-            </section>
         {% elseif currentSection == 'checkout' %}
             <section class="admin-detail-panel">
                 <div class="admin-detail-panel-head">
@@ -352,46 +293,26 @@
                 <div class="admin-detail-panel-head">
                     <div>
                         <span class="admin-detail-entry-kicker">Équipe</span>
-                        <h2>Assignation et priorité</h2>
-                        <p>Décide qui voit l’appartement côté terrain et s’il doit remonter en haut de la liste.</p>
+                        <h2>Assignation</h2>
+                        <p>Choisis les employés terrain qui gèrent cet appartement.</p>
                     </div>
                     <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
 
-                <div class="admin-dual-stack">
-                    <form method="post" action="{{ path('admin_apartment_assign', {id: apartment.id}) }}" class="stack-form employee-home-info-card employee-home-info-card-soft admin-assignment-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
-                        <input type="hidden" name="section" value="{{ currentSection }}">
-                        <label>
-                            <span>Employés assignés</span>
-                            <select name="assignedEmployees[]" multiple size="5">
-                                {% for employee in employees %}
-                                    {% if 'ROLE_ADMIN' not in employee.roles %}
-                                        <option value="{{ employee.id }}" {{ apartment.assignedEmployees.contains(employee) ? 'selected' : '' }}>{{ employee.fullName }} - {{ employee.email }}</option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <button class="secondary-button admin-dark-button" type="submit">Mettre à jour l’assignation</button>
-                    </form>
-
-                    <form method="post" action="{{ path('admin_apartment_priority', {id: apartment.id}) }}" class="stack-form employee-home-primary-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
-                        <input type="hidden" name="section" value="{{ currentSection }}">
-                        <div class="employee-home-primary-content">
-                            <span class="employee-home-kicker">Priorité</span>
-                            <h2>Faire ressortir cet appartement</h2>
-                            <p>Place cet appartement dans les priorités employé et fixe une date d’inventaire.</p>
-                        </div>
-                        <label class="checkbox-row">
-                            <input type="checkbox" name="isInventoryPriority" value="1" {{ apartment.isInventoryPriority ? 'checked' : '' }}>
-                            <span>Faire apparaître en priorité chez l’employé</span>
-                        </label>
-                        <label>
-                            <span>Date d’inventaire</span>
-                            <input type="datetime-local" name="inventoryDueAt" value="{{ apartment.inventoryDueAt ? apartment.inventoryDueAt|date('Y-m-d\\TH:i') : '' }}">
-                        </label>
-                        <button class="secondary-button admin-dark-button admin-inverted-button" type="submit">Enregistrer la priorité</button>
-                    </form>
-                </div>
+                <form method="post" action="{{ path('admin_apartment_assign', {id: apartment.id}) }}" class="stack-form employee-home-info-card employee-home-info-card-soft admin-assignment-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                    <input type="hidden" name="section" value="{{ currentSection }}">
+                    <label>
+                        <span>Employés assignés</span>
+                        <select name="assignedEmployees[]" multiple size="5">
+                            {% for employee in employees %}
+                                {% if 'ROLE_ADMIN' not in employee.roles %}
+                                    <option value="{{ employee.id }}" {{ apartment.assignedEmployees.contains(employee) ? 'selected' : '' }}>{{ employee.fullName }} - {{ employee.email }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button class="secondary-button admin-dark-button" type="submit">Mettre à jour l’assignation</button>
+                </form>
             </section>
         {% elseif currentSection == 'rooms' %}
             <section class="admin-detail-panel">
@@ -406,10 +327,7 @@
 
                 <section class="admin-detail-focus-card">
                     <div class="admin-detail-focus-head">
-                        <div>
-                            <span class="admin-detail-focus-kicker">Ajout rapide</span>
-                            <h3>Commencer par les pièces principales</h3>
-                        </div>
+                       
                         <span class="status-badge is-soft">{{ apartment.activeRooms|length }} pièce{{ apartment.activeRooms|length > 1 ? 's' : '' }}</span>
                     </div>
 
@@ -485,7 +403,6 @@
                                 <input type="hidden" name="section" value="{{ currentSection }}">
                                 <div class="admin-room-equipment-form-grid">
                                     <label class="admin-room-equipment-picker">
-                                        <span>Choisir plusieurs équipements du catalogue</span>
                                         <select name="catalogEquipmentIds[]" multiple size="8">
                                             {% for item in catalog %}
                                                 {% if item.roomType.value == room.type.value and item.id not in existingCatalogIds %}
@@ -493,7 +410,6 @@
                                                 {% endif %}
                                             {% endfor %}
                                         </select>
-                                        <small>Maintiens `Ctrl` ou `Cmd` pour sélectionner plusieurs lignes.</small>
                                     </label>
                                     <label class="admin-room-equipment-manual">
                                         <span>Ou ajouter un équipement manuel</span>

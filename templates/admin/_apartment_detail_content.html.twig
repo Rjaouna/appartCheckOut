@@ -10,7 +10,7 @@
                         type="button"
                         aria-label="Modifier le nom de l’appartement"
                         title="Modifier le nom de l’appartement"
-                        data-edit-target="#apartment-name-edit-form"
+                        data-apartment-name-modal-trigger
                     >
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
@@ -28,6 +28,22 @@
                             </a>
                         </p>
                     </div>
+                    <form
+                        method="post"
+                        action="{{ path('admin_apartment_priority', {id: apartment.id}) }}"
+                        class="apartment-hero-priority-form"
+                        data-async-form
+                        data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
+                    >
+                        {% if currentSection is defined and currentSection %}
+                            <input type="hidden" name="section" value="{{ currentSection }}">
+                        {% endif %}
+                        <input type="hidden" name="isInventoryPriority" value="{{ apartment.isInventoryPriority ? '0' : '1' }}">
+                     
+                        <button class="{{ apartment.isInventoryPriority ? 'secondary-button' : 'primary-button' }} apartment-hero-priority-button" type="submit">
+                            {{ apartment.isInventoryPriority ? 'Retirer la priorité' : 'Mettre en priorité' }}
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -36,24 +52,40 @@
                 <a class="secondary-button apartment-hero-action" href="{{ path('admin_apartments') }}">Retour à la liste</a>
             </div>
         </div>
-
-        <form
-            id="apartment-name-edit-form"
-            method="post"
-            action="{{ path('admin_apartment_name_update', {id: apartment.id}) }}"
-            class="editable-field-form is-collapsed apartment-name-edit-form apartment-hero-edit-form"
-            data-async-form
-            data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
-        >
-            {% if currentSection is defined and currentSection %}
-                <input type="hidden" name="section" value="{{ currentSection }}">
-            {% endif %}
-            <input type="text" name="name" value="{{ apartment.name }}" required>
-            <div class="editable-field-actions">
-                <button class="secondary-button" type="submit">Enregistrer</button>
-            </div>
-        </form>
     </section>
+
+    <div class="modal fade" id="apartmentNameModal" tabindex="-1" aria-labelledby="apartmentNameModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content apartment-name-modal-content">
+                <div class="modal-header apartment-name-modal-header">
+                    <div>
+                        <span class="eyebrow">Appartement</span>
+                        <h4 class="modal-title" id="apartmentNameModalLabel">Modifier le nom</h4>
+                    </div>
+                    <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                </div>
+                <form
+                    method="post"
+                    action="{{ path('admin_apartment_name_update', {id: apartment.id}) }}"
+                    class="stack-form apartment-name-modal-form"
+                    data-async-form
+                    data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
+                    data-close-modal="apartmentNameModal"
+                >
+                    {% if currentSection is defined and currentSection %}
+                        <input type="hidden" name="section" value="{{ currentSection }}">
+                    {% endif %}
+                    <label>
+                        <span>Nouveau nom</span>
+                        <input type="text" name="name" value="{{ apartment.name }}" required data-apartment-name-modal-input>
+                    </label>
+                    <div class="editable-field-actions">
+                        <button class="primary-button" type="submit">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endif %}
 
 <section id="apartment-structure">

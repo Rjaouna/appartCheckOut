@@ -270,9 +270,9 @@ select {
 
 .apartment-hero-address-card {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
     gap: 14px;
-    align-items: center;
+    align-items: start;
     padding: 18px 18px 18px 20px;
     border-radius: 24px;
     border: 1px solid rgba(15, 23, 42, 0.08);
@@ -297,6 +297,54 @@ select {
     font-size: 1.02rem;
     line-height: 1.55;
     color: var(--text);
+}
+
+.apartment-hero-priority-form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.apartment-hero-priority-copy {
+    display: grid;
+    gap: 4px;
+}
+
+.apartment-hero-priority-label {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.apartment-hero-priority-copy strong {
+    font-size: 1rem;
+    line-height: 1.35;
+    color: var(--text);
+}
+
+.apartment-hero-priority-button {
+    white-space: nowrap;
+}
+
+.apartment-name-modal-content {
+    border-radius: 28px;
+    border: 1px solid rgba(34, 34, 34, 0.08);
+    overflow: hidden;
+}
+
+.apartment-name-modal-header {
+    align-items: flex-start;
+    border-bottom: 0;
+    padding: 22px 22px 10px;
+}
+
+.apartment-name-modal-form {
+    padding: 0 22px 22px;
 }
 
 .address-link,
@@ -1505,7 +1553,7 @@ body.nav-compact .floating-main-menu-button {
 .equipment-tag,
 .empty-inline {
     display: inline-flex;
-    padding: 8px 12px;
+    padding: 1px 12px;
     border-radius: 999px;
     background: #f5f4f1;
 }
@@ -1518,7 +1566,7 @@ body.nav-compact .floating-main-menu-button {
 
 .equipment-tag-form {
     align-items: center;
-    gap: 8px;
+    gap: 3px;
     margin: 0;
     border: 1px solid #ece8df;
 }
@@ -3828,6 +3876,10 @@ a.apartment-manager-link:focus-visible {
     align-items: start;
 }
 
+.admin-apartment-workspace.is-overview {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .admin-apartment-workspace.is-section-only {
     grid-template-columns: minmax(0, 1fr);
 }
@@ -3866,6 +3918,7 @@ a.apartment-manager-link:focus-visible {
 
 .admin-apartment-nav-grid {
     display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
 }
 
@@ -4603,6 +4656,10 @@ a.apartment-manager-link:focus-visible {
     .admin-apartment-nav-grid,
     .admin-apartment-summary {
         gap: 12px;
+    }
+
+    .admin-apartment-nav-grid {
+        grid-template-columns: 1fr;
     }
 
     .admin-user-summary {
