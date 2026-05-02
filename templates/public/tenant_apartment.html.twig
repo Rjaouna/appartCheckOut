@@ -6,9 +6,9 @@
 {% block body %}
     <section class="page-head public-page-head">
         <div>
-            <span class="eyebrow">Acces locataire</span>
+            <span class="eyebrow">Accès locataire</span>
             <h1>{{ apartment.name }}</h1>
-            <p class="muted">Les informations utiles pour votre arrivee sont ci-dessous.</p>
+            <p class="muted">Retrouve ici toutes les informations utiles pour ton arrivée et ton séjour.</p>
         </div>
         <div class="head-actions">
             <a class="secondary-button" href="{{ path('tenant_lookup') }}">Rechercher un autre code</a>
@@ -17,41 +17,31 @@
     </section>
 
     <section class="public-apartment-shell">
-        <article class="apartment-detail-card apartment-detail-card-wide public-warning-card">
-            <h3>Important</h3>
-            <p>Ne communiquez jamais ce code a une autre personne. Si vous pensez qu il a ete partage par erreur, contactez immediatement l employe assigne a cet appartement.</p>
+        <article class="apartment-detail-card apartment-detail-card-wide public-access-hero-card">
+            <div class="public-access-hero-copy">
+                <span class="employee-home-kicker">Arrivée guidée</span>
+                <h2>Comment accéder à mon appartement</h2>
+                <p>
+                    {% if apartment.accessSteps|length > 0 %}
+                        Suis les étapes préparées pour arriver facilement jusqu’à ton appartement.
+                    {% else %}
+                        Les informations principales d’accès sont disponibles juste en dessous.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="public-access-hero-actions">
+                {% if apartment.accessSteps|length > 0 %}
+                    <button class="primary-button" type="button" data-public-access-modal-trigger data-step-source="#public-access-steps-source">
+                        Voir les étapes d’accès
+                    </button>
+                {% endif %}
+                <a class="secondary-button public-waze-button" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir Waze</a>
+            </div>
         </article>
 
         <div class="public-apartment-grid">
-            <article class="apartment-detail-card apartment-detail-card-wide">
-                <h3>Votre equipe de contact</h3>
-                <div class="public-contact-grid">
-                    {% for employee in assignedEmployees %}
-                        <div class="public-contact-card">
-                            <div class="admin-user-avatar public-contact-avatar {{ employee.photoPath ? 'has-photo' : '' }}">
-                                {% if employee.photoPath %}
-                                    <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
-                                {% else %}
-                                    <span>{{ employee.fullName|slice(0, 1)|upper }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="public-contact-copy">
-                                <strong>{{ employee.fullName }}</strong>
-                                {% if employee.phoneNumber %}
-                                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ employee.phoneNumber }}">{{ employee.phoneNumber }}</a>
-                                {% else %}
-                                    <span class="muted">Numero non renseigne</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% else %}
-                        <p class="empty-state">Aucun employe actif n est encore assigne a cet appartement.</p>
-                    {% endfor %}
-                </div>
-            </article>
-
             <article class="apartment-detail-card">
-                <h3>Adresse et acces</h3>
+                <h3>Adresse et accès</h3>
                 <div class="editable-field-row">
                     <div class="editable-field-display">
                         <div class="editable-field-copy">
@@ -63,7 +53,7 @@
                 <div class="editable-field-row">
                     <div class="editable-field-display">
                         <div class="editable-field-copy">
-                            <span class="editable-field-label">Etage</span>
+                            <span class="editable-field-label">Étage</span>
                             <strong>{{ apartment.floor ?: '-' }}</strong>
                         </div>
                     </div>
@@ -87,7 +77,7 @@
                 <div class="editable-field-row">
                     <div class="editable-field-display">
                         <div class="editable-field-copy">
-                            <span class="editable-field-label">Code boite a cles / porte</span>
+                            <span class="editable-field-label">Code boîte à clés / porte</span>
                             <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
                         </div>
                     </div>
@@ -108,7 +98,39 @@
                     {% if apartment.googleMapsLink %}
                         <a class="secondary-button" href="{{ apartment.googleMapsLink }}" target="_blank" rel="noreferrer">Ouvrir dans Google Maps</a>
                     {% endif %}
-                    <a class="primary-button" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l adresse de mon appart sur WhatsApp</a>
+                    <a class="primary-button" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l’adresse sur WhatsApp</a>
+                </div>
+            </article>
+
+            <article class="apartment-detail-card apartment-detail-card-wide public-warning-card">
+                <h3>Important</h3>
+                <p>Ne communique jamais ce code à une autre personne. Si tu penses qu’il a été partagé par erreur, contacte immédiatement l’équipe assignée à cet appartement.</p>
+            </article>
+
+            <article class="apartment-detail-card apartment-detail-card-wide">
+                <h3>Votre équipe de contact</h3>
+                <div class="public-contact-grid">
+                    {% for employee in assignedEmployees %}
+                        <div class="public-contact-card">
+                            <div class="admin-user-avatar public-contact-avatar {{ employee.photoPath ? 'has-photo' : '' }}">
+                                {% if employee.photoPath %}
+                                    <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
+                                {% else %}
+                                    <span>{{ employee.fullName|slice(0, 1)|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="public-contact-copy">
+                                <strong>{{ employee.fullName }}</strong>
+                                {% if employee.phoneNumber %}
+                                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ employee.phoneNumber }}">{{ employee.phoneNumber }}</a>
+                                {% else %}
+                                    <span class="muted">Numéro non renseigné</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="empty-state">Aucun employé actif n’est encore assigné à cet appartement.</p>
+                    {% endfor %}
                 </div>
             </article>
 
@@ -117,7 +139,7 @@
                     <div class="panel-head">
                         <div>
                             <h3>Extras disponibles</h3>
-                            <p class="muted">Services proposes par {{ serviceContactEmployee.fullName }} pendant votre sejour.</p>
+                            <p class="muted">Services proposés par {{ serviceContactEmployee.fullName }} pendant votre séjour.</p>
                         </div>
                     </div>
                     <div class="public-extra-grid">
@@ -132,4 +154,49 @@
             {% endif %}
         </div>
     </section>
+
+    {% if apartment.accessSteps|length > 0 %}
+        <div id="public-access-steps-source" hidden>
+            {% for step in apartment.orderedAccessSteps %}
+                <div
+                    data-public-access-step
+                    data-step-title="Étape {{ loop.index }}"
+                    data-step-text="{{ step.instruction|e('html_attr') }}"
+                    data-step-image="{{ step.imagePath ?: '' }}"
+                ></div>
+            {% endfor %}
+        </div>
+
+        <div class="modal fade" id="publicAccessStepsModal" tabindex="-1" aria-labelledby="publicAccessStepsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content public-access-modal-content">
+                    <div class="modal-header public-access-modal-header">
+                        <div>
+                            <span class="eyebrow">Accès appartement</span>
+                            <h4 class="modal-title" id="publicAccessStepsModalLabel">Comment accéder à mon appartement</h4>
+                        </div>
+                        <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                    </div>
+                    <div class="modal-body public-access-modal-body">
+                        <div class="public-access-modal-progress">
+                            <span class="public-access-modal-step-label" data-public-access-step-label>Étape 1</span>
+                            <span class="public-access-modal-step-count" data-public-access-step-count></span>
+                        </div>
+                        <div class="public-access-modal-stage">
+                            <figure class="public-access-modal-figure" data-public-access-figure hidden>
+                                <img src="" alt="" data-public-access-image>
+                            </figure>
+                            <article class="public-access-modal-copy">
+                                <p data-public-access-text></p>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="modal-footer public-access-modal-footer">
+                        <button type="button" class="secondary-button" data-public-access-prev>Précédent</button>
+                        <button type="button" class="primary-button" data-public-access-next>Suivant</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

@@ -108,11 +108,19 @@ class Apartment
     #[ORM\OneToMany(mappedBy: 'apartment', targetEntity: Checkout::class, cascade: ['persist', 'remove'])]
     private Collection $checkouts;
 
+    /**
+     * @var Collection<int, ApartmentAccessStep>
+     */
+    #[ORM\OneToMany(mappedBy: 'apartment', targetEntity: ApartmentAccessStep::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['displayOrder' => 'ASC', 'id' => 'ASC'])]
+    private Collection $accessSteps;
+
     public function __construct()
     {
         $this->assignedEmployees = new ArrayCollection();
         $this->rooms = new ArrayCollection();
         $this->checkouts = new ArrayCollection();
+        $this->accessSteps = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -476,6 +484,41 @@ class Apartment
     public function getCheckouts(): Collection
     {
         return $this->checkouts;
+    }
+
+    /**
+     * @return Collection<int, ApartmentAccessStep>
+     */
+    public function getAccessSteps(): Collection
+    {
+        return $this->accessSteps;
+    }
+
+    /**
+     * @return list<ApartmentAccessStep>
+     */
+    public function getOrderedAccessSteps(): array
+    {
+        return array_values($this->accessSteps->toArray());
+    }
+
+    public function addAccessStep(ApartmentAccessStep $accessStep): self
+    {
+        if (!$this->accessSteps->contains($accessStep)) {
+            $this->accessSteps->add($accessStep);
+            $accessStep->setApartment($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAccessStep(ApartmentAccessStep $accessStep): self
+    {
+        if ($this->accessSteps->removeElement($accessStep) && $accessStep->getApartment() === $this) {
+            $accessStep->setApartment(null);
+        }
+
+        return $this;
     }
 
     public function getFullAddress(): string

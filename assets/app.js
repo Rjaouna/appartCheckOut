@@ -211,6 +211,158 @@ function openApartmentNameModal() {
     }, 120);
 }
 
+function addApartmentAccessStepDraft(trigger) {
+    const targetSelector = trigger.getAttribute('data-target-list');
+    const templateSelector = trigger.getAttribute('data-template');
+    const targetList = targetSelector ? document.querySelector(targetSelector) : null;
+    const template = templateSelector ? document.querySelector(templateSelector) : null;
+    if (!(targetList instanceof HTMLElement) || !(template instanceof HTMLTemplateElement)) {
+        return;
+    }
+
+    const fragment = template.content.cloneNode(true);
+    targetList.appendChild(fragment);
+
+    const latestInput = targetList.querySelector('.apartment-access-step-card-draft:last-child textarea');
+    if (latestInput instanceof HTMLTextAreaElement) {
+        latestInput.focus();
+    }
+}
+
+function openPublicAccessStepsModal(trigger) {
+    const sourceSelector = trigger.getAttribute('data-step-source');
+    const source = sourceSelector ? document.querySelector(sourceSelector) : null;
+    const modalElement = document.getElementById('publicAccessStepsModal');
+    if (!(source instanceof HTMLElement) || !(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    const steps = Array.from(source.querySelectorAll('[data-public-access-step]'))
+        .map((stepElement) => {
+            if (!(stepElement instanceof HTMLElement)) {
+                return null;
+            }
+
+            return {
+                title: stepElement.dataset.stepTitle || '',
+                text: stepElement.dataset.stepText || '',
+                image: stepElement.dataset.stepImage || '',
+            };
+        })
+        .filter((step) => step !== null);
+
+    if (steps.length === 0) {
+        return;
+    }
+
+    modalElement.dataset.publicAccessSteps = JSON.stringify(steps);
+    modalElement.dataset.publicAccessIndex = '0';
+    renderPublicAccessStep(modalElement);
+    showModalElement(modalElement);
+}
+
+function renderPublicAccessStep(modalElement) {
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    const rawSteps = modalElement.dataset.publicAccessSteps;
+    if (!rawSteps) {
+        return;
+    }
+
+    let steps = [];
+    try {
+        steps = JSON.parse(rawSteps);
+    } catch (error) {
+        return;
+    }
+
+    if (!Array.isArray(steps) || steps.length === 0) {
+        return;
+    }
+
+    const index = Math.min(Math.max(Number.parseInt(modalElement.dataset.publicAccessIndex || '0', 10), 0), steps.length - 1);
+    const currentStep = steps[index];
+    if (!currentStep || typeof currentStep !== 'object') {
+        return;
+    }
+
+    const label = modalElement.querySelector('[data-public-access-step-label]');
+    const count = modalElement.querySelector('[data-public-access-step-count]');
+    const text = modalElement.querySelector('[data-public-access-text]');
+    const image = modalElement.querySelector('[data-public-access-image]');
+    const figure = modalElement.querySelector('[data-public-access-figure]');
+    const prevButton = modalElement.querySelector('[data-public-access-prev]');
+    const nextButton = modalElement.querySelector('[data-public-access-next]');
+
+    if (label instanceof HTMLElement) {
+        label.textContent = currentStep.title || `Étape ${index + 1}`;
+    }
+    if (count instanceof HTMLElement) {
+        count.textContent = `${index + 1} / ${steps.length}`;
+    }
+    if (text instanceof HTMLElement) {
+        text.textContent = typeof currentStep.text === 'string' ? currentStep.text : '';
+    }
+    if (image instanceof HTMLImageElement && figure instanceof HTMLElement) {
+        if (typeof currentStep.image === 'string' && currentStep.image !== '') {
+            image.src = currentStep.image;
+            image.alt = currentStep.title || `Étape ${index + 1}`;
+            figure.hidden = false;
+        } else {
+            image.src = '';
+            image.alt = '';
+            figure.hidden = true;
+        }
+    }
+    if (prevButton instanceof HTMLButtonElement) {
+        prevButton.disabled = index === 0;
+    }
+    if (nextButton instanceof HTMLButtonElement) {
+        nextButton.textContent = index >= steps.length - 1 ? 'Fermer' : 'Suivant';
+    }
+
+    modalElement.dataset.publicAccessIndex = String(index);
+}
+
+function navigatePublicAccessSteps(direction) {
+    const modalElement = document.getElementById('publicAccessStepsModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    const rawSteps = modalElement.dataset.publicAccessSteps;
+    if (!rawSteps) {
+        return;
+    }
+
+    let steps = [];
+    try {
+        steps = JSON.parse(rawSteps);
+    } catch (error) {
+        return;
+    }
+
+    if (!Array.isArray(steps) || steps.length === 0) {
+        return;
+    }
+
+    const currentIndex = Number.parseInt(modalElement.dataset.publicAccessIndex || '0', 10);
+    if (direction === 'next') {
+        if (currentIndex >= steps.length - 1) {
+            hideModal('publicAccessStepsModal');
+            return;
+        }
+
+        modalElement.dataset.publicAccessIndex = String(currentIndex + 1);
+    } else if (direction === 'prev' && currentIndex > 0) {
+        modalElement.dataset.publicAccessIndex = String(currentIndex - 1);
+    }
+
+    renderPublicAccessStep(modalElement);
+}
+
 function hideModal(id) {
     const modalElement = document.getElementById(id);
     if (modalElement instanceof HTMLElement) {
@@ -338,6 +490,44 @@ document.addEventListener('click', (event) => {
     if (apartmentNameModalTrigger instanceof HTMLElement) {
         event.preventDefault();
         openApartmentNameModal();
+        return;
+    }
+
+    const addAccessStepTrigger = event.target instanceof Element ? event.target.closest('[data-add-access-step]') : null;
+    if (addAccessStepTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        addApartmentAccessStepDraft(addAccessStepTrigger);
+        return;
+    }
+
+    const removeAccessStepDraftTrigger = event.target instanceof Element ? event.target.closest('[data-remove-access-step-draft]') : null;
+    if (removeAccessStepDraftTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        const draftCard = removeAccessStepDraftTrigger.closest('.apartment-access-step-card-draft');
+        if (draftCard instanceof HTMLElement) {
+            draftCard.remove();
+        }
+        return;
+    }
+
+    const publicAccessModalTrigger = event.target instanceof Element ? event.target.closest('[data-public-access-modal-trigger]') : null;
+    if (publicAccessModalTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        openPublicAccessStepsModal(publicAccessModalTrigger);
+        return;
+    }
+
+    const publicAccessPrevTrigger = event.target instanceof Element ? event.target.closest('[data-public-access-prev]') : null;
+    if (publicAccessPrevTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        navigatePublicAccessSteps('prev');
+        return;
+    }
+
+    const publicAccessNextTrigger = event.target instanceof Element ? event.target.closest('[data-public-access-next]') : null;
+    if (publicAccessNextTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        navigatePublicAccessSteps('next');
         return;
     }
 

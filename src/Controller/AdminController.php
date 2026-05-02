@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Anomaly;
 use App\Entity\Apartment;
+use App\Entity\ApartmentAccessStep;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
 use App\Entity\EquipmentCatalog;
@@ -30,7 +31,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/admin')]
 class AdminController extends AbstractController
 {
-    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'assignment', 'rooms', 'anomalies', 'settings'];
+    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'assignment', 'rooms', 'anomalies', 'settings'];
 
     #[Route('', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(EntityManagerInterface $entityManager): Response
@@ -504,8 +505,17 @@ class AdminController extends AbstractController
             ], 422);
         }
 
+        $accessStepImagePaths = array_map(
+            static fn (ApartmentAccessStep $step): ?string => $step->getImagePath(),
+            $apartment->getOrderedAccessSteps()
+        );
+
         $entityManager->remove($apartment);
         $entityManager->flush();
+
+        foreach ($accessStepImagePaths as $imagePath) {
+            $this->deleteApartmentAccessStepImage($imagePath);
+        }
 
         return new JsonResponse([
             'success' => true,
@@ -534,11 +544,91 @@ class AdminController extends AbstractController
     public function togglePriority(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $apartment->setIsInventoryPriority($request->request->getBoolean('isInventoryPriority'));
-        $due = $request->request->get('inventoryDueAt');
-        $apartment->setInventoryDueAt(is_string($due) && $due !== '' ? new \DateTimeImmutable($due) : null);
+        if (!$apartment->isInventoryPriority()) {
+            $apartment->setInventoryDueAt(null);
+        }
         $entityManager->flush();
 
         return $this->apartmentDetailResponse($apartment, $entityManager, 'Priorité inventaire mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+    }
+
+    #[Route('/apartments/{id}/access-steps', name: 'admin_apartment_access_step_create', methods: ['POST'])]
+    public function createApartmentAccessStep(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $instruction = trim((string) $request->request->get('instruction'));
+        if ($instruction === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Le texte de l’étape est obligatoire.'], 422);
+        }
+
+        $step = (new ApartmentAccessStep())
+            ->setInstruction($instruction)
+            ->setDisplayOrder($apartment->getAccessSteps()->count() + 1);
+
+        $image = $request->files->get('image');
+        if ($image instanceof UploadedFile) {
+            $step->setImagePath($this->storeApartmentAccessStepImage($image));
+        }
+
+        $apartment->addAccessStep($step);
+        $entityManager->persist($step);
+        $entityManager->flush();
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Étape d’accès ajoutée.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+    }
+
+    #[Route('/apartment-access-steps/{id}', name: 'admin_apartment_access_step_update', methods: ['POST'])]
+    public function updateApartmentAccessStep(ApartmentAccessStep $accessStep, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $apartment = $accessStep->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Étape introuvable.'], 404);
+        }
+
+        $instruction = trim((string) $request->request->get('instruction'));
+        if ($instruction === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Le texte de l’étape est obligatoire.'], 422);
+        }
+
+        $accessStep->setInstruction($instruction);
+
+        $removeImage = $request->request->getBoolean('removeImage');
+        $newImage = $request->files->get('image');
+        $previousImagePath = $accessStep->getImagePath();
+
+        if ($removeImage) {
+            $accessStep->setImagePath(null);
+        }
+
+        if ($newImage instanceof UploadedFile) {
+            $accessStep->setImagePath($this->storeApartmentAccessStepImage($newImage));
+        }
+
+        $entityManager->flush();
+
+        if (($removeImage || $newImage instanceof UploadedFile) && $previousImagePath !== $accessStep->getImagePath()) {
+            $this->deleteApartmentAccessStepImage($previousImagePath);
+        }
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Étape d’accès mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+    }
+
+    #[Route('/apartment-access-steps/{id}/delete', name: 'admin_apartment_access_step_delete', methods: ['POST'])]
+    public function deleteApartmentAccessStep(ApartmentAccessStep $accessStep, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $apartment = $accessStep->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Étape introuvable.'], 404);
+        }
+
+        $photoPath = $accessStep->getImagePath();
+        $apartment->removeAccessStep($accessStep);
+        $entityManager->remove($accessStep);
+        $entityManager->flush();
+
+        $this->deleteApartmentAccessStepImage($photoPath);
+        $this->reorderApartmentAccessSteps($apartment, $entityManager);
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Étape d’accès supprimée.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/rooms', name: 'admin_room_create', methods: ['POST'])]
@@ -995,6 +1085,17 @@ class AdminController extends AbstractController
         }
 
         return in_array($section, self::APARTMENT_DETAIL_SECTIONS, true) ? $section : null;
+    }
+
+    private function reorderApartmentAccessSteps(Apartment $apartment, EntityManagerInterface $entityManager): void
+    {
+        $position = 1;
+        foreach ($apartment->getOrderedAccessSteps() as $step) {
+            $step->setDisplayOrder($position);
+            ++$position;
+        }
+
+        $entityManager->flush();
     }
 
     private function hasOpenCheckout(Apartment $apartment, EntityManagerInterface $entityManager): bool
@@ -1586,6 +1687,22 @@ class AdminController extends AbstractController
         return '/uploads/users/' . $filename;
     }
 
+    private function storeApartmentAccessStepImage(UploadedFile $image): string
+    {
+        $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/apartment-access';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $safeName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeName = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeName) ?: 'access-step';
+        $filename = sprintf('%s-%s.%s', $safeName, bin2hex(random_bytes(4)), $image->guessExtension() ?: 'jpg');
+
+        $image->move($targetDir, $filename);
+
+        return '/uploads/apartment-access/' . $filename;
+    }
+
     private function deleteUserPhoto(?string $photoPath): void
     {
         if (!is_string($photoPath) || $photoPath === '' || !str_starts_with($photoPath, '/uploads/users/')) {
@@ -1593,6 +1710,18 @@ class AdminController extends AbstractController
         }
 
         $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $photoPath;
+        if (is_file($fullPath)) {
+            @unlink($fullPath);
+        }
+    }
+
+    private function deleteApartmentAccessStepImage(?string $imagePath): void
+    {
+        if (!is_string($imagePath) || $imagePath === '' || !str_starts_with($imagePath, '/uploads/apartment-access/')) {
+            return;
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $imagePath;
         if (is_file($fullPath)) {
             @unlink($fullPath);
         }

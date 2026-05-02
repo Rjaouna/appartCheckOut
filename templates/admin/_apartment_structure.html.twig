@@ -40,6 +40,22 @@
                     <p>Retrouver vite l’adresse, les codes et les consignes d’entrée.</p>
                 </a>
 
+                <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'apartment-access'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 20V9.5L12 4l8 5.5V20h-5.5v-5.2h-5V20H4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+                                <path d="M10.5 11.5h3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                                <path d="M12 10v3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">{{ apartment.accessSteps|length }}</span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">Étape 3</span>
+                    <strong>Accès appartement</strong>
+                    <p>Préparer le pas-à-pas d’arrivée que le locataire verra dans son espace.</p>
+                </a>
+
                 <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'assignment'}) }}">
                     <div class="admin-detail-entry-head">
                         <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
@@ -49,7 +65,7 @@
                         </span>
                         <span class="admin-detail-entry-metric">{{ apartment.assignedEmployees|length }}</span>
                     </div>
-                    <span class="admin-detail-entry-kicker">Étape 3</span>
+                    <span class="admin-detail-entry-kicker">Étape 4</span>
                     <strong>Assignation</strong>
                     <p>Choisir les employés qui gèrent cet appartement côté terrain.</p>
                 </a>
@@ -63,7 +79,7 @@
                         </span>
                         <span class="admin-detail-entry-metric">{{ apartment.activeRooms|length }}</span>
                     </div>
-                    <span class="admin-detail-entry-kicker">Étape 4</span>
+                    <span class="admin-detail-entry-kicker">Étape 5</span>
                     <strong>Pièces et équipements</strong>
                     <p>Construire la checklist pièce par pièce et garder une base propre.</p>
                 </a>
@@ -286,6 +302,126 @@
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerPhone', label: 'Téléphone', value: apartment.ownerPhone ?: 'Non renseigné', rawValue: apartment.ownerPhone } %}
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'internalNotes', label: 'Notes internes', value: apartment.internalNotes ?: 'Aucune note', rawValue: apartment.internalNotes, multiline: true } %}
                     </div>
+                </section>
+            </section>
+        {% elseif currentSection == 'apartment-access' %}
+            <section class="admin-detail-panel">
+                <div class="admin-detail-panel-head">
+                    <div>
+                        <span class="admin-detail-entry-kicker">Accès locataire</span>
+                        <h2>Accès appartement</h2>
+                        <p>Prépare les étapes d’arrivée que le locataire verra dans son espace, avec texte et photo si besoin.</p>
+                    </div>
+                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                </div>
+
+                <section class="admin-detail-focus-card">
+                    <div class="admin-detail-focus-head">
+                        <div>
+                            <span class="admin-detail-focus-kicker">Création</span>
+                            <h3>Ajouter des étapes d’accès</h3>
+                        </div>
+                        <button class="primary-button" type="button" data-add-access-step data-target-list="#apartment-access-step-draft-list" data-template="#apartment-access-step-template">Ajouter une étape</button>
+                    </div>
+                    <p class="muted">Chaque étape peut contenir un texte explicatif et une photo pour guider le locataire visuellement.</p>
+
+                    <div id="apartment-access-step-draft-list" class="apartment-access-step-stack">
+                        {% for step in apartment.orderedAccessSteps %}
+                            <article class="apartment-access-step-card">
+                                <div class="apartment-access-step-card-head">
+                                    <div>
+                                        <span class="admin-detail-focus-kicker">Étape {{ loop.index }}</span>
+                                        <h4>Étape enregistrée</h4>
+                                    </div>
+                                    <form
+                                        method="post"
+                                        action="{{ path('admin_apartment_access_step_delete', {id: step.id}) }}"
+                                        data-async-form
+                                        data-update-target="{{ detailUpdateTarget }}"
+                                        data-confirm-reset
+                                        data-confirm-title="Supprimer cette étape"
+                                        data-confirm-message="Veux-tu vraiment supprimer cette étape d’accès ?"
+                                    >
+                                        <input type="hidden" name="section" value="{{ currentSection }}">
+                                        <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Supprimer l’étape {{ loop.index }}" title="Supprimer l’étape">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M7 5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                <path d="M10 5V4h4v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                <path d="M9 9v7M12 9v7M15 9v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                <path d="M8 7h8l-.6 11.2a2 2 0 0 1-2 1.8h-2.8a2 2 0 0 1-2-1.8L8 7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <form
+                                    method="post"
+                                    action="{{ path('admin_apartment_access_step_update', {id: step.id}) }}"
+                                    class="stack-form apartment-access-step-form"
+                                    enctype="multipart/form-data"
+                                    data-async-form
+                                    data-update-target="{{ detailUpdateTarget }}"
+                                >
+                                    <input type="hidden" name="section" value="{{ currentSection }}">
+                                    <label>
+                                        <span>Texte de l’étape</span>
+                                        <textarea name="instruction" rows="4" required>{{ step.instruction }}</textarea>
+                                    </label>
+                                    <label>
+                                        <span>Image</span>
+                                        <input type="file" name="image" accept="image/*">
+                                    </label>
+                                    {% if step.imagePath %}
+                                        <div class="apartment-access-step-image-preview">
+                                            <img src="{{ step.imagePath }}" alt="Étape {{ loop.index }}">
+                                            <label class="checkbox-row">
+                                                <input type="checkbox" name="removeImage" value="1">
+                                                <span>Retirer l’image actuelle</span>
+                                            </label>
+                                        </div>
+                                    {% endif %}
+                                    <button class="secondary-button" type="submit">Enregistrer l’étape</button>
+                                </form>
+                            </article>
+                        {% else %}
+                            <p class="empty-state">Aucune étape d’accès pour le moment.</p>
+                        {% endfor %}
+                    </div>
+
+                    <template id="apartment-access-step-template">
+                        <article class="apartment-access-step-card apartment-access-step-card-draft">
+                            <div class="apartment-access-step-card-head">
+                                <div>
+                                    <span class="admin-detail-focus-kicker">Nouvelle étape</span>
+                                    <h4>À enregistrer</h4>
+                                </div>
+                                <button class="icon-action-button" type="button" data-remove-access-step-draft aria-label="Retirer ce brouillon" title="Retirer ce brouillon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M6 6 18 18M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <form
+                                method="post"
+                                action="{{ path('admin_apartment_access_step_create', {id: apartment.id}) }}"
+                                class="stack-form apartment-access-step-form"
+                                enctype="multipart/form-data"
+                                data-async-form
+                                data-update-target="{{ detailUpdateTarget }}"
+                            >
+                                <input type="hidden" name="section" value="{{ currentSection }}">
+                                <label>
+                                    <span>Texte de l’étape</span>
+                                    <textarea name="instruction" rows="4" required placeholder="Ex. Entrez dans l’immeuble puis prenez l’ascenseur jusqu’au 1er étage."></textarea>
+                                </label>
+                                <label>
+                                    <span>Image</span>
+                                    <input type="file" name="image" accept="image/*">
+                                </label>
+                                <button class="primary-button" type="submit">Ajouter l’étape</button>
+                            </form>
+                        </article>
+                    </template>
                 </section>
             </section>
         {% elseif currentSection == 'assignment' %}
