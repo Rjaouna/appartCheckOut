@@ -7,117 +7,121 @@
     {% endif %}
 {% endfor %}
 
-<section class="admin-apartment-workspace">
-    <aside class="admin-apartment-nav">
-        <div class="admin-apartment-nav-head">
-            <span class="eyebrow">{{ isOverview ? 'Sommaire' : 'Section active' }}</span>
-            <h2>{{ isOverview ? 'Choisir une zone de travail' : 'Tu es dans le bon espace' }}</h2>
-            <p>{{ isOverview ? 'Chaque bloc ouvre maintenant une vraie page dédiée pour éviter de perdre le fil après une modification.' : 'Les enregistrements restent dans cette page pour garder un parcours stable et facile à suivre.' }}</p>
-        </div>
+<section class="admin-apartment-workspace {{ isOverview ? '' : 'is-section-only' }}">
+    {% if isOverview %}
+        <aside class="admin-apartment-nav">
+            <div class="admin-apartment-nav-head">
+                <span class="eyebrow">Sommaire</span>
+                <h2>Choisir une zone de travail</h2>
+                <p>Chaque bloc ouvre maintenant une vraie page dédiée pour éviter de perdre le fil après une modification.</p>
+            </div>
 
-        <div class="admin-apartment-nav-grid">
-            <a class="admin-detail-entry-card admin-detail-entry-card-primary {{ currentSection == 'checkout' ? 'is-active' : '' }}" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'checkout'}) }}">
-                <div class="admin-detail-entry-head">
-                    <span class="admin-detail-entry-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6v-2Z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <span class="admin-detail-entry-metric">{{ activeCheckouts|length > 0 ? activeCheckouts|length : 'Nouveau' }}</span>
-                </div>
-                <span class="admin-detail-entry-kicker">Étape 1</span>
-                <strong>Check-out</strong>
-                <p>Créer, programmer, suivre ou annuler un check-out sur cet appartement.</p>
-            </a>
+            <div class="admin-apartment-nav-grid">
+                <a class="admin-detail-entry-card admin-detail-entry-card-primary" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'checkout'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6v-2Z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">{{ activeCheckouts|length > 0 ? activeCheckouts|length : 'Nouveau' }}</span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">Étape 1</span>
+                    <strong>Check-out</strong>
+                    <p>Créer, programmer, suivre ou annuler un check-out sur cet appartement.</p>
+                </a>
 
-            <a class="admin-detail-entry-card admin-detail-entry-card-soft {{ currentSection == 'access' ? 'is-active' : '' }}" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'access'}) }}">
-                <div class="admin-detail-entry-head">
-                    <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 21s7-4.4 7-11a7 7 0 1 0-14 0c0 6.6 7 11 7 11Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
-                            <circle cx="12" cy="10" r="2.5" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <span class="admin-detail-entry-metric">Accès</span>
-                </div>
-                <span class="admin-detail-entry-kicker">Étape 2</span>
-                <strong>Adresse et codes</strong>
-                <p>Retrouver vite l’adresse, les codes et les consignes d’entrée.</p>
-            </a>
+                <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'access'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 21s7-4.4 7-11a7 7 0 1 0-14 0c0 6.6 7 11 7 11Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+                                <circle cx="12" cy="10" r="2.5" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">Accès</span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">Étape 2</span>
+                    <strong>Adresse et codes</strong>
+                    <p>Retrouver vite l’adresse, les codes et les consignes d’entrée.</p>
+                </a>
 
-            <a class="admin-detail-entry-card admin-detail-entry-card-soft {{ currentSection == 'assignment' ? 'is-active' : '' }}" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'assignment'}) }}">
-                <div class="admin-detail-entry-head">
-                    <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm8 2c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4ZM8 13c-.29 0-.62.02-.97.05C4.42 13.27 0 14.44 0 17v3h6v-3c0-1.16.55-2.18 1.53-3A8.63 8.63 0 0 1 8 13Z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <span class="admin-detail-entry-metric">{{ apartment.assignedEmployees|length }}</span>
-                </div>
-                <span class="admin-detail-entry-kicker">Étape 3</span>
-                <strong>Équipe et priorité</strong>
-                <p>Choisir les employés et mettre l’appartement en tête de liste si nécessaire.</p>
-            </a>
+                <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'assignment'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm8 2c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4ZM8 13c-.29 0-.62.02-.97.05C4.42 13.27 0 14.44 0 17v3h6v-3c0-1.16.55-2.18 1.53-3A8.63 8.63 0 0 1 8 13Z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">{{ apartment.assignedEmployees|length }}</span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">Étape 3</span>
+                    <strong>Équipe et priorité</strong>
+                    <p>Choisir les employés et mettre l’appartement en tête de liste si nécessaire.</p>
+                </a>
 
-            <a class="admin-detail-entry-card admin-detail-entry-card-soft {{ currentSection == 'rooms' ? 'is-active' : '' }}" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'rooms'}) }}">
-                <div class="admin-detail-entry-head">
-                    <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3v-10.5Z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <span class="admin-detail-entry-metric">{{ apartment.activeRooms|length }}</span>
-                </div>
-                <span class="admin-detail-entry-kicker">Étape 4</span>
-                <strong>Pièces et équipements</strong>
-                <p>Construire la checklist pièce par pièce et garder une base propre.</p>
-            </a>
+                <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'rooms'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3v-10.5Z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">{{ apartment.activeRooms|length }}</span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">Étape 4</span>
+                    <strong>Pièces et équipements</strong>
+                    <p>Construire la checklist pièce par pièce et garder une base propre.</p>
+                </a>
 
-            <a class="admin-detail-entry-card admin-detail-entry-card-soft {{ currentSection == 'anomalies' ? 'is-active' : '' }}" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'anomalies'}) }}">
-                <div class="admin-detail-entry-head">
-                    <span class="admin-detail-entry-icon admin-detail-entry-icon-warning" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <span class="admin-detail-entry-metric">{{ anomalyCount }}</span>
-                </div>
-                <span class="admin-detail-entry-kicker">Suivi</span>
-                <strong>Anomalies</strong>
-                <p>Voir les pièces touchées et ouvrir le détail du suivi en un clic.</p>
-            </a>
+                <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'anomalies'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-warning" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">{{ anomalyCount }}</span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">Suivi</span>
+                    <strong>Anomalies</strong>
+                    <p>Voir les pièces touchées et ouvrir le détail du suivi en un clic.</p>
+                </a>
 
-            <a class="admin-detail-entry-card admin-detail-entry-card-danger {{ currentSection == 'settings' ? 'is-active' : '' }}" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'settings'}) }}">
-                <div class="admin-detail-entry-head">
-                    <span class="admin-detail-entry-icon admin-detail-entry-icon-danger" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18.3A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                    <span class="admin-detail-entry-metric">{{ apartment.status.label }}</span>
-                </div>
-                <span class="admin-detail-entry-kicker">Pilotage</span>
-                <strong>Statut et archivage</strong>
-                <p>Mettre l’appartement en pause, l’archiver ou le supprimer si besoin.</p>
-            </a>
-        </div>
-    </aside>
+                <a class="admin-detail-entry-card admin-detail-entry-card-danger" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'settings'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-danger" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18.3A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">{{ apartment.status.label }}</span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">Pilotage</span>
+                    <strong>Statut et archivage</strong>
+                    <p>Mettre l’appartement en pause, l’archiver ou le supprimer si besoin.</p>
+                </a>
+            </div>
+        </aside>
+    {% endif %}
 
     <div class="admin-apartment-panels">
-        <div class="admin-apartment-summary">
-            <article class="admin-apartment-summary-card">
-                <span class="admin-apartment-summary-label">À faire maintenant</span>
-                <strong>{{ activeCheckouts|length > 0 ? 'Suivre le check-out déjà ouvert' : 'Créer le prochain check-out' }}</strong>
-            </article>
-            <article class="admin-apartment-summary-card">
-                <span class="admin-apartment-summary-label">Équipe assignée</span>
-                <strong>{{ apartment.assignedEmployees|length > 0 ? apartment.assignedEmployees|length ~ ' employé' ~ (apartment.assignedEmployees|length > 1 ? 's' : '') : 'Aucun employé assigné' }}</strong>
-            </article>
-            <article class="admin-apartment-summary-card">
-                <span class="admin-apartment-summary-label">Anomalies ouvertes</span>
-                <strong>{{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }}</strong>
-            </article>
-        </div>
+        {% if isOverview %}
+            <div class="admin-apartment-summary">
+                <article class="admin-apartment-summary-card">
+                    <span class="admin-apartment-summary-label">À faire maintenant</span>
+                    <strong>{{ activeCheckouts|length > 0 ? 'Suivre le check-out déjà ouvert' : 'Créer le prochain check-out' }}</strong>
+                </article>
+                <article class="admin-apartment-summary-card">
+                    <span class="admin-apartment-summary-label">Équipe assignée</span>
+                    <strong>{{ apartment.assignedEmployees|length > 0 ? apartment.assignedEmployees|length ~ ' employé' ~ (apartment.assignedEmployees|length > 1 ? 's' : '') : 'Aucun employé assigné' }}</strong>
+                </article>
+                <article class="admin-apartment-summary-card">
+                    <span class="admin-apartment-summary-label">Anomalies ouvertes</span>
+                    <strong>{{ anomalyCount }} anomalie{{ anomalyCount > 1 ? 's' : '' }}</strong>
+                </article>
+            </div>
+        {% endif %}
 
         {% if isOverview %}
             <section class="admin-detail-panel">

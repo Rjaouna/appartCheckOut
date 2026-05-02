@@ -3555,6 +3555,10 @@ body.nav-compact .floating-main-menu-button {
     align-items: start;
 }
 
+.admin-apartment-workspace.is-section-only {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .admin-apartment-nav {
     position: sticky;
     top: 96px;

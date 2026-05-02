@@ -1,58 +1,60 @@
-<section class="page-head apartment-hero">
-    <div class="apartment-hero-main">
-        <div class="apartment-hero-copy">
-            <span class="eyebrow apartment-hero-eyebrow">Appartement</span>
-            <div class="inline-title-edit apartment-hero-title-row">
-                <h1>{{ apartment.name }}</h1>
-                <button
-                    class="icon-action-button apartment-hero-edit-button"
-                    type="button"
-                    aria-label="Modifier le nom de l’appartement"
-                    title="Modifier le nom de l’appartement"
-                    data-edit-target="#apartment-name-edit-form"
-                >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                        <path d="M13.3 6.6 16 9.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                        <path d="M15.2 4.7a1.9 1.9 0 0 1 2.6 0l1.5 1.5a1.9 1.9 0 0 1 0 2.6l-1.1 1.1-4.1-4.1 1.1-1.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="apartment-hero-address-card">
-                <div class="apartment-hero-address-copy">
-                    <span class="apartment-hero-address-label">Adresse complète</span>
-                    <p>
-                        <a class="address-link apartment-hero-address-link" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">
-                            {{ apartment.fullAddress }}
-                        </a>
-                    </p>
+{% if currentSection is not defined or currentSection is null %}
+    <section class="page-head apartment-hero">
+        <div class="apartment-hero-main">
+            <div class="apartment-hero-copy">
+                <span class="eyebrow apartment-hero-eyebrow">Appartement</span>
+                <div class="inline-title-edit apartment-hero-title-row">
+                    <h1>{{ apartment.name }}</h1>
+                    <button
+                        class="icon-action-button apartment-hero-edit-button"
+                        type="button"
+                        aria-label="Modifier le nom de l’appartement"
+                        title="Modifier le nom de l’appartement"
+                        data-edit-target="#apartment-name-edit-form"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                            <path d="M13.3 6.6 16 9.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M15.2 4.7a1.9 1.9 0 0 1 2.6 0l1.5 1.5a1.9 1.9 0 0 1 0 2.6l-1.1 1.1-4.1-4.1 1.1-1.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="apartment-hero-address-card">
+                    <div class="apartment-hero-address-copy">
+                        <span class="apartment-hero-address-label">Adresse complète</span>
+                        <p>
+                            <a class="address-link apartment-hero-address-link" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">
+                                {{ apartment.fullAddress }}
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </div>
+
+            <div class="head-actions apartment-hero-actions">
+                <a class="secondary-button apartment-hero-action" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies{% if anomalyCount > 0 %} ({{ anomalyCount }}){% endif %}</a>
+                <a class="secondary-button apartment-hero-action" href="{{ path('admin_apartments') }}">Retour à la liste</a>
+            </div>
         </div>
 
-        <div class="head-actions apartment-hero-actions">
-            <a class="secondary-button apartment-hero-action" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies{% if anomalyCount > 0 %} ({{ anomalyCount }}){% endif %}</a>
-            <a class="secondary-button apartment-hero-action" href="{{ path('admin_apartments') }}">Retour à la liste</a>
-        </div>
-    </div>
-
-    <form
-        id="apartment-name-edit-form"
-        method="post"
-        action="{{ path('admin_apartment_name_update', {id: apartment.id}) }}"
-        class="editable-field-form is-collapsed apartment-name-edit-form apartment-hero-edit-form"
-        data-async-form
-        data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
-    >
-        {% if currentSection is defined and currentSection %}
-            <input type="hidden" name="section" value="{{ currentSection }}">
-        {% endif %}
-        <input type="text" name="name" value="{{ apartment.name }}" required>
-        <div class="editable-field-actions">
-            <button class="secondary-button" type="submit">Enregistrer</button>
-        </div>
-    </form>
-</section>
+        <form
+            id="apartment-name-edit-form"
+            method="post"
+            action="{{ path('admin_apartment_name_update', {id: apartment.id}) }}"
+            class="editable-field-form is-collapsed apartment-name-edit-form apartment-hero-edit-form"
+            data-async-form
+            data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
+        >
+            {% if currentSection is defined and currentSection %}
+                <input type="hidden" name="section" value="{{ currentSection }}">
+            {% endif %}
+            <input type="text" name="name" value="{{ apartment.name }}" required>
+            <div class="editable-field-actions">
+                <button class="secondary-button" type="submit">Enregistrer</button>
+            </div>
+        </form>
+    </section>
+{% endif %}
 
 <section id="apartment-structure">
     {% include 'admin/_apartment_structure.html.twig' %}
