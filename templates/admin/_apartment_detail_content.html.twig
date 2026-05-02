@@ -2,22 +2,19 @@
     <section class="page-head apartment-hero">
         <div class="apartment-hero-main">
             <div class="apartment-hero-copy">
-                <span class="eyebrow apartment-hero-eyebrow">Appartement</span>
-                <div class="inline-title-edit apartment-hero-title-row">
-                    <h1>{{ apartment.name }}</h1>
-                    <button
-                        class="icon-action-button apartment-hero-edit-button"
-                        type="button"
-                        aria-label="Modifier le nom de l’appartement"
-                        title="Modifier le nom de l’appartement"
-                        data-apartment-name-modal-trigger
-                    >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                            <path d="M13.3 6.6 16 9.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                            <path d="M15.2 4.7a1.9 1.9 0 0 1 2.6 0l1.5 1.5a1.9 1.9 0 0 1 0 2.6l-1.1 1.1-4.1-4.1 1.1-1.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
+                <span class="eyebrow apartment-hero-eyebrow">Appartement · {{ apartment.name }}</span>
+                <div class="apartment-hero-title-row">
+                    <h1>
+                        <button
+                            class="apartment-hero-name-link"
+                            type="button"
+                            aria-label="Modifier le nom de l’appartement"
+                            title="Modifier le nom de l’appartement"
+                            data-apartment-name-modal-trigger
+                        >
+                            {{ apartment.name }}
+                        </button>
+                    </h1>
                 </div>
                 <div class="apartment-hero-address-card">
                     <div class="apartment-hero-address-copy">
@@ -28,27 +25,72 @@
                             </a>
                         </p>
                     </div>
-                    <form
-                        method="post"
-                        action="{{ path('admin_apartment_priority', {id: apartment.id}) }}"
-                        class="apartment-hero-priority-form"
-                        data-async-form
-                        data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
-                    >
-                        {% if currentSection is defined and currentSection %}
-                            <input type="hidden" name="section" value="{{ currentSection }}">
-                        {% endif %}
-                        <input type="hidden" name="isInventoryPriority" value="{{ apartment.isInventoryPriority ? '0' : '1' }}">
-                     
-                        <button class="{{ apartment.isInventoryPriority ? 'secondary-button' : 'primary-button' }} apartment-hero-priority-button" type="submit">
-                            {{ apartment.isInventoryPriority ? 'Retirer la priorité' : 'Mettre en priorité' }}
-                        </button>
-                    </form>
+                    <div class="apartment-hero-meta-list">
+                        {% set assignedEmployees = apartment.assignedEmployees|default([]) %}
+                        {% set leadEmployee = assignedEmployees|length > 0 ? assignedEmployees|first : null %}
+                        {% set extraManagers = assignedEmployees|length > 1 ? assignedEmployees|slice(1) : [] %}
+
+                        <div class="apartment-hero-meta-item">
+                            <span class="apartment-hero-address-label">Gérant</span>
+                            {% if leadEmployee %}
+                                <div class="apartment-hero-manager-block">
+                                    <a class="apartment-hero-manager-link" href="{{ path('admin_user_show', {id: leadEmployee.id}) }}">
+                                        {{ leadEmployee.fullName }}
+                                    </a>
+                                    {% if extraManagers|length > 0 %}
+                                        <button
+                                            class="apartment-hero-manager-more"
+                                            type="button"
+                                            data-manager-list-toggle
+                                            data-target="#apartment-manager-list"
+                                            aria-expanded="false"
+                                        >
+                                            (+{{ extraManagers|length }} autre{{ extraManagers|length > 1 ? 's' : '' }})
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                {% if extraManagers|length > 0 %}
+                                    <div id="apartment-manager-list" class="apartment-hero-manager-list is-collapsed" hidden>
+                                        {% for employee in extraManagers %}
+                                            <a href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <span class="muted">Aucun gérant assigné</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="apartment-hero-meta-item">
+                            <span class="apartment-hero-address-label">Code de la porte</span>
+                            <strong>{{ apartment.keyBoxCode ?: 'Non renseigné' }}</strong>
+                        </div>
+
+                        <div class="apartment-hero-meta-item">
+                            <a class="apartment-hero-anomaly-link" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">
+                                {{ anomalyCount }} anomal{{ anomalyCount > 1 ? 'ies' : 'ie' }} sur ce logement
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="head-actions apartment-hero-actions">
-                <a class="secondary-button apartment-hero-action" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Voir les anomalies{% if anomalyCount > 0 %} ({{ anomalyCount }}){% endif %}</a>
+                <form
+                    method="post"
+                    action="{{ path('admin_apartment_priority', {id: apartment.id}) }}"
+                    class="apartment-hero-priority-form"
+                    data-async-form
+                    data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
+                >
+                    {% if currentSection is defined and currentSection %}
+                        <input type="hidden" name="section" value="{{ currentSection }}">
+                    {% endif %}
+                    <input type="hidden" name="isInventoryPriority" value="{{ apartment.isInventoryPriority ? '0' : '1' }}">
+                    <button class="{{ apartment.isInventoryPriority ? 'secondary-button' : 'primary-button' }} apartment-hero-priority-button" type="submit">
+                        {{ apartment.isInventoryPriority ? 'Retirer la priorité' : 'Mettre en priorité' }}
+                    </button>
+                </form>
                 <a class="secondary-button apartment-hero-action" href="{{ path('admin_apartments') }}">Retour à la liste</a>
             </div>
         </div>

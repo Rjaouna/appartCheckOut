@@ -259,13 +259,22 @@ select {
     letter-spacing: -0.04em;
 }
 
-.apartment-hero-edit-button {
-    width: 46px;
-    height: 46px;
-    border: 1px solid rgba(255, 56, 92, 0.18);
-    background: rgba(255, 255, 255, 0.9);
+.apartment-hero-name-link {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+    cursor: pointer;
+}
+
+.apartment-hero-name-link:hover,
+.apartment-hero-name-link:focus-visible {
     color: var(--accent-dark);
-    box-shadow: 0 10px 24px rgba(255, 56, 92, 0.12);
 }
 
 .apartment-hero-address-card {
@@ -280,6 +289,16 @@ select {
 }
 
 .apartment-hero-address-copy {
+    display: grid;
+    gap: 6px;
+}
+
+.apartment-hero-meta-list {
+    display: grid;
+    gap: 12px;
+}
+
+.apartment-hero-meta-item {
     display: grid;
     gap: 6px;
 }
@@ -299,35 +318,68 @@ select {
     color: var(--text);
 }
 
-.apartment-hero-priority-form {
+.apartment-hero-manager-block {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.apartment-hero-priority-copy {
-    display: grid;
-    gap: 4px;
-}
-
-.apartment-hero-priority-label {
-    font-size: 0.82rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-}
-
-.apartment-hero-priority-copy strong {
-    font-size: 1rem;
-    line-height: 1.35;
+.apartment-hero-manager-link,
+.apartment-hero-anomaly-link {
+    width: fit-content;
     color: var(--text);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.apartment-hero-manager-link:hover,
+.apartment-hero-manager-link:focus-visible,
+.apartment-hero-anomaly-link:hover,
+.apartment-hero-anomaly-link:focus-visible {
+    color: var(--accent-dark);
+}
+
+.apartment-hero-manager-more {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.94rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.apartment-hero-manager-list {
+    display: grid;
+    gap: 6px;
+}
+
+.apartment-hero-manager-list.is-collapsed {
+    display: none;
+}
+
+.apartment-hero-manager-list a {
+    width: fit-content;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.apartment-hero-manager-list a:hover,
+.apartment-hero-manager-list a:focus-visible {
+    color: var(--accent-dark);
+    text-decoration: underline;
+}
+
+.apartment-hero-priority-form {
+    width: 100%;
 }
 
 .apartment-hero-priority-button {
+    width: 100%;
     white-space: nowrap;
 }
 

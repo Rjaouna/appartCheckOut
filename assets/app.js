@@ -495,6 +495,20 @@ document.addEventListener('click', (event) => {
         return;
     }
 
+    const managerListToggle = event.target instanceof Element ? event.target.closest('[data-manager-list-toggle]') : null;
+    if (managerListToggle instanceof HTMLElement) {
+        event.preventDefault();
+        const targetSelector = managerListToggle.getAttribute('data-target');
+        const target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (target instanceof HTMLElement) {
+            const willExpand = target.hidden || target.classList.contains('is-collapsed');
+            target.hidden = !willExpand;
+            target.classList.toggle('is-collapsed', !willExpand);
+            managerListToggle.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+        }
+        return;
+    }
+
     const addAccessStepTrigger = event.target instanceof Element ? event.target.closest('[data-add-access-step]') : null;
     if (addAccessStepTrigger instanceof HTMLElement) {
         event.preventDefault();
