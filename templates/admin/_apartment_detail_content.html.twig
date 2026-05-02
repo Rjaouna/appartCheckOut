@@ -42,8 +42,11 @@
         action="{{ path('admin_apartment_name_update', {id: apartment.id}) }}"
         class="editable-field-form is-collapsed apartment-name-edit-form apartment-hero-edit-form"
         data-async-form
-        data-update-target="#apartment-detail-root"
+        data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
     >
+        {% if currentSection is defined and currentSection %}
+            <input type="hidden" name="section" value="{{ currentSection }}">
+        {% endif %}
         <input type="text" name="name" value="{{ apartment.name }}" required>
         <div class="editable-field-actions">
             <button class="secondary-button" type="submit">Enregistrer</button>

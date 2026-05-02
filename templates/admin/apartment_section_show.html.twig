@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ apartment.name }}{% endblock %}
+
+{% block body %}
+    <section id="apartment-section-root">
+        {% include 'admin/_apartment_detail_content.html.twig' %}
+    </section>
+{% endblock %}

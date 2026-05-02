@@ -30,9 +30,12 @@
         method="post"
         action="{{ path('admin_apartment_field_update', {id: apartment.id}) }}"
         data-async-form
-        data-update-target="#apartment-detail-root"
+        data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
     >
         <input type="hidden" name="field" value="{{ field }}">
+        {% if currentSection is defined and currentSection %}
+            <input type="hidden" name="section" value="{{ currentSection }}">
+        {% endif %}
         {% if multiline %}
             <textarea name="value" rows="4">{{ rawValue }}</textarea>
         {% else %}

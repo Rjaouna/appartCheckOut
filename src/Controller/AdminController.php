@@ -30,6 +30,8 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/admin')]
 class AdminController extends AbstractController
 {
+    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'assignment', 'rooms', 'anomalies', 'settings'];
+
     #[Route('', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(EntityManagerInterface $entityManager): Response
     {
@@ -428,6 +430,17 @@ class AdminController extends AbstractController
         return $this->render('admin/apartment_show.html.twig', $this->buildApartmentDetailData($apartment, $entityManager));
     }
 
+    #[Route('/apartments/{id}/details/{section}', name: 'admin_apartment_section', methods: ['GET'])]
+    public function showApartmentSection(Apartment $apartment, string $section, EntityManagerInterface $entityManager): Response
+    {
+        $currentSection = $this->normalizeApartmentDetailSection($section);
+        if ($currentSection === null) {
+            throw $this->createNotFoundException('Section appartement introuvable.');
+        }
+
+        return $this->render('admin/apartment_section_show.html.twig', $this->buildApartmentDetailData($apartment, $entityManager, $currentSection));
+    }
+
     #[Route('/apartments/{id}/name', name: 'admin_apartment_name_update', methods: ['POST'])]
     public function updateApartmentName(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -439,7 +452,7 @@ class AdminController extends AbstractController
         $apartment->setName($name);
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Nom de l appartement mis a jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Nom de l appartement mis a jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/field', name: 'admin_apartment_field_update', methods: ['POST'])]
@@ -458,7 +471,7 @@ class AdminController extends AbstractController
             ], 422);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Information appartement mise a jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Information appartement mise a jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/status', name: 'admin_apartment_status', methods: ['POST'])]
@@ -475,7 +488,7 @@ class AdminController extends AbstractController
             ]);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Statut de l appartement mis a jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Statut de l appartement mis a jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/delete', name: 'admin_apartment_delete', methods: ['POST'])]
@@ -514,7 +527,7 @@ class AdminController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Affectations mises à jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Affectations mises à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/priority', name: 'admin_apartment_priority', methods: ['POST'])]
@@ -525,7 +538,7 @@ class AdminController extends AbstractController
         $apartment->setInventoryDueAt(is_string($due) && $due !== '' ? new \DateTimeImmutable($due) : null);
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Priorité inventaire mise à jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Priorité inventaire mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/rooms', name: 'admin_room_create', methods: ['POST'])]
@@ -544,7 +557,7 @@ class AdminController extends AbstractController
         $entityManager->persist($room);
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece ajoutee.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece ajoutee.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/catalog', name: 'admin_catalog_create', methods: ['POST'])]
@@ -562,7 +575,7 @@ class AdminController extends AbstractController
 
         $apartment = $entityManager->getRepository(Apartment::class)->find((int) $request->request->get('apartmentId'));
         if ($request->isXmlHttpRequest() && $apartment instanceof Apartment) {
-            return $this->apartmentDetailResponse($apartment, $entityManager, 'Catalogue mis a jour.');
+            return $this->apartmentDetailResponse($apartment, $entityManager, 'Catalogue mis a jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
         }
 
         return $this->redirectToRoute('admin_apartment_show', ['id' => (int) $request->request->get('apartmentId')]);
@@ -594,7 +607,7 @@ class AdminController extends AbstractController
         $entityManager->persist($equipment);
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($room->getApartment(), $entityManager, 'Equipement ajoute.');
+        return $this->apartmentDetailResponse($room->getApartment(), $entityManager, 'Equipement ajoute.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/rooms/{id}/delete', name: 'admin_room_delete', methods: ['POST'])]
@@ -623,7 +636,7 @@ class AdminController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece supprimee.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece supprimee.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/room-equipments/{id}/delete', name: 'admin_room_equipment_delete', methods: ['POST'])]
@@ -645,7 +658,7 @@ class AdminController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Equipement supprime de la piece.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Equipement supprime de la piece.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/checkouts', name: 'admin_checkout_create', methods: ['POST'])]
@@ -677,7 +690,7 @@ class AdminController extends AbstractController
             ]);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out créé et assigné.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out créé et assigné.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/checkouts/{id}', name: 'admin_checkout_show', methods: ['GET'])]
@@ -798,7 +811,7 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Date du check-out mise a jour.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Date du check-out mise a jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/checkouts/{id}/cancel', name: 'admin_checkout_cancel', methods: ['POST'])]
@@ -829,12 +842,12 @@ class AdminController extends AbstractController
             ]);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out annulé.');
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Check-out annulé.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
-    private function apartmentDetailResponse(Apartment $apartment, EntityManagerInterface $entityManager, string $message): JsonResponse
+    private function apartmentDetailResponse(Apartment $apartment, EntityManagerInterface $entityManager, string $message, ?string $currentSection = null): JsonResponse
     {
-        $html = $this->renderView('admin/_apartment_detail_content.html.twig', $this->buildApartmentDetailData($apartment, $entityManager));
+        $html = $this->renderView('admin/_apartment_detail_content.html.twig', $this->buildApartmentDetailData($apartment, $entityManager, $currentSection));
 
         return new JsonResponse([
             'success' => true,
@@ -878,12 +891,15 @@ class AdminController extends AbstractController
     /**
      * @return array<string, mixed>
      */
-    private function buildApartmentDetailData(Apartment $apartment, EntityManagerInterface $entityManager): array
+    private function buildApartmentDetailData(Apartment $apartment, EntityManagerInterface $entityManager, ?string $currentSection = null): array
     {
         $anomalies = $entityManager->getRepository(Anomaly::class)->findBy(['apartment' => $apartment], ['createdAt' => 'DESC']);
+        $normalizedSection = $this->normalizeApartmentDetailSection($currentSection);
 
         return [
             'apartment' => $apartment,
+            'currentSection' => $normalizedSection,
+            'detailUpdateTarget' => $normalizedSection === null ? '#apartment-detail-root' : '#apartment-section-root',
             'employees' => $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
             'catalog' => $entityManager->getRepository(EquipmentCatalog::class)->findBy(['isActive' => true], ['roomType' => 'ASC', 'name' => 'ASC']),
             'activeCheckouts' => $entityManager->createQueryBuilder()
@@ -920,6 +936,15 @@ class AdminController extends AbstractController
             'canDeleteApartment' => !$this->hasOpenCheckout($apartment, $entityManager)
                 && !$this->hasOpenAnomalies($apartment, $entityManager),
         ];
+    }
+
+    private function normalizeApartmentDetailSection(?string $section): ?string
+    {
+        if (!is_string($section) || $section === '') {
+            return null;
+        }
+
+        return in_array($section, self::APARTMENT_DETAIL_SECTIONS, true) ? $section : null;
     }
 
     private function hasOpenCheckout(Apartment $apartment, EntityManagerInterface $entityManager): bool
