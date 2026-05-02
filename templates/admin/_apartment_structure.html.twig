@@ -317,13 +317,9 @@
 
                 <section class="admin-detail-focus-card">
                     <div class="admin-detail-focus-head">
-                        <div>
-                            <span class="admin-detail-focus-kicker">Création</span>
-                            <h3>Ajouter des étapes d’accès</h3>
-                        </div>
+                  
                         <button class="primary-button" type="button" data-add-access-step data-target-list="#apartment-access-step-draft-list" data-template="#apartment-access-step-template">Ajouter une étape</button>
                     </div>
-                    <p class="muted">Chaque étape peut contenir un texte explicatif et une photo pour guider le locataire visuellement.</p>
 
                     <div id="apartment-access-step-draft-list" class="apartment-access-step-stack">
                         {% for step in apartment.orderedAccessSteps %}
