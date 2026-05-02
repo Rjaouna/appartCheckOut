@@ -2712,20 +2712,27 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .admin-dashboard-launch-head {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+    text-align: center;
 }
 
 .admin-dashboard-launch-copy {
     display: grid;
     gap: 4px;
     min-width: 0;
+    justify-items: center;
 }
 
 .admin-dashboard-launch-copy strong,
 .admin-dashboard-launch-copy small {
     margin: 0;
+}
+
+.admin-dashboard-launch-copy strong {
+    font-size: 1.08rem;
+    line-height: 1.3;
 }
 
 .admin-dashboard-launch-copy small {
@@ -3541,6 +3548,50 @@ body.nav-compact .floating-main-menu-button {
     align-items: start;
 }
 
+.admin-apartment-workspace {
+    display: grid;
+    grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.admin-apartment-nav {
+    position: sticky;
+    top: 96px;
+    display: grid;
+    gap: 16px;
+}
+
+.admin-apartment-nav-head,
+.admin-apartment-summary-card,
+.admin-detail-panel,
+.admin-detail-focus-card {
+    border: 1px solid rgba(34, 34, 34, 0.08);
+}
+
+.admin-apartment-nav-head {
+    display: grid;
+    gap: 8px;
+    padding: 22px;
+    border-radius: 26px;
+    background: linear-gradient(180deg, #fff 0%, #fff8fb 100%);
+}
+
+.admin-apartment-nav-head h2,
+.admin-apartment-nav-head p {
+    margin: 0;
+}
+
+.admin-apartment-nav-head p {
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+.admin-apartment-nav-grid {
+    display: grid;
+    gap: 14px;
+}
+
 .admin-detail-accordion-stack {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3549,7 +3600,7 @@ body.nav-compact .floating-main-menu-button {
 
 .admin-detail-entry-card {
     display: grid;
-    gap: 8px;
+    gap: 10px;
     padding: 20px 22px;
     text-align: left;
     border: 1px solid transparent;
@@ -3557,12 +3608,17 @@ body.nav-compact .floating-main-menu-button {
     background: linear-gradient(135deg, #ff5a76 0%, #ff385c 55%, #df3154 100%);
     color: #fff;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .admin-detail-entry-card:hover {
     transform: translateY(-1px);
-    box-shadow: 0 16px 32px rgba(255, 56, 92, 0.2);
+}
+
+.admin-detail-entry-card.is-active {
+    border-color: rgba(255, 255, 255, 0.75);
+    outline: 2px solid rgba(255, 56, 92, 0.18);
+    outline-offset: 1px;
 }
 
 .admin-detail-entry-card strong,
@@ -3570,10 +3626,101 @@ body.nav-compact .floating-main-menu-button {
     margin: 0;
 }
 
+.admin-detail-entry-card strong {
+    font-size: 1.12rem;
+    line-height: 1.25;
+}
+
 .admin-detail-entry-card p {
-    color: rgba(255, 255, 255, 0.88);
+    color: rgba(255, 255, 255, 0.9);
     line-height: 1.45;
-    font-size: 0.96rem;
+    font-size: 0.95rem;
+}
+
+.admin-detail-entry-card-soft {
+    background: linear-gradient(180deg, #fff 0%, #fcfbf9 100%);
+    color: var(--text);
+    border-color: rgba(34, 34, 34, 0.08);
+}
+
+.admin-detail-entry-card-soft p {
+    color: var(--muted);
+}
+
+.admin-detail-entry-card-soft .admin-detail-entry-kicker {
+    background: #fff4f7;
+    color: var(--accent-dark);
+}
+
+.admin-detail-entry-card-danger {
+    background: linear-gradient(180deg, #fff7f5 0%, #fff 100%);
+    color: var(--text);
+    border-color: rgba(180, 35, 24, 0.12);
+}
+
+.admin-detail-entry-card-danger p {
+    color: var(--muted);
+}
+
+.admin-detail-entry-card-danger .admin-detail-entry-kicker {
+    background: #fde7e4;
+    color: #b42318;
+}
+
+.admin-detail-entry-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.admin-detail-entry-icon,
+.admin-detail-entry-metric {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 16px;
+}
+
+.admin-detail-entry-icon {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.admin-detail-entry-card-soft .admin-detail-entry-icon {
+    background: #fff1f4;
+    color: var(--accent-dark);
+}
+
+.admin-detail-entry-icon-warning {
+    background: #fff3df;
+    color: #c66b00;
+}
+
+.admin-detail-entry-icon-danger {
+    background: #fde7e4;
+    color: #b42318;
+}
+
+.admin-detail-entry-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.admin-detail-entry-metric {
+    padding: 0 12px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.92rem;
+}
+
+.admin-detail-entry-card-soft .admin-detail-entry-metric,
+.admin-detail-entry-card-danger .admin-detail-entry-metric {
+    background: #f6f3ef;
+    color: var(--text);
 }
 
 .admin-detail-entry-kicker {
@@ -3583,15 +3730,50 @@ body.nav-compact .floating-main-menu-button {
     width: fit-content;
     padding: 7px 12px;
     border-radius: 999px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 800;
     background: rgba(255, 255, 255, 0.14);
     color: #fff;
 }
 
+.admin-apartment-panels {
+    display: grid;
+    gap: 18px;
+}
+
+.admin-apartment-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-apartment-summary-card {
+    display: grid;
+    gap: 8px;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #fff 0%, #fcfbf9 100%);
+}
+
+.admin-apartment-summary-card strong,
+.admin-apartment-summary-label {
+    margin: 0;
+}
+
+.admin-apartment-summary-label {
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.admin-apartment-summary-card strong {
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
 .admin-detail-panel {
     display: grid;
-    gap: 16px;
+    gap: 18px;
     padding: 22px;
     border-radius: 26px;
     background: linear-gradient(180deg, #fff 0%, #fcfbf9 100%);
@@ -3625,15 +3807,88 @@ body.nav-compact .floating-main-menu-button {
     font-size: 1.45rem;
 }
 
+.admin-detail-panel-head p {
+    color: var(--muted);
+    line-height: 1.55;
+}
+
 .admin-detail-back-button {
     background: linear-gradient(135deg, #20324f 0%, #0f62fe 100%);
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 14px 28px rgba(15, 98, 254, 0.18);
 }
 
 .admin-detail-back-button:hover {
     color: #fff;
+}
+
+.admin-detail-section-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.admin-detail-focus-card {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+    border-radius: 24px;
+    background: #fff;
+}
+
+.admin-detail-focus-card-primary {
+    background: linear-gradient(180deg, #fff6f8 0%, #fff 100%);
+}
+
+.admin-detail-focus-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.admin-detail-focus-head h3,
+.admin-detail-focus-head p {
+    margin: 0;
+}
+
+.admin-detail-focus-head h3 {
+    font-size: 1.15rem;
+}
+
+.admin-detail-focus-kicker {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #fff1f4;
+    color: var(--accent-dark);
+    font-size: 0.78rem;
+    font-weight: 800;
+    width: fit-content;
+    margin-bottom: 8px;
+}
+
+.admin-detail-inline-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.admin-detail-subsection {
+    display: grid;
+    gap: 12px;
+}
+
+.admin-detail-form-card {
+    display: grid;
+    gap: 14px;
+}
+
+.admin-detail-info-group {
+    display: grid;
+    gap: 8px;
 }
 
 .admin-dual-stack {
@@ -3832,9 +4087,16 @@ body.nav-compact .floating-main-menu-button {
         grid-template-columns: 1fr;
     }
 
+    .admin-apartment-workspace,
+    .admin-apartment-summary,
+    .admin-detail-section-grid,
     .admin-detail-accordion-stack,
     .admin-dual-stack {
         grid-template-columns: 1fr;
+    }
+
+    .admin-apartment-nav {
+        position: static;
     }
 
     .admin-home-stats-grid,
@@ -4041,6 +4303,20 @@ body.nav-compact .floating-main-menu-button {
     .admin-users-layout,
     .admin-users-grid {
         grid-template-columns: 1fr;
+    }
+
+    .admin-apartment-nav-head,
+    .admin-detail-entry-card,
+    .admin-detail-panel,
+    .admin-detail-focus-card,
+    .admin-apartment-summary-card {
+        padding: 18px;
+        border-radius: 22px;
+    }
+
+    .admin-apartment-nav-grid,
+    .admin-apartment-summary {
+        gap: 12px;
     }
 
     .admin-user-summary {

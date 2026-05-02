@@ -16,15 +16,18 @@ restoreFloatingMenuPosition();
 syncTopBarOnScroll();
 registerServiceWorker();
 setupInstallPrompt();
+syncPanelTriggers(document);
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         startDashboardPolling();
         syncTopBarOnScroll();
+        syncPanelTriggers(document);
     });
 } else {
     startDashboardPolling();
     syncTopBarOnScroll();
+    syncPanelTriggers(document);
 }
 
 document.addEventListener('submit', async (event) => {
@@ -268,6 +271,7 @@ document.addEventListener('click', (event) => {
             }
 
             target.classList.remove('is-collapsed');
+            setActivePanelTrigger(groupName, targetSelector);
             target.scrollIntoView({behavior: 'smooth', block: 'start'});
         }
         return;
@@ -279,6 +283,7 @@ document.addEventListener('click', (event) => {
         const target = targetSelector ? document.querySelector(targetSelector) : null;
         if (target instanceof HTMLElement) {
             target.classList.add('is-collapsed');
+            syncPanelTriggers(document);
         }
         return;
     }
@@ -664,9 +669,48 @@ function restoreUiState(targetSelector, uiState) {
             });
         }
 
+        syncPanelTriggers(target);
+
         if (typeof uiState.scrollY === 'number') {
             window.scrollTo({top: uiState.scrollY});
         }
+    });
+}
+
+function setActivePanelTrigger(groupName, targetSelector) {
+    if (!groupName || !targetSelector) {
+        return;
+    }
+
+    document.querySelectorAll(`[data-panel-open][data-panel-group="${groupName}"]`).forEach((trigger) => {
+        if (!(trigger instanceof HTMLElement)) {
+            return;
+        }
+
+        trigger.classList.toggle('is-active', trigger.getAttribute('data-panel-open') === targetSelector);
+    });
+}
+
+function syncPanelTriggers(scope = document) {
+    if (!scope || typeof scope.querySelectorAll !== 'function') {
+        return;
+    }
+
+    const processedGroups = new Set();
+    scope.querySelectorAll('[data-panel-name][data-panel-group]').forEach((panel) => {
+        if (!(panel instanceof HTMLElement)) {
+            return;
+        }
+
+        const groupName = panel.getAttribute('data-panel-group');
+        if (!groupName || processedGroups.has(groupName)) {
+            return;
+        }
+
+        processedGroups.add(groupName);
+        const openPanel = document.querySelector(`[data-panel-name][data-panel-group="${groupName}"]:not(.is-collapsed)`);
+        const targetSelector = openPanel instanceof HTMLElement ? `#${openPanel.id}` : null;
+        setActivePanelTrigger(groupName, targetSelector);
     });
 }
 
