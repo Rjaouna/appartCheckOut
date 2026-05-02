@@ -9,7 +9,7 @@
         {% for apartment in apartments %}
             {% set activeManagers = apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
             {% set managerListId = 'admin-apartment-managers-' ~ apartment.id %}
-            {% set accessCode = apartment.buildingAccessCode ?: apartment.keyBoxCode ?: 'Non renseigné' %}
+            {% set accessCode = apartment.keyBoxCode ?: apartment.buildingAccessCode ?: 'Non renseigné' %}
             <article class="employee-card admin-apartment-card admin-home-card {{ apartment.status.value != 'active' ? 'is-dimmed' : '' }}" data-click-url="{{ path('admin_apartment_show', {id: apartment.id}) }}">
                 <div class="apartment-topline">
                     <div class="card-top-actions">

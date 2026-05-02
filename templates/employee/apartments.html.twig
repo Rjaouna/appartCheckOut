@@ -16,7 +16,7 @@
         {% for apartment in apartments %}
             {% set activeManagers = apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
             {% set managerListId = 'employee-apartment-managers-' ~ apartment.id %}
-            {% set accessCode = apartment.buildingAccessCode ?: apartment.keyBoxCode ?: 'Non renseigné' %}
+            {% set accessCode = apartment.keyBoxCode ?: apartment.buildingAccessCode ?: 'Non renseigné' %}
             <article class="employee-card employee-apartment-card" data-click-url="{{ path('employee_apartment_show', {id: apartment.id}) }}">
                 <div class="employee-apartment-head">
                     <h2 class="employee-apartment-card-title">{{ apartment.name }}</h2>
