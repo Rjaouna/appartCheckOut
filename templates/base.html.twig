@@ -79,10 +79,10 @@
             </svg>
         </button>
 
-        <div id="toast-stack" class="toast-stack" aria-live="polite">
+        <div id="toast-stack" class="app-toast-stack" aria-live="polite">
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="toast {{ label in ['error', 'danger'] ? 'toast-error' : '' }}">{{ message }}</div>
+                    <div class="app-toast {{ label in ['error', 'danger'] ? 'app-toast-error' : '' }}">{{ message }}</div>
                 {% endfor %}
             {% endfor %}
         </div>

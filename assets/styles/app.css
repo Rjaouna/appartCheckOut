@@ -4047,7 +4047,7 @@ body.nav-compact .floating-main-menu-button {
     background: #fff;
 }
 
-.toast-stack {
+.app-toast-stack {
     position: fixed;
     right: 20px;
     bottom: 20px;
@@ -4056,7 +4056,9 @@ body.nav-compact .floating-main-menu-button {
     z-index: 50;
 }
 
-.toast {
+.app-toast {
+    display: block;
+    opacity: 1;
     min-width: 220px;
     max-width: 320px;
     padding: 14px 16px;
@@ -4066,11 +4068,11 @@ body.nav-compact .floating-main-menu-button {
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.toast-error {
+.app-toast-error {
     background: #b42318;
 }
 
-.toast-hide {
+.app-toast-hide {
     opacity: 0;
     transform: translateY(10px);
 }

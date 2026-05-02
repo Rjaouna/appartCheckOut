@@ -400,12 +400,12 @@ function showToast(message, type = 'success') {
     }
 
     const toast = document.createElement('div');
-    toast.className = `toast ${type === 'error' ? 'toast-error' : ''}`;
+    toast.className = `app-toast ${type === 'error' ? 'app-toast-error' : ''}`;
     toast.textContent = message;
     stack.appendChild(toast);
 
     window.setTimeout(() => {
-        toast.classList.add('toast-hide');
+        toast.classList.add('app-toast-hide');
         window.setTimeout(() => toast.remove(), 300);
     }, 2600);
 }
