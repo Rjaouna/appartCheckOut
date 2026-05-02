@@ -3147,7 +3147,7 @@ body.nav-compact .floating-main-menu-button {
 
 .admin-dashboard-title-link {
     font-weight: 800;
-    color: var(--accent-dark);
+    color: inherit;
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 5px;
