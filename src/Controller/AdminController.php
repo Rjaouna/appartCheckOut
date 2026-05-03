@@ -614,7 +614,7 @@ class AdminController extends AbstractController
     #[Route('/apartments/{id}/delete', name: 'admin_apartment_delete', methods: ['POST'])]
     public function deleteApartment(Apartment $apartment, EntityManagerInterface $entityManager): JsonResponse
     {
-        $hasCheckouts = $this->hasOpenCheckout($apartment, $entityManager);
+        $hasCheckouts = $this->hasCheckoutHistory($apartment, $entityManager);
         $hasAnomalies = $this->hasOpenAnomalies($apartment, $entityManager);
 
         if ($hasCheckouts || $hasAnomalies) {
@@ -693,7 +693,8 @@ class AdminController extends AbstractController
         Apartment $apartment,
         Request $request,
         EntityManagerInterface $entityManager,
-        ApartmentReservationMessenger $reservationMessenger
+        ApartmentReservationMessenger $reservationMessenger,
+        CheckoutManager $checkoutManager
     ): JsonResponse {
         /** @var User|null $actor */
         $actor = $this->getUser();
@@ -712,12 +713,34 @@ class AdminController extends AbstractController
 
         $reservation->setCreatedBy($actor);
         $apartment->addReservation($reservation);
+
+        $checkoutMessage = null;
+        $scheduledCheckoutAt = $reservation->getDepartureDate()?->setTime(11, 0);
+        $assignedEmployee = $this->resolveReservationCheckoutAssignee($apartment, $actor);
+        if ($assignedEmployee instanceof User && $scheduledCheckoutAt instanceof \DateTimeImmutable) {
+            $existingCheckout = $this->findCheckoutConflict($apartment, $scheduledCheckoutAt, $entityManager);
+            if ($existingCheckout instanceof Checkout) {
+                $checkoutMessage = 'Un check-out était déjà programmé pour la date de départ.';
+            } else {
+                $reservation->setLinkedCheckout(
+                    $checkoutManager->createCheckout($apartment, $assignedEmployee, 'normal', $scheduledCheckoutAt)
+                );
+                $checkoutMessage = 'Le check-out de fin de séjour a été programmé automatiquement.';
+            }
+        } elseif ($scheduledCheckoutAt instanceof \DateTimeImmutable) {
+            $checkoutMessage = 'Aucun employé terrain n’est assigné : le check-out de fin de séjour reste à programmer.';
+        }
+
         $entityManager->persist($reservation);
         $entityManager->flush();
 
         $message = $reservation->isArrivalToday(new \DateTimeImmutable('today'))
             ? 'Réservation enregistrée. Le message WhatsApp peut être envoyé aujourd’hui.'
             : 'Réservation enregistrée.';
+
+        if ($checkoutMessage !== null) {
+            $message .= ' ' . $checkoutMessage;
+        }
 
         return $this->apartmentDetailResponse(
             $apartment,
@@ -793,6 +816,45 @@ class AdminController extends AbstractController
             'redirect' => $whatsAppUrl,
             'message' => $reservation->getAccessMessageSentCount() > 1 ? 'Message WhatsApp renvoyé.' : 'Message WhatsApp prêt à être envoyé.',
         ]);
+    }
+
+    #[Route('/reservations/{id}/delete', name: 'admin_reservation_delete', methods: ['POST'])]
+    public function deleteReservation(
+        ApartmentReservation $reservation,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $apartment = $reservation->getApartment();
+        $this->cancelCheckoutLinkedToReservation($reservation, $entityManager);
+        if ($apartment instanceof Apartment) {
+            $apartment->removeReservation($reservation);
+        }
+
+        $entityManager->remove($reservation);
+        $entityManager->flush();
+
+        $context = (string) $request->request->get('context', 'arrivals');
+
+        return match ($context) {
+            'dashboard' => new JsonResponse([
+                'success' => true,
+                'html' => $this->renderView('admin/_dashboard_content.html.twig', $this->buildDashboardData($entityManager)),
+                'message' => 'Réservation annulée.',
+            ]),
+            'apartment' => $apartment instanceof Apartment
+                ? $this->apartmentDetailResponse(
+                    $apartment,
+                    $entityManager,
+                    'Réservation annulée.',
+                    $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
+                )
+                : new JsonResponse(['success' => true, 'message' => 'Réservation annulée.']),
+            default => new JsonResponse([
+                'success' => true,
+                'html' => $this->renderView('admin/_arrivals_content.html.twig', $this->buildArrivalsPageData($entityManager)),
+                'message' => 'Réservation annulée.',
+            ]),
+        };
     }
 
     #[Route('/apartments/{id}/access-steps', name: 'admin_apartment_access_step_create', methods: ['POST'])]
@@ -1074,6 +1136,9 @@ class AdminController extends AbstractController
 
         $scheduledAtRaw = (string) $request->request->get('scheduledAt');
         $scheduledAt = $scheduledAtRaw !== '' ? new \DateTimeImmutable($scheduledAtRaw) : new \DateTimeImmutable();
+        if ($this->findCheckoutConflict($apartment, $scheduledAt, $entityManager) instanceof Checkout) {
+            return new JsonResponse(['success' => false, 'message' => 'Un check-out est déjà programmé à cette date pour cet appartement.'], 422);
+        }
         $checkoutManager->createCheckout($apartment, $employee, (string) $request->request->get('priority', 'normal'), $scheduledAt);
         $entityManager->flush();
 
@@ -1405,6 +1470,87 @@ class AdminController extends AbstractController
         }
     }
 
+    private function resolveReservationCheckoutAssignee(Apartment $apartment, ?User $actor): ?User
+    {
+        foreach ($apartment->getAssignedEmployees() as $employee) {
+            if ($employee instanceof User && !in_array('ROLE_ADMIN', $employee->getRoles(), true)) {
+                return $employee;
+            }
+        }
+
+        return $actor instanceof User ? $actor : null;
+    }
+
+    private function findCheckoutConflict(
+        Apartment $apartment,
+        \DateTimeImmutable $scheduledAt,
+        EntityManagerInterface $entityManager,
+        ?Checkout $ignoredCheckout = null
+    ): ?Checkout {
+        $openStatuses = [
+            CheckoutStatus::Todo,
+            CheckoutStatus::InProgress,
+            CheckoutStatus::Paused,
+            CheckoutStatus::PendingValidation,
+            CheckoutStatus::Blocked,
+        ];
+
+        $dayStart = $scheduledAt->setTime(0, 0);
+        $dayEnd = $scheduledAt->setTime(23, 59, 59);
+        $queryBuilder = $entityManager->createQueryBuilder()
+            ->select('checkout')
+            ->from(Checkout::class, 'checkout')
+            ->where('checkout.apartment = :apartment')
+            ->andWhere('checkout.status IN (:statuses)')
+            ->andWhere('checkout.scheduledAt IS NOT NULL')
+            ->andWhere('checkout.scheduledAt >= :dayStart')
+            ->andWhere('checkout.scheduledAt <= :dayEnd')
+            ->setParameter('apartment', $apartment)
+            ->setParameter('statuses', $openStatuses)
+            ->setParameter('dayStart', $dayStart)
+            ->setParameter('dayEnd', $dayEnd)
+            ->orderBy('checkout.scheduledAt', 'ASC')
+            ->setMaxResults(1);
+
+        if ($ignoredCheckout instanceof Checkout && $ignoredCheckout->getId() !== null) {
+            $queryBuilder
+                ->andWhere('checkout.id != :ignoredCheckoutId')
+                ->setParameter('ignoredCheckoutId', $ignoredCheckout->getId());
+        }
+
+        return $queryBuilder->getQuery()->getOneOrNullResult();
+    }
+
+    private function cancelCheckoutLinkedToReservation(ApartmentReservation $reservation, EntityManagerInterface $entityManager): void
+    {
+        $checkout = $reservation->getLinkedCheckout();
+        if (
+            !$checkout instanceof Checkout
+            && $reservation->getApartment() instanceof Apartment
+            && $reservation->getDepartureDate() instanceof \DateTimeImmutable
+        ) {
+            $checkout = $this->findCheckoutConflict(
+                $reservation->getApartment(),
+                $reservation->getDepartureDate()->setTime(11, 0),
+                $entityManager
+            );
+        }
+
+        if (!$checkout instanceof Checkout) {
+            return;
+        }
+
+        if (in_array($checkout->getStatus(), [CheckoutStatus::Completed, CheckoutStatus::Cancelled], true)) {
+            return;
+        }
+
+        $checkout
+            ->setStatus(CheckoutStatus::Cancelled)
+            ->setPausedAt(null)
+            ->setPauseReason(null)
+            ->setBlockReason(null);
+    }
+
     /**
      * @return list<ApartmentReservation>
      */
@@ -1516,7 +1662,7 @@ class AdminController extends AbstractController
             'hasOpenCheckout' => $this->hasOpenCheckout($apartment, $entityManager),
             'anomalyCount' => count($anomalies),
             'anomalyGroups' => $this->buildAnomalyGroups($anomalies, $this->buildApartmentRepeatCounts($apartment, $entityManager)),
-            'canDeleteApartment' => !$this->hasOpenCheckout($apartment, $entityManager)
+            'canDeleteApartment' => !$this->hasCheckoutHistory($apartment, $entityManager)
                 && !$this->hasOpenAnomalies($apartment, $entityManager),
         ];
     }
@@ -1544,7 +1690,6 @@ class AdminController extends AbstractController
     private function hasOpenCheckout(Apartment $apartment, EntityManagerInterface $entityManager): bool
     {
         $openStatuses = [
-            CheckoutStatus::Todo,
             CheckoutStatus::InProgress,
             CheckoutStatus::Paused,
             CheckoutStatus::PendingValidation,
@@ -1560,6 +1705,11 @@ class AdminController extends AbstractController
             ->setParameter('statuses', $openStatuses)
             ->getQuery()
             ->getSingleScalarResult() > 0;
+    }
+
+    private function hasCheckoutHistory(Apartment $apartment, EntityManagerInterface $entityManager): bool
+    {
+        return $entityManager->getRepository(Checkout::class)->count(['apartment' => $apartment]) > 0;
     }
 
     private function hasOpenAnomalies(Apartment $apartment, EntityManagerInterface $entityManager): bool

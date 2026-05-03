@@ -124,6 +124,18 @@
                             {{ reservation.hasSentAccessMessage ? 'Renvoyer le message' : 'Envoyer les informations' }}
                         </button>
                     </form>
+                    <form
+                        method="post"
+                        action="{{ path('admin_reservation_delete', {id: reservation.id}) }}"
+                        data-async-form
+                        data-update-target="#admin-arrivals-root"
+                        data-confirm-reset
+                        data-confirm-title="Annuler la réservation"
+                        data-confirm-message="Cette réservation sera supprimée définitivement. Continuer ?"
+                    >
+                        <input type="hidden" name="context" value="arrivals">
+                        <button class="secondary-button danger-button" type="submit">Annuler la réservation</button>
+                    </form>
                 </div>
             </article>
         {% else %}

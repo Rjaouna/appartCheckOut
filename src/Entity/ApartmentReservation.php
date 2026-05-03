@@ -45,6 +45,10 @@ class ApartmentReservation
     #[ORM\Column]
     private int $accessMessageSentCount = 0;
 
+    #[ORM\OneToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Checkout $linkedCheckout = null;
+
     public function __construct()
     {
         $now = new \DateTimeImmutable();
@@ -186,6 +190,19 @@ class ApartmentReservation
     public function incrementAccessMessageSentCount(): self
     {
         ++$this->accessMessageSentCount;
+        $this->touch();
+
+        return $this;
+    }
+
+    public function getLinkedCheckout(): ?Checkout
+    {
+        return $this->linkedCheckout;
+    }
+
+    public function setLinkedCheckout(?Checkout $linkedCheckout): self
+    {
+        $this->linkedCheckout = $linkedCheckout;
         $this->touch();
 
         return $this;

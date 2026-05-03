@@ -223,29 +223,38 @@
                 </div>
 
                 <div class="reservation-wizard-step is-collapsed" data-reservation-step="3" hidden>
-                    <label>
-                        <span>Date d’arrivée</span>
-                        <input type="date" name="arrivalDate" required data-reservation-date-input="arrival">
-                    </label>
-                    <label>
-                        <span>Date de départ</span>
-                        <input type="date" name="departureDate" required data-reservation-date-input="departure">
-                    </label>
-                    {% if reservationRanges is not empty %}
-                        <div class="reservation-unavailable-ranges">
-                            <span class="reservation-unavailable-title">Périodes déjà réservées</span>
-                            <ul class="reservation-unavailable-list">
-                                {% for reservedRange in reservationRanges %}
-                                    <li>
-                                        {{ reservedRange.arrivalDate|date('d/m/Y') }} au {{ reservedRange.departureDate|date('d/m/Y') }}
-                                        {% if reservedRange.guestName %}
-                                            <span>· {{ reservedRange.guestName }}</span>
-                                        {% endif %}
-                                    </li>
-                                {% endfor %}
-                            </ul>
+                    <div class="reservation-range-picker" data-reservation-range-picker>
+                        <div class="reservation-range-summary">
+                            <div class="reservation-range-chip">
+                                <span>Arrivée</span>
+                                <strong data-reservation-date-display="arrival">Non définie</strong>
+                            </div>
+                            <div class="reservation-range-chip">
+                                <span>Départ</span>
+                                <strong data-reservation-date-display="departure">Non défini</strong>
+                            </div>
                         </div>
-                    {% endif %}
+                        <p class="muted">Choisis d’abord une date d’arrivée, puis une date de départ.</p>
+                        <div class="reservation-calendar-card">
+                            <div class="reservation-calendar-nav">
+                                <button type="button" class="secondary-button" data-reservation-calendar-shift="-1">Précédent</button>
+                                <strong data-reservation-calendar-label></strong>
+                                <button type="button" class="secondary-button" data-reservation-calendar-shift="1">Suivant</button>
+                            </div>
+                            <div class="reservation-calendar-weekdays" aria-hidden="true">
+                                <span>Lun</span>
+                                <span>Mar</span>
+                                <span>Mer</span>
+                                <span>Jeu</span>
+                                <span>Ven</span>
+                                <span>Sam</span>
+                                <span>Dim</span>
+                            </div>
+                            <div class="reservation-calendar-grid" data-reservation-calendar-grid></div>
+                        </div>
+                        <input type="hidden" name="arrivalDate" data-reservation-date-input="arrival">
+                        <input type="hidden" name="departureDate" data-reservation-date-input="departure">
+                    </div>
                     <div class="editable-field-actions">
                         <button class="secondary-button" type="button" data-reservation-prev>Retour</button>
                         <button class="primary-button" type="submit">Terminer</button>

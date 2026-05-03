@@ -160,18 +160,17 @@
                                 <span class="admin-detail-focus-kicker">Action principale</span>
                                 <h3>Créer un check-out</h3>
                             </div>
-                            <span class="status-badge">{{ hasOpenCheckout ? 'Déjà ouvert' : 'Disponible' }}</span>
+                            <span class="status-badge">{{ hasOpenCheckout ? 'En cours ailleurs' : 'Disponible' }}</span>
                         </div>
 
-                        {% if hasOpenCheckout %}
-                            <div class="empty-state">
-                                Un check-out non terminé existe déjà pour cet appartement. Termine-le ou annule-le avant d’en créer un nouveau.
-                            </div>
-                        {% elseif assignableEmployeeCount == 0 %}
+                        {% if assignableEmployeeCount == 0 %}
                             <div class="empty-state">
                                 Assigne d’abord au moins un employé terrain à cet appartement pour pouvoir créer un check-out.
                             </div>
                         {% else %}
+                            {% if hasOpenCheckout %}
+                                <p class="muted">Un check-out est déjà en cours de traitement, mais tu peux programmer un autre passage à une date différente.</p>
+                            {% endif %}
                             <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form admin-detail-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
                                 <input type="hidden" name="section" value="{{ currentSection }}">
                                 <label><span>Employé</span>

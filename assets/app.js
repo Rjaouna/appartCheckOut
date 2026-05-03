@@ -51,6 +51,10 @@ document.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearInlineFormError(form);
 
+    if (!validateReservationCreationForm(form)) {
+        return;
+    }
+
     const submitButton = form.querySelector('button[type="submit"]');
     if (submitButton instanceof HTMLButtonElement) {
         submitButton.disabled = true;
@@ -233,6 +237,8 @@ function resetApartmentReservationWizard(modalElement) {
     if (form instanceof HTMLFormElement) {
         form.reset();
         clearInlineFormError(form);
+        delete form.dataset.reservationCalendarMonth;
+        renderReservationRangePicker(form);
     }
 
     steps.forEach((stepElement, index) => {
@@ -282,6 +288,36 @@ function validateReservationWhatsAppInput(input) {
     return /^\+[1-9]\d{7,14}$/.test(normalized);
 }
 
+function parseReservationLocalDate(value) {
+    if (!value || typeof value !== 'string') {
+        return null;
+    }
+
+    const [year, month, day] = value.split('-').map((part) => Number.parseInt(part, 10));
+    if (!year || !month || !day) {
+        return null;
+    }
+
+    return new Date(year, month - 1, day);
+}
+
+function formatReservationIso(date) {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function formatReservationDisplay(value) {
+    const date = parseReservationLocalDate(value);
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
 function parseReservationRanges(form) {
     if (!(form instanceof HTMLFormElement)) {
         return [];
@@ -301,6 +337,94 @@ function parseReservationRanges(form) {
     }
 }
 
+function reservationRangeOverlaps(arrivalDate, departureDate, ranges) {
+    return ranges.some((range) => arrivalDate <= range.departureDate && departureDate >= range.arrivalDate);
+}
+
+function isReservationDateBlocked(dateValue, ranges) {
+    return ranges.some((range) => dateValue >= range.arrivalDate && dateValue <= range.departureDate);
+}
+
+function renderReservationRangePicker(form) {
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    const grid = form.querySelector('[data-reservation-calendar-grid]');
+    const label = form.querySelector('[data-reservation-calendar-label]');
+    const arrivalDisplay = form.querySelector('[data-reservation-date-display="arrival"]');
+    const departureDisplay = form.querySelector('[data-reservation-date-display="departure"]');
+    const arrivalInput = form.querySelector('[data-reservation-date-input="arrival"]');
+    const departureInput = form.querySelector('[data-reservation-date-input="departure"]');
+
+    if (
+        !(grid instanceof HTMLElement)
+        || !(label instanceof HTMLElement)
+        || !(arrivalDisplay instanceof HTMLElement)
+        || !(departureDisplay instanceof HTMLElement)
+        || !(arrivalInput instanceof HTMLInputElement)
+        || !(departureInput instanceof HTMLInputElement)
+    ) {
+        return;
+    }
+
+    const reservationRanges = parseReservationRanges(form);
+    const arrivalValue = arrivalInput.value;
+    const departureValue = departureInput.value;
+    const monthSource = form.dataset.reservationCalendarMonth || arrivalValue || formatReservationIso(new Date());
+    const currentMonth = parseReservationLocalDate(monthSource) || new Date();
+    currentMonth.setDate(1);
+    form.dataset.reservationCalendarMonth = formatReservationIso(currentMonth);
+
+    arrivalDisplay.textContent = formatReservationDisplay(arrivalValue) || 'Non définie';
+    departureDisplay.textContent = formatReservationDisplay(departureValue) || 'Non défini';
+    label.textContent = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentMonth);
+
+    const firstDayIndex = (currentMonth.getDay() + 6) % 7;
+    const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+
+    grid.innerHTML = '';
+
+    for (let blankIndex = 0; blankIndex < firstDayIndex; blankIndex += 1) {
+        const blank = document.createElement('span');
+        blank.className = 'reservation-calendar-empty';
+        grid.appendChild(blank);
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+        const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+        const iso = formatReservationIso(date);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'reservation-calendar-day';
+        button.textContent = `${day}`;
+        button.dataset.reservationCalendarDay = iso;
+
+        const isBlocked = isReservationDateBlocked(iso, reservationRanges);
+        const isSelected = iso === arrivalValue || iso === departureValue;
+        const isInRange = Boolean(arrivalValue && departureValue && iso > arrivalValue && iso < departureValue);
+        const blocksDepartureChoice = Boolean(
+            arrivalValue
+            && !departureValue
+            && iso > arrivalValue
+            && reservationRangeOverlaps(arrivalValue, iso, reservationRanges)
+        );
+
+        if ((isBlocked && !isSelected) || blocksDepartureChoice) {
+            button.disabled = true;
+            button.classList.add('is-blocked');
+        }
+
+        if (isSelected) {
+            button.classList.add('is-selected');
+        } else if (isInRange) {
+            button.classList.add('is-in-range');
+        }
+
+        grid.appendChild(button);
+    }
+}
+
 function syncReservationDateAvailability(form) {
     if (!(form instanceof HTMLFormElement)) {
         return true;
@@ -316,12 +440,6 @@ function syncReservationDateAvailability(form) {
 
     arrivalInput.setCustomValidity('');
     departureInput.setCustomValidity('');
-
-    if (arrivalInput.value) {
-        departureInput.min = arrivalInput.value;
-    } else {
-        departureInput.removeAttribute('min');
-    }
 
     if (!arrivalInput.value || !departureInput.value) {
         if (submitButton instanceof HTMLButtonElement) {
@@ -342,8 +460,8 @@ function syncReservationDateAvailability(form) {
         return true;
     }
 
-    const formattedStart = new Intl.DateTimeFormat('fr-FR').format(new Date(`${blockedRange.arrivalDate}T00:00:00`));
-    const formattedEnd = new Intl.DateTimeFormat('fr-FR').format(new Date(`${blockedRange.departureDate}T00:00:00`));
+    const formattedStart = formatReservationDisplay(blockedRange.arrivalDate);
+    const formattedEnd = formatReservationDisplay(blockedRange.departureDate);
     const message = `Cette période est déjà réservée du ${formattedStart} au ${formattedEnd}.`;
 
     arrivalInput.setCustomValidity(message);
@@ -357,6 +475,64 @@ function syncReservationDateAvailability(form) {
     return false;
 }
 
+function validateReservationCreationForm(form) {
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-reservation-ranges')) {
+        return true;
+    }
+
+    const whatsAppInput = form.querySelector('input[name="guestWhatsappNumber"]');
+    if (whatsAppInput instanceof HTMLInputElement && whatsAppInput.value.trim() !== '' && !validateReservationWhatsAppInput(whatsAppInput)) {
+        setInlineFormError(form, 'Saisissez le numéro au format international, par exemple +33 6 00 00 00 00.');
+        whatsAppInput.focus();
+        return false;
+    }
+
+    const arrivalInput = form.querySelector('[data-reservation-date-input="arrival"]');
+    const departureInput = form.querySelector('[data-reservation-date-input="departure"]');
+    if (arrivalInput instanceof HTMLInputElement && departureInput instanceof HTMLInputElement) {
+        if (!arrivalInput.value || !departureInput.value) {
+            setInlineFormError(form, 'Choisis une date d’arrivée puis une date de départ.');
+            return false;
+        }
+
+        if (!syncReservationDateAvailability(form)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function applyReservationCalendarSelection(form, selectedDate) {
+    if (!(form instanceof HTMLFormElement) || !selectedDate) {
+        return;
+    }
+
+    const arrivalInput = form.querySelector('[data-reservation-date-input="arrival"]');
+    const departureInput = form.querySelector('[data-reservation-date-input="departure"]');
+    if (!(arrivalInput instanceof HTMLInputElement) || !(departureInput instanceof HTMLInputElement)) {
+        return;
+    }
+
+    const reservationRanges = parseReservationRanges(form);
+    const arrivalValue = arrivalInput.value;
+    const departureValue = departureInput.value;
+
+    if (!arrivalValue || departureValue) {
+        arrivalInput.value = selectedDate;
+        departureInput.value = '';
+    } else if (selectedDate < arrivalValue) {
+        arrivalInput.value = selectedDate;
+        departureInput.value = '';
+    } else if (!reservationRangeOverlaps(arrivalValue, selectedDate, reservationRanges)) {
+        departureInput.value = selectedDate;
+    }
+
+    form.dataset.reservationCalendarMonth = selectedDate;
+    syncReservationDateAvailability(form);
+    renderReservationRangePicker(form);
+}
+
 function openApartmentReservationModal() {
     const modalElement = document.getElementById('apartmentReservationModal');
     if (!(modalElement instanceof HTMLElement)) {
@@ -368,6 +544,7 @@ function openApartmentReservationModal() {
 
     const form = modalElement.querySelector('form');
     if (form instanceof HTMLFormElement) {
+        renderReservationRangePicker(form);
         syncReservationDateAvailability(form);
     }
 
@@ -755,6 +932,31 @@ document.addEventListener('click', (event) => {
         return;
     }
 
+    const reservationCalendarShiftTrigger = event.target instanceof Element ? event.target.closest('[data-reservation-calendar-shift]') : null;
+    if (reservationCalendarShiftTrigger instanceof HTMLButtonElement) {
+        event.preventDefault();
+        const form = reservationCalendarShiftTrigger.closest('form');
+        if (form instanceof HTMLFormElement) {
+            const currentMonth = parseReservationLocalDate(form.dataset.reservationCalendarMonth || formatReservationIso(new Date())) || new Date();
+            currentMonth.setDate(1);
+            currentMonth.setMonth(currentMonth.getMonth() + Number.parseInt(reservationCalendarShiftTrigger.dataset.reservationCalendarShift || '0', 10));
+            form.dataset.reservationCalendarMonth = formatReservationIso(currentMonth);
+            renderReservationRangePicker(form);
+        }
+        return;
+    }
+
+    const reservationCalendarDayTrigger = event.target instanceof Element ? event.target.closest('[data-reservation-calendar-day]') : null;
+    if (reservationCalendarDayTrigger instanceof HTMLButtonElement) {
+        event.preventDefault();
+        const form = reservationCalendarDayTrigger.closest('form');
+        if (form instanceof HTMLFormElement) {
+            clearInlineFormError(form);
+            applyReservationCalendarSelection(form, reservationCalendarDayTrigger.dataset.reservationCalendarDay || '');
+        }
+        return;
+    }
+
     const managerListToggle = event.target instanceof Element ? event.target.closest('[data-manager-list-toggle]') : null;
     if (managerListToggle instanceof HTMLElement) {
         event.preventDefault();
@@ -902,15 +1104,11 @@ document.addEventListener('input', (event) => {
         return;
     }
 
-    if (target.matches('[data-reservation-date-input]') || target.name === 'guestWhatsappNumber') {
+    if (target.name === 'guestWhatsappNumber') {
         const form = target.form;
         if (form instanceof HTMLFormElement) {
-            if (target.name === 'guestWhatsappNumber' && validateReservationWhatsAppInput(target)) {
+            if (validateReservationWhatsAppInput(target)) {
                 clearInlineFormError(form);
-            }
-
-            if (target.matches('[data-reservation-date-input]')) {
-                syncReservationDateAvailability(form);
             }
         }
     }
