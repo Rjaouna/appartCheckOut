@@ -4,142 +4,171 @@
 {% block body_class %}public-body{% endblock %}
 
 {% block body %}
-    <section class="page-head public-page-head">
-        <div>
-            <span class="eyebrow">Accès locataire</span>
-            <h1>{{ apartment.name }}</h1>
-            <p class="muted">Retrouve ici toutes les informations utiles pour ton arrivée et ton séjour.</p>
-        </div>
-        <div class="head-actions">
-            <a class="secondary-button" href="{{ path('tenant_lookup') }}">Rechercher un autre code</a>
-            <a class="secondary-button" href="{{ path('app_home') }}">Accueil</a>
-        </div>
-    </section>
+    {% set leadEmployee = assignedEmployees|first %}
+    {% set extraEmployees = assignedEmployees|length > 1 ? assignedEmployees|slice(1) : [] %}
+    {% set hasGuidebook = apartment.guestGuideContent %}
 
-    <section class="public-apartment-shell">
-        <article class="apartment-detail-card apartment-detail-card-wide public-access-hero-card">
-            <div class="public-access-hero-copy">
-                <span class="employee-home-kicker">Arrivée guidée</span>
-                <h2>Comment accéder à mon appartement</h2>
-                <p>
-                    {% if apartment.accessSteps|length > 0 %}
-                        Suis les étapes préparées pour arriver facilement jusqu’à ton appartement.
-                    {% else %}
-                        Les informations principales d’accès sont disponibles juste en dessous.
+    <section class="public-tenant-hero">
+        <article class="public-tenant-hero-card">
+            <div class="public-tenant-hero-copy">
+                <span class="eyebrow">Votre arrivée</span>
+                <h1>{{ apartment.name }}</h1>
+                <p>{{ apartment.fullAddress }}</p>
+
+                <div class="public-tenant-hero-badges">
+                    {% if apartment.floor %}
+                        <span class="public-tenant-badge">Étage {{ apartment.floor }}</span>
                     {% endif %}
-                </p>
+                    {% if apartment.doorNumber %}
+                        <span class="public-tenant-badge">Porte {{ apartment.doorNumber }}</span>
+                    {% endif %}
+                    {% if hasGuidebook %}
+                        <a class="public-tenant-badge public-tenant-badge-link" href="#tenant-guidebook">Livret disponible</a>
+                    {% endif %}
+                </div>
             </div>
-            <div class="public-access-hero-actions">
+
+            <div class="public-tenant-hero-actions">
+                <a class="secondary-button public-waze-button" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir Waze</a>
                 {% if apartment.accessSteps|length > 0 %}
                     <button class="primary-button" type="button" data-public-access-modal-trigger data-step-source="#public-access-steps-source">
-                        Voir les étapes d’accès
+                        Voir le plan d’accès
                     </button>
                 {% endif %}
-                <a class="secondary-button public-waze-button" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir Waze</a>
+                <a class="secondary-button" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l’adresse</a>
+                <a class="secondary-button" href="{{ path('tenant_lookup') }}">Saisir un autre code logement</a>
             </div>
         </article>
+    </section>
 
-        <div class="public-apartment-grid">
-            <article class="apartment-detail-card">
-                <h3>Adresse et accès</h3>
-                <div class="editable-field-row">
-                    <div class="editable-field-display">
-                        <div class="editable-field-copy">
-                            <span class="editable-field-label">Adresse</span>
-                            <strong>{{ apartment.fullAddress }}</strong>
-                        </div>
+    <section class="public-tenant-layout">
+        <div class="public-tenant-main">
+            <article class="apartment-detail-card apartment-detail-card-wide public-tenant-arrival-card">
+                <div class="panel-head">
+                    <div>
+                        <h2>Accès rapide</h2>
+                        <p class="muted">
+                            {% if apartment.accessSteps|length > 0 %}
+                                Commencez par le plan d’accès, puis retrouvez ici les codes et repères utiles.
+                            {% else %}
+                                Retrouvez ici les principales informations pour entrer dans le logement.
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
-                <div class="editable-field-row">
-                    <div class="editable-field-display">
-                        <div class="editable-field-copy">
-                            <span class="editable-field-label">Étage</span>
-                            <strong>{{ apartment.floor ?: '-' }}</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="editable-field-row">
-                    <div class="editable-field-display">
-                        <div class="editable-field-copy">
-                            <span class="editable-field-label">Porte</span>
-                            <strong>{{ apartment.doorNumber ?: '-' }}</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="editable-field-row">
-                    <div class="editable-field-display">
-                        <div class="editable-field-copy">
-                            <span class="editable-field-label">Code immeuble</span>
-                            <strong>{{ apartment.buildingAccessCode ?: '-' }}</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="editable-field-row">
-                    <div class="editable-field-display">
-                        <div class="editable-field-copy">
-                            <span class="editable-field-label">Code boîte à clés / porte</span>
-                            <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
-                        </div>
-                    </div>
+
+                <div class="public-tenant-quick-grid">
+                    <article class="public-tenant-quick-card public-tenant-quick-card-wide">
+                        <span class="editable-field-label">Adresse</span>
+                        <strong>{{ apartment.fullAddress }}</strong>
+                    </article>
+                    <article class="public-tenant-quick-card">
+                        <span class="editable-field-label">Code immeuble</span>
+                        <strong>{{ apartment.buildingAccessCode ?: '-' }}</strong>
+                    </article>
+                    <article class="public-tenant-quick-card">
+                        <span class="editable-field-label">Code boîte à clés / porte</span>
+                        <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
+                    </article>
+                    <article class="public-tenant-quick-card">
+                        <span class="editable-field-label">Boîte aux lettres</span>
+                        <strong>{{ apartment.mailboxNumber ?: '-' }}</strong>
+                    </article>
+                    <article class="public-tenant-quick-card">
+                        <span class="editable-field-label">Consignes d’entrée</span>
+                        <strong>{{ apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</strong>
+                    </article>
                 </div>
             </article>
 
-            <article class="apartment-detail-card">
-                <h3>Informations utiles</h3>
-                <div class="editable-field-row">
-                    <div class="editable-field-display">
-                        <div class="editable-field-copy">
-                            <span class="editable-field-label">Consignes</span>
-                            <strong>{{ apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</strong>
+            {% if hasGuidebook %}
+                <article id="tenant-guidebook" class="apartment-detail-card apartment-detail-card-wide public-guidebook-card public-guidebook-card-main">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Livret d’accueil</h2>
+                            <p class="muted">Toutes les informations utiles du séjour, regroupées au même endroit.</p>
                         </div>
                     </div>
-                </div>
-                <div class="public-share-actions">
-                    {% if apartment.googleMapsLink %}
-                        <a class="secondary-button" href="{{ apartment.googleMapsLink }}" target="_blank" rel="noreferrer">Ouvrir dans Google Maps</a>
-                    {% endif %}
-                    <a class="primary-button" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l’adresse sur WhatsApp</a>
-                </div>
-            </article>
 
-            <article class="apartment-detail-card apartment-detail-card-wide public-warning-card">
-                <h3>Important</h3>
-                <p>Ne communique jamais ce code à une autre personne. Si tu penses qu’il a été partagé par erreur, contacte immédiatement l’équipe assignée à cet appartement.</p>
-            </article>
-
-            <article class="apartment-detail-card apartment-detail-card-wide">
-                <h3>Votre équipe de contact</h3>
-                <div class="public-contact-grid">
-                    {% for employee in assignedEmployees %}
-                        <div class="public-contact-card">
-                            <div class="admin-user-avatar public-contact-avatar {{ employee.photoPath ? 'has-photo' : '' }}">
-                                {% if employee.photoPath %}
-                                    <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
-                                {% else %}
-                                    <span>{{ employee.fullName|slice(0, 1)|upper }}</span>
+                    <div class="public-guidebook-grid">
+                        {% if apartment.guestWifiName or apartment.guestWifiPassword or apartment.guestWifiInstructions %}
+                            <article class="public-guidebook-item public-guidebook-item-highlight">
+                                <h3>Wi-Fi</h3>
+                                <dl class="detail-definition-list">
+                                    {% if apartment.guestWifiName %}
+                                        <div>
+                                            <dt>Réseau</dt>
+                                            <dd>{{ apartment.guestWifiName }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    {% if apartment.guestWifiPassword %}
+                                        <div>
+                                            <dt>Mot de passe</dt>
+                                            <dd>
+                                                <span class="public-password-reveal" data-password-reveal-wrapper>
+                                                    <span data-password-reveal-value>••••••••</span>
+                                                    <button
+                                                        type="button"
+                                                        class="public-password-reveal-button"
+                                                        data-password-reveal-toggle
+                                                        data-password-value="{{ apartment.guestWifiPassword|e('html_attr') }}"
+                                                        data-password-mask="••••••••"
+                                                        aria-label="Afficher temporairement le mot de passe Wi-Fi"
+                                                        title="Afficher le mot de passe"
+                                                    >
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                            <path d="M2 12s3.8-6 10-6 10 6 10 6-3.8 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                                        </svg>
+                                                    </button>
+                                                </span>
+                                            </dd>
+                                        </div>
+                                    {% endif %}
+                                </dl>
+                                {% if apartment.guestWifiInstructions %}
+                                    <p>{{ apartment.guestWifiInstructions|nl2br }}</p>
                                 {% endif %}
-                            </div>
-                            <div class="public-contact-copy">
-                                <strong>{{ employee.fullName }}</strong>
-                                {% if employee.phoneNumber %}
-                                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ employee.phoneNumber }}">{{ employee.phoneNumber }}</a>
-                                {% else %}
-                                    <span class="muted">Numéro non renseigné</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% else %}
-                        <p class="empty-state">Aucun employé actif n’est encore assigné à cet appartement.</p>
-                    {% endfor %}
-                </div>
-            </article>
+                            </article>
+                        {% endif %}
+
+                        {% if apartment.guestHouseRules %}
+                            <article class="public-guidebook-item">
+                                <h3>Règles du logement</h3>
+                                <p>{{ apartment.guestHouseRules|nl2br }}</p>
+                            </article>
+                        {% endif %}
+
+                        {% if apartment.guestDepartureInstructions %}
+                            <article class="public-guidebook-item">
+                                <h3>Départ</h3>
+                                <p>{{ apartment.guestDepartureInstructions|nl2br }}</p>
+                            </article>
+                        {% endif %}
+
+                        {% if apartment.guestEmergencyInfo %}
+                            <article class="public-guidebook-item">
+                                <h3>Urgences</h3>
+                                <p>{{ apartment.guestEmergencyInfo|nl2br }}</p>
+                            </article>
+                        {% endif %}
+
+                        {% if apartment.guestEquipmentInfo %}
+                            <article class="public-guidebook-item">
+                                <h3>Équipements utiles</h3>
+                                <p>{{ apartment.guestEquipmentInfo|nl2br }}</p>
+                            </article>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endif %}
 
             {% if serviceContactEmployee and serviceExtras is not empty %}
                 <article class="apartment-detail-card apartment-detail-card-wide public-extra-card">
                     <div class="panel-head">
                         <div>
-                            <h3>Extras disponibles</h3>
-                            <p class="muted">Services proposés par {{ serviceContactEmployee.fullName }} pendant votre séjour.</p>
+                            <h2>Services disponibles</h2>
+                            <p class="muted">Services proposés pendant votre séjour.</p>
                         </div>
                     </div>
                     <div class="public-extra-grid">
@@ -152,7 +181,91 @@
                     </div>
                 </article>
             {% endif %}
+
+            <article class="apartment-detail-card apartment-detail-card-wide public-warning-card">
+                <h2>Important</h2>
+                <p>Ne communiquez jamais ces codes à une autre personne. Si vous pensez qu’ils ont été partagés par erreur, contactez immédiatement l’équipe du logement.</p>
+            </article>
         </div>
+
+        <aside class="public-tenant-side">
+            <article class="apartment-detail-card public-contact-summary-card">
+                <div class="panel-head">
+                    <div>
+                        <h2>Votre contact</h2>
+                        <p class="muted">Une question sur votre arrivée ou votre séjour ?</p>
+                    </div>
+                </div>
+
+                {% if leadEmployee %}
+                    <div class="public-contact-summary-main">
+                        <div class="admin-user-avatar public-contact-avatar {{ leadEmployee.photoPath ? 'has-photo' : '' }}">
+                            {% if leadEmployee.photoPath %}
+                                <img src="{{ leadEmployee.photoPath }}" alt="{{ leadEmployee.fullName }}">
+                            {% else %}
+                                <span>{{ leadEmployee.fullName|slice(0, 1)|upper }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="public-contact-summary-copy">
+                            <strong>{{ leadEmployee.fullName }}</strong>
+                            {% if leadEmployee.phoneNumber %}
+                                <a class="inline-detail-link admin-user-phone-link" href="tel:{{ leadEmployee.phoneNumber }}">{{ leadEmployee.phoneNumber }}</a>
+                            {% else %}
+                                <span class="muted">Numéro non renseigné</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if extraEmployees is not empty %}
+                        <details class="public-contact-summary-more">
+                            <summary>{{ extraEmployees|length }} autre{{ extraEmployees|length > 1 ? 's' : '' }} contact{{ extraEmployees|length > 1 ? 's' : '' }}</summary>
+                            <div class="public-contact-summary-list">
+                                {% for employee in extraEmployees %}
+                                    <div class="public-contact-summary-item">
+                                        <strong>{{ employee.fullName }}</strong>
+                                        {% if employee.phoneNumber %}
+                                            <a class="inline-detail-link admin-user-phone-link" href="tel:{{ employee.phoneNumber }}">{{ employee.phoneNumber }}</a>
+                                        {% else %}
+                                            <span class="muted">Numéro non renseigné</span>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% endif %}
+                {% else %}
+                    <p class="empty-state">Aucun employé actif n’est encore assigné à cet appartement.</p>
+                {% endif %}
+            </article>
+
+            <article class="apartment-detail-card public-stay-card">
+                <div class="panel-head">
+                    <div>
+                        <h2>Repères du séjour</h2>
+                        <p class="muted">Les informations pratiques à garder sous la main.</p>
+                    </div>
+                </div>
+
+                <dl class="detail-definition-list">
+                    <div>
+                        <dt>Nom du logement</dt>
+                        <dd>{{ apartment.name }}</dd>
+                    </div>
+                    <div>
+                        <dt>Ville</dt>
+                        <dd>{{ apartment.city }}</dd>
+                    </div>
+                    <div>
+                        <dt>Porte</dt>
+                        <dd>{{ apartment.doorNumber ?: '-' }}</dd>
+                    </div>
+                    <div>
+                        <dt>Étage</dt>
+                        <dd>{{ apartment.floor ?: '-' }}</dd>
+                    </div>
+                </dl>
+            </article>
+        </aside>
     </section>
 
     {% if apartment.accessSteps|length > 0 %}

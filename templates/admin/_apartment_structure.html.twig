@@ -53,6 +53,23 @@
                     <p>Préparer le pas-à-pas d’arrivée que le locataire verra dans son espace.</p>
                 </a>
 
+                <a class="admin-detail-entry-card admin-detail-entry-card-soft {{ apartment.guestGuideComplete ? '' : 'admin-detail-entry-card-pending' }}" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'guidebook'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-soft {{ apartment.guestGuideComplete ? '' : 'admin-detail-entry-icon-pending' }}" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v18H7.5A2.5 2.5 0 0 0 5 22V4.5Zm2.5-.6c-.8 0-1.5.7-1.5 1.6V18c.46-.32 1-.5 1.5-.5H18V3.9H7.5Z" fill="currentColor"/>
+                                <path d="M9 7h6M9 10.5h6M9 14h4.5" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric {{ apartment.guestGuideComplete ? '' : 'admin-detail-entry-metric-pending' }}">
+                            {{ apartment.guestGuideComplete ? apartment.guestGuideCompletedSectionCount ~ '/5' : '!' }}
+                        </span>
+                    </div>
+                    <span class="admin-detail-entry-kicker">{{ apartment.guestGuideComplete ? 'Prêt' : 'À compléter' }}</span>
+                    <strong>Livret d’accueil</strong>
+                    <p>Wi-Fi, règles, départ, urgences et équipements utiles pour le séjour.</p>
+                </a>
+
                 <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'assignment'}) }}">
                     <div class="admin-detail-entry-head">
                         <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
@@ -451,6 +468,91 @@
                         </article>
                     </template>
                 </section>
+            </section>
+        {% elseif currentSection == 'guidebook' %}
+            <section class="admin-detail-panel">
+                <div class="admin-detail-panel-head">
+                    <div>
+                        <span class="admin-detail-entry-kicker">Livret d’accueil</span>
+                        <h2>Préparer les informations du séjour</h2>
+                        <p>Complète ici les informations que le locataire retrouvera une fois le code saisi. L’objectif est qu’il puisse se débrouiller sans t’appeler.</p>
+                    </div>
+                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                </div>
+
+                <div class="admin-detail-section-grid">
+                    <section class="admin-detail-focus-card {{ apartment.guestWifiName and apartment.guestWifiPassword ? '' : 'admin-detail-focus-card-pending' }}">
+                        <div class="admin-detail-focus-head">
+                            <div>
+                                <span class="admin-detail-focus-kicker">Connexion</span>
+                                <h3>Wi-Fi</h3>
+                            </div>
+                            <span class="status-badge {{ apartment.guestWifiName and apartment.guestWifiPassword ? 'is-success' : 'is-warning' }}">
+                                {{ apartment.guestWifiName and apartment.guestWifiPassword ? 'Complet' : 'À renseigner' }}
+                            </span>
+                        </div>
+                        <p class="muted">Indique le nom du réseau, le mot de passe et une précision utile si besoin.</p>
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestWifiName', label: 'Nom du réseau', value: apartment.guestWifiName ?: 'Non renseigné', rawValue: apartment.guestWifiName ?: '', compact: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestWifiPassword', label: 'Mot de passe Wi-Fi', value: apartment.guestWifiPassword ?: 'Non renseigné', rawValue: apartment.guestWifiPassword ?: '', compact: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestWifiInstructions', label: 'Précision Wi-Fi', value: apartment.guestWifiInstructions ?: 'Aucune précision', rawValue: apartment.guestWifiInstructions ?: '', multiline: true, compact: true } %}
+                    </section>
+
+                    <section class="admin-detail-focus-card {{ apartment.guestHouseRules ? '' : 'admin-detail-focus-card-pending' }}">
+                        <div class="admin-detail-focus-head">
+                            <div>
+                                <span class="admin-detail-focus-kicker">Vie sur place</span>
+                                <h3>Règles du logement</h3>
+                            </div>
+                            <span class="status-badge {{ apartment.guestHouseRules ? 'is-success' : 'is-warning' }}">
+                                {{ apartment.guestHouseRules ? 'Complet' : 'À renseigner' }}
+                            </span>
+                        </div>
+                        <p class="muted">Bruit, voisinage, poubelles, fumeur ou non, animaux, horaires importants.</p>
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestHouseRules', label: 'Règles à communiquer', value: apartment.guestHouseRules ?: 'Non renseigné', rawValue: apartment.guestHouseRules ?: '', multiline: true, compact: true } %}
+                    </section>
+
+                    <section class="admin-detail-focus-card {{ apartment.guestDepartureInstructions ? '' : 'admin-detail-focus-card-pending' }}">
+                        <div class="admin-detail-focus-head">
+                            <div>
+                                <span class="admin-detail-focus-kicker">Fin de séjour</span>
+                                <h3>Départ</h3>
+                            </div>
+                            <span class="status-badge {{ apartment.guestDepartureInstructions ? 'is-success' : 'is-warning' }}">
+                                {{ apartment.guestDepartureInstructions ? 'Complet' : 'À renseigner' }}
+                            </span>
+                        </div>
+                        <p class="muted">Heure de départ, remise des clés, ménage demandé, fermeture du logement.</p>
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestDepartureInstructions', label: 'Consignes de départ', value: apartment.guestDepartureInstructions ?: 'Non renseigné', rawValue: apartment.guestDepartureInstructions ?: '', multiline: true, compact: true } %}
+                    </section>
+
+                    <section class="admin-detail-focus-card {{ apartment.guestEmergencyInfo ? '' : 'admin-detail-focus-card-pending' }}">
+                        <div class="admin-detail-focus-head">
+                            <div>
+                                <span class="admin-detail-focus-kicker">Aide</span>
+                                <h3>Urgences</h3>
+                            </div>
+                            <span class="status-badge {{ apartment.guestEmergencyInfo ? 'is-success' : 'is-warning' }}">
+                                {{ apartment.guestEmergencyInfo ? 'Complet' : 'À renseigner' }}
+                            </span>
+                        </div>
+                        <p class="muted">Qui appeler en cas de souci, coupure, fuite, perte de clés ou arrivée tardive.</p>
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestEmergencyInfo', label: 'Contacts et réflexes utiles', value: apartment.guestEmergencyInfo ?: 'Non renseigné', rawValue: apartment.guestEmergencyInfo ?: '', multiline: true, compact: true } %}
+                    </section>
+
+                    <section class="admin-detail-focus-card {{ apartment.guestEquipmentInfo ? '' : 'admin-detail-focus-card-pending' }}">
+                        <div class="admin-detail-focus-head">
+                            <div>
+                                <span class="admin-detail-focus-kicker">Confort</span>
+                                <h3>Équipements utiles</h3>
+                            </div>
+                            <span class="status-badge {{ apartment.guestEquipmentInfo ? 'is-success' : 'is-warning' }}">
+                                {{ apartment.guestEquipmentInfo ? 'Complet' : 'À renseigner' }}
+                            </span>
+                        </div>
+                        <p class="muted">Indique ce qui aide le locataire sur place : chauffage, clim, télé, eau chaude, machine à laver, parking.</p>
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestEquipmentInfo', label: 'Équipements et astuces', value: apartment.guestEquipmentInfo ?: 'Non renseigné', rawValue: apartment.guestEquipmentInfo ?: '', multiline: true, compact: true } %}
+                    </section>
+                </div>
             </section>
         {% elseif currentSection == 'assignment' %}
             <section class="admin-detail-panel">

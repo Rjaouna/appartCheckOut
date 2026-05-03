@@ -76,6 +76,27 @@ class Apartment
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $internalNotes = null;
 
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $guestWifiName = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $guestWifiPassword = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $guestWifiInstructions = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $guestHouseRules = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $guestDepartureInstructions = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $guestEmergencyInfo = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $guestEquipmentInfo = null;
+
     #[ORM\Column(enumType: ApartmentStatus::class)]
     private ApartmentStatus $status = ApartmentStatus::Active;
 
@@ -372,6 +393,133 @@ class Apartment
         $this->internalNotes = $internalNotes;
 
         return $this;
+    }
+
+    public function getGuestWifiName(): ?string
+    {
+        return $this->guestWifiName;
+    }
+
+    public function setGuestWifiName(?string $guestWifiName): self
+    {
+        $this->guestWifiName = $guestWifiName;
+
+        return $this;
+    }
+
+    public function getGuestWifiPassword(): ?string
+    {
+        return $this->guestWifiPassword;
+    }
+
+    public function setGuestWifiPassword(?string $guestWifiPassword): self
+    {
+        $this->guestWifiPassword = $guestWifiPassword;
+
+        return $this;
+    }
+
+    public function getGuestWifiInstructions(): ?string
+    {
+        return $this->guestWifiInstructions;
+    }
+
+    public function setGuestWifiInstructions(?string $guestWifiInstructions): self
+    {
+        $this->guestWifiInstructions = $guestWifiInstructions;
+
+        return $this;
+    }
+
+    public function getGuestHouseRules(): ?string
+    {
+        return $this->guestHouseRules;
+    }
+
+    public function setGuestHouseRules(?string $guestHouseRules): self
+    {
+        $this->guestHouseRules = $guestHouseRules;
+
+        return $this;
+    }
+
+    public function getGuestDepartureInstructions(): ?string
+    {
+        return $this->guestDepartureInstructions;
+    }
+
+    public function setGuestDepartureInstructions(?string $guestDepartureInstructions): self
+    {
+        $this->guestDepartureInstructions = $guestDepartureInstructions;
+
+        return $this;
+    }
+
+    public function getGuestEmergencyInfo(): ?string
+    {
+        return $this->guestEmergencyInfo;
+    }
+
+    public function setGuestEmergencyInfo(?string $guestEmergencyInfo): self
+    {
+        $this->guestEmergencyInfo = $guestEmergencyInfo;
+
+        return $this;
+    }
+
+    public function getGuestEquipmentInfo(): ?string
+    {
+        return $this->guestEquipmentInfo;
+    }
+
+    public function setGuestEquipmentInfo(?string $guestEquipmentInfo): self
+    {
+        $this->guestEquipmentInfo = $guestEquipmentInfo;
+
+        return $this;
+    }
+
+    public function getGuestGuideCompletedSectionCount(): int
+    {
+        $count = 0;
+
+        if ($this->getGuestWifiName() !== null && $this->getGuestWifiPassword() !== null) {
+            ++$count;
+        }
+
+        if ($this->getGuestHouseRules() !== null) {
+            ++$count;
+        }
+
+        if ($this->getGuestDepartureInstructions() !== null) {
+            ++$count;
+        }
+
+        if ($this->getGuestEmergencyInfo() !== null) {
+            ++$count;
+        }
+
+        if ($this->getGuestEquipmentInfo() !== null) {
+            ++$count;
+        }
+
+        return $count;
+    }
+
+    public function isGuestGuideComplete(): bool
+    {
+        return $this->getGuestGuideCompletedSectionCount() >= 5;
+    }
+
+    public function hasGuestGuideContent(): bool
+    {
+        return $this->guestWifiName !== null
+            || $this->guestWifiPassword !== null
+            || $this->guestWifiInstructions !== null
+            || $this->guestHouseRules !== null
+            || $this->guestDepartureInstructions !== null
+            || $this->guestEmergencyInfo !== null
+            || $this->guestEquipmentInfo !== null;
     }
 
     public function getStatus(): ApartmentStatus

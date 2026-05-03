@@ -31,7 +31,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/admin')]
 class AdminController extends AbstractController
 {
-    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'assignment', 'rooms', 'anomalies', 'settings'];
+    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'guidebook', 'assignment', 'rooms', 'anomalies', 'settings'];
 
     #[Route('', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(EntityManagerInterface $entityManager): Response
@@ -1775,6 +1775,13 @@ class AdminController extends AbstractController
             'ownerName' => $apartment->setOwnerName($normalizedValue),
             'ownerPhone' => $apartment->setOwnerPhone($normalizedValue),
             'internalNotes' => $apartment->setInternalNotes($normalizedValue),
+            'guestWifiName' => $apartment->setGuestWifiName($normalizedValue),
+            'guestWifiPassword' => $apartment->setGuestWifiPassword($normalizedValue),
+            'guestWifiInstructions' => $apartment->setGuestWifiInstructions($normalizedValue),
+            'guestHouseRules' => $apartment->setGuestHouseRules($normalizedValue),
+            'guestDepartureInstructions' => $apartment->setGuestDepartureInstructions($normalizedValue),
+            'guestEmergencyInfo' => $apartment->setGuestEmergencyInfo($normalizedValue),
+            'guestEquipmentInfo' => $apartment->setGuestEquipmentInfo($normalizedValue),
             default => throw new \InvalidArgumentException('Champ non modifiable.'),
         };
 

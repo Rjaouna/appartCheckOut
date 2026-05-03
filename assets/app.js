@@ -600,6 +600,35 @@ document.addEventListener('click', (event) => {
         return;
     }
 
+    const passwordRevealTrigger = event.target instanceof Element ? event.target.closest('[data-password-reveal-toggle]') : null;
+    if (passwordRevealTrigger instanceof HTMLButtonElement) {
+        event.preventDefault();
+        const wrapper = passwordRevealTrigger.closest('[data-password-reveal-wrapper]');
+        const valueElement = wrapper instanceof HTMLElement ? wrapper.querySelector('[data-password-reveal-value]') : null;
+        if (!(wrapper instanceof HTMLElement) || !(valueElement instanceof HTMLElement)) {
+            return;
+        }
+
+        const passwordValue = passwordRevealTrigger.getAttribute('data-password-value') || '';
+        const passwordMask = passwordRevealTrigger.getAttribute('data-password-mask') || '••••••••';
+        const previousTimeout = wrapper.dataset.hideTimeoutId ? Number(wrapper.dataset.hideTimeoutId) : 0;
+        if (previousTimeout) {
+            window.clearTimeout(previousTimeout);
+        }
+
+        valueElement.textContent = passwordValue;
+        passwordRevealTrigger.disabled = true;
+
+        const timeoutId = window.setTimeout(() => {
+            valueElement.textContent = passwordMask;
+            passwordRevealTrigger.disabled = false;
+            delete wrapper.dataset.hideTimeoutId;
+        }, 5000);
+
+        wrapper.dataset.hideTimeoutId = String(timeoutId);
+        return;
+    }
+
     const card = event.target instanceof Element ? event.target.closest('[data-click-url]') : null;
     if (!(card instanceof HTMLElement)) {
         return;

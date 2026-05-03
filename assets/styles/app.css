@@ -2223,6 +2223,117 @@ body.nav-compact .floating-main-menu-button {
     margin-bottom: 26px;
 }
 
+.public-tenant-hero {
+    margin-bottom: 22px;
+}
+
+.public-tenant-hero-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    gap: 18px;
+    padding: 24px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 56, 92, 0.14);
+    background:
+        radial-gradient(circle at top left, rgba(255, 90, 118, 0.14), transparent 30%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 247, 248, 0.98) 100%);
+}
+
+.public-tenant-hero-copy {
+    display: grid;
+    gap: 10px;
+}
+
+.public-tenant-hero-copy h1,
+.public-tenant-hero-copy p {
+    margin: 0;
+}
+
+.public-tenant-hero-copy h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.05;
+}
+
+.public-tenant-hero-copy p {
+    color: var(--muted);
+    max-width: 680px;
+}
+
+.public-tenant-hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.public-tenant-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(255, 56, 92, 0.12);
+    color: var(--accent-dark);
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+
+.public-tenant-badge-link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+}
+
+.public-tenant-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-content: start;
+    justify-content: flex-end;
+}
+
+.public-tenant-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(290px, 0.8fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.public-tenant-main,
+.public-tenant-side {
+    display: grid;
+    gap: 18px;
+}
+
+.public-tenant-arrival-card {
+    background:
+        radial-gradient(circle at top right, rgba(70, 199, 244, 0.1), transparent 32%),
+        linear-gradient(180deg, #fffdfb 0%, #fff 100%);
+}
+
+.public-tenant-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.public-tenant-quick-card {
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid #ece8df;
+}
+
+.public-tenant-quick-card strong {
+    line-height: 1.55;
+}
+
+.public-tenant-quick-card-wide {
+    grid-column: 1 / -1;
+}
+
 .public-apartment-shell {
     display: grid;
     gap: 20px;
@@ -2275,6 +2386,70 @@ body.nav-compact .floating-main-menu-button {
 .public-warning-card {
     background: linear-gradient(180deg, #fff7f8 0%, #fffdfa 100%);
     border-color: rgba(255, 56, 92, 0.18);
+}
+
+.public-guidebook-card {
+    background: linear-gradient(180deg, #fffdfb 0%, #fff8f6 100%);
+    border-color: rgba(255, 56, 92, 0.12);
+}
+
+.public-guidebook-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.public-guidebook-item {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid #f0ebe5;
+}
+
+.public-guidebook-item-highlight {
+    background: linear-gradient(180deg, #fff7fb 0%, #fff 100%);
+    border-color: rgba(255, 56, 92, 0.14);
+}
+
+.public-guidebook-item h3,
+.public-guidebook-item p {
+    margin: 0;
+}
+
+.public-guidebook-item h3 {
+    font-size: 1rem;
+}
+
+.public-guidebook-item p {
+    color: var(--muted);
+    line-height: 1.65;
+}
+
+.public-password-reveal {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.public-password-reveal-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(34, 34, 34, 0.08);
+    border-radius: 12px;
+    background: #fff6f8;
+    color: var(--accent-dark);
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.public-password-reveal-button svg {
+    width: 18px;
+    height: 18px;
 }
 
 .public-warning-card p {
@@ -2379,6 +2554,44 @@ body.nav-compact .floating-main-menu-button {
 .public-contact-copy {
     display: grid;
     gap: 6px;
+}
+
+.public-contact-summary-card,
+.public-stay-card {
+    background: linear-gradient(180deg, #fff 0%, #fcfbf8 100%);
+}
+
+.public-contact-summary-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.public-contact-summary-copy {
+    display: grid;
+    gap: 6px;
+}
+
+.public-contact-summary-more {
+    border-top: 1px solid rgba(34, 34, 34, 0.08);
+    padding-top: 14px;
+}
+
+.public-contact-summary-more summary {
+    cursor: pointer;
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.public-contact-summary-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.public-contact-summary-item {
+    display: grid;
+    gap: 4px;
 }
 
 .public-extra-card {
@@ -4393,6 +4606,11 @@ a.apartment-manager-link:focus-visible {
     border-color: rgba(34, 34, 34, 0.08);
 }
 
+.admin-detail-entry-card-pending {
+    background: linear-gradient(180deg, #f5f4f1 0%, #ece9e3 100%);
+    border-color: rgba(34, 34, 34, 0.08);
+}
+
 .admin-detail-entry-card-soft p {
     color: var(--muted);
 }
@@ -4449,6 +4667,11 @@ a.apartment-manager-link:focus-visible {
     color: #c66b00;
 }
 
+.admin-detail-entry-icon-pending {
+    background: #f0ece6;
+    color: #8a6240;
+}
+
 .admin-detail-entry-icon-danger {
     background: #fde7e4;
     color: #b42318;
@@ -4471,6 +4694,11 @@ a.apartment-manager-link:focus-visible {
 .admin-detail-entry-card-danger .admin-detail-entry-metric {
     background: #f6f3ef;
     color: var(--text);
+}
+
+.admin-detail-entry-metric-pending {
+    background: #fff1e7 !important;
+    color: #b35a00 !important;
 }
 
 .admin-detail-entry-kicker {
@@ -4628,6 +4856,11 @@ a.apartment-manager-link:focus-visible {
     padding: 20px;
     border-radius: 24px;
     background: #fff;
+}
+
+.admin-detail-focus-card-pending {
+    background: linear-gradient(180deg, #f7f5f1 0%, #fff 100%);
+    border: 1px solid rgba(179, 90, 0, 0.14);
 }
 
 .admin-detail-focus-card-primary {
@@ -4914,9 +5147,12 @@ a.apartment-manager-link:focus-visible {
         grid-template-columns: 1fr;
     }
 
+    .public-tenant-hero-card,
+    .public-tenant-layout,
     .public-entry-grid,
     .public-apartment-grid,
-    .public-contact-grid {
+    .public-contact-grid,
+    .public-guidebook-grid {
         grid-template-columns: 1fr;
     }
 
@@ -4930,10 +5166,20 @@ a.apartment-manager-link:focus-visible {
         justify-content: stretch;
     }
 
+    .public-tenant-hero-actions {
+        justify-content: stretch;
+    }
+
     .public-access-hero-actions .primary-button,
-    .public-access-hero-actions .secondary-button {
+    .public-access-hero-actions .secondary-button,
+    .public-tenant-hero-actions .primary-button,
+    .public-tenant-hero-actions .secondary-button {
         width: 100%;
         justify-content: center;
+    }
+
+    .public-tenant-quick-grid {
+        grid-template-columns: 1fr;
     }
 
     .admin-apartment-workspace,
