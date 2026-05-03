@@ -41,6 +41,16 @@
         </article>
     </section>
 
+    {% if serviceContactEmployee and serviceExtras is not empty %}
+        <section class="public-services-callout">
+            <div class="public-services-callout-copy">
+                <strong>Besoin d’un service pendant votre séjour ?</strong>
+                <p>Retrouvez les services disponibles proposés pour ce logement.</p>
+            </div>
+            <a class="public-services-callout-link" href="#tenant-services">Voir les services disponibles</a>
+        </section>
+    {% endif %}
+
     <section class="public-tenant-layout">
         <div class="public-tenant-main">
             <article class="apartment-detail-card apartment-detail-card-wide public-tenant-arrival-card">
@@ -164,7 +174,7 @@
             {% endif %}
 
             {% if serviceContactEmployee and serviceExtras is not empty %}
-                <article class="apartment-detail-card apartment-detail-card-wide public-extra-card">
+                <article id="tenant-services" class="apartment-detail-card apartment-detail-card-wide public-extra-card">
                     <div class="panel-head">
                         <div>
                             <h2>Services disponibles</h2>
