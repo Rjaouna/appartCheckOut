@@ -8,6 +8,8 @@
     <div class="card-grid apartment-card-grid admin-home-apartment-grid">
         {% for apartment in apartments %}
             {% set activeManagers = apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
+            {% set leadManager = activeManagers|first %}
+            {% set extraManagerCount = activeManagers|length > 1 ? activeManagers|length - 1 : 0 %}
             {% set managerListId = 'admin-apartment-managers-' ~ apartment.id %}
             {% set accessCode = apartment.keyBoxCode ?: apartment.buildingAccessCode ?: 'Non renseigné' %}
             <article class="employee-card admin-apartment-card admin-home-card {{ apartment.status.value != 'active' ? 'is-dimmed' : '' }}" data-click-url="{{ path('admin_apartment_show', {id: apartment.id}) }}">
@@ -21,28 +23,6 @@
                             <span class="mini-badge is-warning">{{ openAnomalyCount }} anomalie{{ openAnomalyCount > 1 ? 's' : '' }}</span>
                         {% endif %}
                     </div>
-                    <form method="post" action="{{ path('admin_apartment_status', {id: apartment.id}) }}" data-async-form data-update-target="#apartments-list-panel">
-                        <input type="hidden" name="context" value="apartments-list">
-                        <input type="hidden" name="status" value="{{ apartment.status.value == 'active' ? 'inactive' : 'active' }}">
-                        <button
-                            class="icon-action-button {{ apartment.status.value == 'active' ? 'is-warning' : 'is-success' }}"
-                            type="submit"
-                            title="{{ apartment.status.value == 'active' ? 'Desactiver l appartement' : 'Activer l appartement' }}"
-                            aria-label="{{ apartment.status.value == 'active' ? 'Desactiver l appartement' : 'Activer l appartement' }}"
-                        >
-                            {% if apartment.status.value == 'active' %}
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M12 2v10"></path>
-                                    <path d="M6.2 6.2a8 8 0 1 0 11.6 0"></path>
-                                </svg>
-                            {% else %}
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M12 2v10"></path>
-                                    <path d="M18.4 6.6a8 8 0 1 1-12.8 0"></path>
-                                </svg>
-                            {% endif %}
-                        </button>
-                    </form>
                 </div>
                 <h2 class="card-title-link-wrap"><a class="card-title-link" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartment.name }}</a></h2>
                 <div class="apartment-card-info-stack">
@@ -55,25 +35,32 @@
                         <div>
                             <dt>Gérants</dt>
                             <dd>
-                                <button
-                                    class="apartment-manager-toggle"
-                                    type="button"
-                                    data-toggle-target="#{{ managerListId }}"
-                                    data-toggle-label-open="{{ activeManagers|length }}"
-                                    data-toggle-label-closed="{{ activeManagers|length }}"
-                                >
-                                    {{ activeManagers|length }}
-                                </button>
+                                {% if leadManager %}
+                                    <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: leadManager.id}) }}">{{ leadManager.fullName }}</a>
+                                    {% if extraManagerCount > 0 %}
+                                        <button
+                                            class="apartment-manager-toggle"
+                                            type="button"
+                                            data-toggle-target="#{{ managerListId }}"
+                                            data-toggle-label-open="(+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }})"
+                                            data-toggle-label-closed="(+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }})"
+                                        >
+                                            (+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }})
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="muted">Aucun employé assigné</span>
+                                {% endif %}
                             </dd>
                         </div>
                     </dl>
-                    <div id="{{ managerListId }}" class="apartment-manager-list is-collapsed">
-                        {% for employee in activeManagers %}
-                            <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
-                        {% else %}
-                            <span class="muted">Aucun employé assigné</span>
-                        {% endfor %}
-                    </div>
+                    {% if extraManagerCount > 0 %}
+                        <div id="{{ managerListId }}" class="apartment-manager-list is-collapsed">
+                            {% for employee in activeManagers|slice(1) %}
+                                <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </article>
         {% else %}

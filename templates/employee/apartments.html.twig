@@ -15,6 +15,8 @@
     <section class="employee-apartments-grid">
         {% for apartment in apartments %}
             {% set activeManagers = apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
+            {% set leadManager = activeManagers|first %}
+            {% set extraManagerCount = activeManagers|length > 1 ? activeManagers|length - 1 : 0 %}
             {% set managerListId = 'employee-apartment-managers-' ~ apartment.id %}
             {% set accessCode = apartment.keyBoxCode ?: apartment.buildingAccessCode ?: 'Non renseigné' %}
             <article class="employee-card employee-apartment-card" data-click-url="{{ path('employee_apartment_show', {id: apartment.id}) }}">
@@ -31,25 +33,32 @@
                         <div>
                             <dt>Gérants</dt>
                             <dd>
-                                <button
-                                    class="apartment-manager-toggle"
-                                    type="button"
-                                    data-toggle-target="#{{ managerListId }}"
-                                    data-toggle-label-open="{{ activeManagers|length }}"
-                                    data-toggle-label-closed="{{ activeManagers|length }}"
-                                >
-                                    {{ activeManagers|length }}
-                                </button>
+                                {% if leadManager %}
+                                    <span class="apartment-manager-link">{{ leadManager.fullName }}</span>
+                                    {% if extraManagerCount > 0 %}
+                                        <button
+                                            class="apartment-manager-toggle"
+                                            type="button"
+                                            data-toggle-target="#{{ managerListId }}"
+                                            data-toggle-label-open="(+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }})"
+                                            data-toggle-label-closed="(+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }})"
+                                        >
+                                            (+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }})
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="muted">Aucun employé assigné</span>
+                                {% endif %}
                             </dd>
                         </div>
                     </dl>
-                    <div id="{{ managerListId }}" class="apartment-manager-list is-collapsed">
-                        {% for employee in activeManagers %}
-                            <span class="apartment-manager-link">{{ employee.fullName }}</span>
-                        {% else %}
-                            <span class="muted">Aucun employé assigné</span>
-                        {% endfor %}
-                    </div>
+                    {% if extraManagerCount > 0 %}
+                        <div id="{{ managerListId }}" class="apartment-manager-list is-collapsed">
+                            {% for employee in activeManagers|slice(1) %}
+                                <span class="apartment-manager-link">{{ employee.fullName }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </article>
         {% else %}
