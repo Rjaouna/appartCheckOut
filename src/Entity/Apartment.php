@@ -142,12 +142,20 @@ class Apartment
     #[ORM\OrderBy(['displayOrder' => 'ASC', 'id' => 'ASC'])]
     private Collection $accessSteps;
 
+    /**
+     * @var Collection<int, ApartmentReservation>
+     */
+    #[ORM\OneToMany(mappedBy: 'apartment', targetEntity: ApartmentReservation::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['arrivalDate' => 'ASC', 'id' => 'DESC'])]
+    private Collection $reservations;
+
     public function __construct()
     {
         $this->assignedEmployees = new ArrayCollection();
         $this->rooms = new ArrayCollection();
         $this->checkouts = new ArrayCollection();
         $this->accessSteps = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -694,6 +702,41 @@ class Apartment
     {
         if ($this->accessSteps->removeElement($accessStep) && $accessStep->getApartment() === $this) {
             $accessStep->setApartment(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ApartmentReservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    /**
+     * @return list<ApartmentReservation>
+     */
+    public function getOrderedReservations(): array
+    {
+        return array_values($this->reservations->toArray());
+    }
+
+    public function addReservation(ApartmentReservation $reservation): self
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setApartment($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(ApartmentReservation $reservation): self
+    {
+        if ($this->reservations->removeElement($reservation) && $reservation->getApartment() === $this) {
+            $reservation->setApartment(null);
         }
 
         return $this;

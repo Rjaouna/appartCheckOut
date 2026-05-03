@@ -49,6 +49,7 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
+    clearInlineFormError(form);
 
     const submitButton = form.querySelector('button[type="submit"]');
     if (submitButton instanceof HTMLButtonElement) {
@@ -80,19 +81,6 @@ document.addEventListener('submit', async (event) => {
             throw new Error(payload?.message || 'Une erreur est survenue.');
         }
 
-        if (payload.redirect) {
-            if (payload.message) {
-                storePendingToast(payload.message, 'success');
-            }
-            window.location.href = payload.redirect;
-            return;
-        }
-
-        if (form.hasAttribute('data-reload-on-success')) {
-            window.location.reload();
-            return;
-        }
-
         const modalToClose = form.getAttribute('data-close-modal');
         if (modalToClose) {
             hideModal(modalToClose);
@@ -115,6 +103,19 @@ document.addEventListener('submit', async (event) => {
             }
         }
 
+        if (payload.redirect) {
+            if (payload.message) {
+                storePendingToast(payload.message, 'success');
+            }
+            window.location.href = payload.redirect;
+            return;
+        }
+
+        if (form.hasAttribute('data-reload-on-success')) {
+            window.location.reload();
+            return;
+        }
+
         if (form.hasAttribute('data-reset-form')) {
             form.reset();
         }
@@ -123,6 +124,7 @@ document.addEventListener('submit', async (event) => {
         hideModal('actionMenuModal');
         showToast(payload?.message || 'Opération terminée.');
     } catch (error) {
+        setInlineFormError(form, error.message || 'Opération impossible.');
         showToast(error.message || 'Opération impossible.', 'error');
     } finally {
         if (submitButton instanceof HTMLButtonElement) {
@@ -219,6 +221,235 @@ function openApartmentNameModal() {
             input.select();
         }
     }, 120);
+}
+
+function resetApartmentReservationWizard(modalElement) {
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    const form = modalElement.querySelector('form');
+    const steps = Array.from(modalElement.querySelectorAll('[data-reservation-step]'));
+    if (form instanceof HTMLFormElement) {
+        form.reset();
+        clearInlineFormError(form);
+    }
+
+    steps.forEach((stepElement, index) => {
+        if (!(stepElement instanceof HTMLElement)) {
+            return;
+        }
+
+        const isFirstStep = index === 0;
+        stepElement.hidden = !isFirstStep;
+        stepElement.classList.toggle('is-collapsed', !isFirstStep);
+    });
+}
+
+function setInlineFormError(form, message) {
+    const errorElement = form.querySelector('[data-form-error]');
+    if (!(errorElement instanceof HTMLElement)) {
+        return;
+    }
+
+    errorElement.textContent = message;
+    errorElement.hidden = false;
+}
+
+function clearInlineFormError(form) {
+    const errorElement = form.querySelector('[data-form-error]');
+    if (!(errorElement instanceof HTMLElement)) {
+        return;
+    }
+
+    errorElement.textContent = '';
+    errorElement.hidden = true;
+}
+
+function validateReservationWhatsAppInput(input) {
+    const rawValue = input.value.trim();
+    const digits = rawValue.replace(/\D+/g, '');
+    let normalized = '';
+
+    if (rawValue.startsWith('+')) {
+        normalized = `+${digits}`;
+    } else if (rawValue.startsWith('00')) {
+        normalized = `+${digits.slice(2)}`;
+    } else {
+        return false;
+    }
+
+    return /^\+[1-9]\d{7,14}$/.test(normalized);
+}
+
+function parseReservationRanges(form) {
+    if (!(form instanceof HTMLFormElement)) {
+        return [];
+    }
+
+    const rawRanges = form.getAttribute('data-reservation-ranges') || '[]';
+
+    try {
+        const payload = JSON.parse(rawRanges);
+        if (!Array.isArray(payload)) {
+            return [];
+        }
+
+        return payload.filter((range) => range && typeof range.arrivalDate === 'string' && typeof range.departureDate === 'string');
+    } catch (error) {
+        return [];
+    }
+}
+
+function syncReservationDateAvailability(form) {
+    if (!(form instanceof HTMLFormElement)) {
+        return true;
+    }
+
+    const arrivalInput = form.querySelector('[data-reservation-date-input="arrival"]');
+    const departureInput = form.querySelector('[data-reservation-date-input="departure"]');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    if (!(arrivalInput instanceof HTMLInputElement) || !(departureInput instanceof HTMLInputElement)) {
+        return true;
+    }
+
+    arrivalInput.setCustomValidity('');
+    departureInput.setCustomValidity('');
+
+    if (arrivalInput.value) {
+        departureInput.min = arrivalInput.value;
+    } else {
+        departureInput.removeAttribute('min');
+    }
+
+    if (!arrivalInput.value || !departureInput.value) {
+        if (submitButton instanceof HTMLButtonElement) {
+            submitButton.disabled = false;
+        }
+
+        return true;
+    }
+
+    const reservationRanges = parseReservationRanges(form);
+    const blockedRange = reservationRanges.find((range) => arrivalInput.value <= range.departureDate && departureInput.value >= range.arrivalDate);
+    if (!blockedRange) {
+        if (submitButton instanceof HTMLButtonElement) {
+            submitButton.disabled = false;
+        }
+
+        clearInlineFormError(form);
+        return true;
+    }
+
+    const formattedStart = new Intl.DateTimeFormat('fr-FR').format(new Date(`${blockedRange.arrivalDate}T00:00:00`));
+    const formattedEnd = new Intl.DateTimeFormat('fr-FR').format(new Date(`${blockedRange.departureDate}T00:00:00`));
+    const message = `Cette période est déjà réservée du ${formattedStart} au ${formattedEnd}.`;
+
+    arrivalInput.setCustomValidity(message);
+    departureInput.setCustomValidity(message);
+    setInlineFormError(form, message);
+
+    if (submitButton instanceof HTMLButtonElement) {
+        submitButton.disabled = true;
+    }
+
+    return false;
+}
+
+function openApartmentReservationModal() {
+    const modalElement = document.getElementById('apartmentReservationModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    resetApartmentReservationWizard(modalElement);
+    showModalElement(modalElement);
+
+    const form = modalElement.querySelector('form');
+    if (form instanceof HTMLFormElement) {
+        syncReservationDateAvailability(form);
+    }
+
+    window.setTimeout(() => {
+        const input = modalElement.querySelector('[data-reservation-step-input]');
+        if (input instanceof HTMLInputElement) {
+            input.focus();
+        }
+    }, 120);
+}
+
+function moveApartmentReservationWizard(direction) {
+    const modalElement = document.getElementById('apartmentReservationModal');
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    const steps = Array.from(modalElement.querySelectorAll('[data-reservation-step]')).filter((step) => step instanceof HTMLElement);
+    const currentIndex = steps.findIndex((step) => step instanceof HTMLElement && !step.hidden);
+    if (currentIndex === -1) {
+        return;
+    }
+
+    const nextIndex = direction === 'next'
+        ? Math.min(currentIndex + 1, steps.length - 1)
+        : Math.max(currentIndex - 1, 0);
+
+    if (direction === 'next') {
+        const currentStep = steps[currentIndex];
+        if (currentStep instanceof HTMLElement) {
+            const requiredInputs = Array.from(currentStep.querySelectorAll('input[required], textarea[required], select[required]'));
+            const invalidInput = requiredInputs.find((input) => {
+                if (
+                    input instanceof HTMLInputElement
+                    || input instanceof HTMLTextAreaElement
+                    || input instanceof HTMLSelectElement
+                ) {
+                    return !input.reportValidity();
+                }
+
+                return false;
+            });
+
+            if (invalidInput) {
+                return;
+            }
+
+            if (currentIndex === 1) {
+                const whatsAppInput = currentStep.querySelector('input[name="guestWhatsappNumber"]');
+                if (whatsAppInput instanceof HTMLInputElement && !validateReservationWhatsAppInput(whatsAppInput)) {
+                    setInlineFormError(whatsAppInput.form, 'Saisissez le numéro au format international, par exemple +33 6 00 00 00 00.');
+                    whatsAppInput.focus();
+                    return;
+                }
+
+                if (whatsAppInput instanceof HTMLInputElement && whatsAppInput.form instanceof HTMLFormElement) {
+                    clearInlineFormError(whatsAppInput.form);
+                }
+            }
+
+            if (currentIndex === 2) {
+                const stepForm = currentStep.closest('form');
+                if (stepForm instanceof HTMLFormElement && !syncReservationDateAvailability(stepForm)) {
+                    const arrivalInput = stepForm.querySelector('[data-reservation-date-input="arrival"]');
+                    if (arrivalInput instanceof HTMLInputElement) {
+                        arrivalInput.reportValidity();
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
+    steps.forEach((step, index) => {
+        if (!(step instanceof HTMLElement)) {
+            return;
+        }
+
+        const isActive = index === nextIndex;
+        step.hidden = !isActive;
+        step.classList.toggle('is-collapsed', !isActive);
+    });
 }
 
 function addApartmentAccessStepDraft(trigger) {
@@ -496,10 +727,31 @@ document.addEventListener('click', (event) => {
         return;
     }
 
+    const apartmentReservationModalTrigger = event.target instanceof Element ? event.target.closest('[data-apartment-reservation-modal-trigger]') : null;
+    if (apartmentReservationModalTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        openApartmentReservationModal();
+        return;
+    }
+
     const apartmentNameModalTrigger = event.target instanceof Element ? event.target.closest('[data-apartment-name-modal-trigger]') : null;
     if (apartmentNameModalTrigger instanceof HTMLElement) {
         event.preventDefault();
         openApartmentNameModal();
+        return;
+    }
+
+    const reservationNextTrigger = event.target instanceof Element ? event.target.closest('[data-reservation-next]') : null;
+    if (reservationNextTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        moveApartmentReservationWizard('next');
+        return;
+    }
+
+    const reservationPrevTrigger = event.target instanceof Element ? event.target.closest('[data-reservation-prev]') : null;
+    if (reservationPrevTrigger instanceof HTMLElement) {
+        event.preventDefault();
+        moveApartmentReservationWizard('prev');
         return;
     }
 
@@ -641,6 +893,26 @@ document.addEventListener('click', (event) => {
     const url = card.dataset.clickUrl;
     if (url) {
         window.location.href = url;
+    }
+});
+
+document.addEventListener('input', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+        return;
+    }
+
+    if (target.matches('[data-reservation-date-input]') || target.name === 'guestWhatsappNumber') {
+        const form = target.form;
+        if (form instanceof HTMLFormElement) {
+            if (target.name === 'guestWhatsappNumber' && validateReservationWhatsAppInput(target)) {
+                clearInlineFormError(form);
+            }
+
+            if (target.matches('[data-reservation-date-input]')) {
+                syncReservationDateAvailability(form);
+            }
+        }
     }
 });
 

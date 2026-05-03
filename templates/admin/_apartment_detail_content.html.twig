@@ -67,6 +67,17 @@
                         </div>
 
                         <div class="apartment-hero-meta-item">
+                            <span class="apartment-hero-address-label">Réservation</span>
+                            <strong>
+                                {% if nextArrivalReservation %}
+                                    {{ nextArrivalReservation.guestName }} · {{ nextArrivalReservation.stayDateLabel }}
+                                {% else %}
+                                    Aucune réservation
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="apartment-hero-meta-item">
                             <span class="apartment-hero-address-label">Accès locataire</span>
                             <strong>{{ apartment.isTenantAccessEnabled ? 'Actif' : 'Bloqué' }}</strong>
                         </div>
@@ -81,6 +92,9 @@
             </div>
 
             <div class="head-actions apartment-hero-actions">
+                <button class="primary-button apartment-hero-priority-button" type="button" data-apartment-reservation-modal-trigger>
+                    Réserver le logement
+                </button>
                 <form
                     method="post"
                     action="{{ path('admin_apartment_tenant_access', {id: apartment.id}) }}"
@@ -148,7 +162,99 @@
             </div>
         </div>
     </div>
+
 {% endif %}
+
+{% set reservationRanges = [] %}
+{% for existingReservation in reservations|default([]) %}
+    {% if existingReservation.arrivalDate and existingReservation.departureDate %}
+        {% set reservationRanges = reservationRanges|merge([{
+            arrivalDate: existingReservation.arrivalDate|date('Y-m-d'),
+            departureDate: existingReservation.departureDate|date('Y-m-d'),
+            guestName: existingReservation.guestName
+        }]) %}
+    {% endif %}
+{% endfor %}
+
+<div class="modal fade" id="apartmentReservationModal" tabindex="-1" aria-labelledby="apartmentReservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content apartment-name-modal-content apartment-reservation-modal-content">
+            <div class="modal-header apartment-name-modal-header">
+                <div>
+                    <span class="eyebrow">Réservation</span>
+                    <h4 class="modal-title" id="apartmentReservationModalLabel">Enregistrer une arrivée</h4>
+                </div>
+                <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+            </div>
+            <form
+                method="post"
+                action="{{ path('admin_apartment_reservation_create', {id: apartment.id}) }}"
+                class="stack-form apartment-reservation-modal-form"
+                data-async-form
+                data-update-target="{{ detailUpdateTarget|default('#apartment-detail-root') }}"
+                data-close-modal="apartmentReservationModal"
+                data-reservation-ranges="{{ reservationRanges|json_encode|e('html_attr') }}"
+            >
+                {% if currentSection is defined and currentSection %}
+                    <input type="hidden" name="section" value="{{ currentSection }}">
+                {% endif %}
+                <p class="form-inline-error" data-form-error hidden></p>
+
+                <div class="reservation-wizard-step" data-reservation-step="1">
+                    <label>
+                        <span>Nom du locataire</span>
+                        <input type="text" name="guestName" required data-reservation-step-input>
+                    </label>
+                    <div class="editable-field-actions">
+                        <button class="primary-button" type="button" data-reservation-next>Suivant</button>
+                    </div>
+                </div>
+
+                <div class="reservation-wizard-step is-collapsed" data-reservation-step="2" hidden>
+                    <label>
+                        <span>Numéro WhatsApp</span>
+                        <input type="text" name="guestWhatsappNumber" placeholder="+33 6 00 00 00 00" required>
+                    </label>
+                    <p class="muted">Saisis le numéro au format international, par exemple +33 6 00 00 00 00.</p>
+                    <div class="editable-field-actions">
+                        <button class="secondary-button" type="button" data-reservation-prev>Retour</button>
+                        <button class="primary-button" type="button" data-reservation-next>Suivant</button>
+                    </div>
+                </div>
+
+                <div class="reservation-wizard-step is-collapsed" data-reservation-step="3" hidden>
+                    <label>
+                        <span>Date d’arrivée</span>
+                        <input type="date" name="arrivalDate" required data-reservation-date-input="arrival">
+                    </label>
+                    <label>
+                        <span>Date de départ</span>
+                        <input type="date" name="departureDate" required data-reservation-date-input="departure">
+                    </label>
+                    {% if reservationRanges is not empty %}
+                        <div class="reservation-unavailable-ranges">
+                            <span class="reservation-unavailable-title">Périodes déjà réservées</span>
+                            <ul class="reservation-unavailable-list">
+                                {% for reservedRange in reservationRanges %}
+                                    <li>
+                                        {{ reservedRange.arrivalDate|date('d/m/Y') }} au {{ reservedRange.departureDate|date('d/m/Y') }}
+                                        {% if reservedRange.guestName %}
+                                            <span>· {{ reservedRange.guestName }}</span>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="editable-field-actions">
+                        <button class="secondary-button" type="button" data-reservation-prev>Retour</button>
+                        <button class="primary-button" type="submit">Terminer</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <section id="apartment-structure">
     {% include 'admin/_apartment_structure.html.twig' %}

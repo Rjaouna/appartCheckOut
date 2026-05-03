@@ -1,0 +1,133 @@
+<div id="admin-arrivals-root">
+    <section class="page-head">
+        <div>
+            <h1>Gestion des arrivées</h1>
+            <p>{{ reservations|length }} réservation{{ reservations|length > 1 ? 's' : '' }} active{{ reservations|length > 1 ? 's' : '' }} à suivre.</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path('admin_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    <div class="room-stack admin-arrival-card-stack">
+        {% for reservation in reservations %}
+            {% set apartment = reservation.apartment %}
+            {% set activeManagers = apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
+            {% set leadManager = activeManagers|first %}
+            {% set extraManagers = activeManagers|slice(1) %}
+            {% set managerListId = 'arrival-page-managers-' ~ reservation.id %}
+            {% set shouldDiscourageSend = reservation.arrivalDate and reservation.arrivalDate > todayDate %}
+            <article class="room-card admin-arrival-card {{ reservation.isArrivalToday(todayDate) ? 'is-today' : '' }}">
+                <div class="room-card-head">
+                    <div>
+                        <h3>{{ reservation.guestName }}</h3>
+                        <p><a class="card-title-link" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartment.name }}</a> · {{ reservation.stayDateLabel }}</p>
+                    </div>
+                    <span class="status-badge {{ reservation.hasSentAccessMessage ? 'is-success' : (reservation.isArrivalToday(todayDate) ? 'is-warning' : 'is-soft') }}">
+                        {% if reservation.hasSentAccessMessage %}
+                            Message envoyé
+                        {% elseif reservation.isArrivalToday(todayDate) %}
+                            Jour d’arrivée
+                        {% elseif shouldDiscourageSend %}
+                            En attente
+                        {% else %}
+                            Arrivée passée
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="admin-arrival-card-grid">
+                    {% include 'admin/_editable_reservation_field.html.twig' with {
+                        reservation: reservation,
+                        field: 'guestName',
+                        label: 'Locataire',
+                        value: reservation.guestName,
+                        rawValue: reservation.guestName,
+                        context: 'arrivals',
+                        updateTarget: '#admin-arrivals-root'
+                    } %}
+
+                    {% include 'admin/_editable_reservation_field.html.twig' with {
+                        reservation: reservation,
+                        field: 'guestWhatsappNumber',
+                        label: 'WhatsApp',
+                        value: reservation.guestWhatsappNumber,
+                        rawValue: reservation.guestWhatsappNumber,
+                        context: 'arrivals',
+                        updateTarget: '#admin-arrivals-root'
+                    } %}
+
+                    <div class="editable-field-row editable-field-row-compact">
+                        <div class="editable-field-display">
+                            <div class="editable-field-copy">
+                                <span class="editable-field-label">Gérant</span>
+                                {% if leadManager %}
+                                    <strong class="admin-arrival-manager-inline">
+                                        <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: leadManager.id}) }}">{{ leadManager.fullName }}</a>
+                                        {% if leadManager.phoneNumber %}
+                                            <a class="inline-phone-link" href="tel:{{ leadManager.phoneNumber }}" aria-label="Appeler {{ leadManager.fullName }}">✆</a>
+                                        {% endif %}
+                                    </strong>
+                                    {% if extraManagers|length > 0 %}
+                                        <button
+                                            class="apartment-manager-toggle"
+                                            type="button"
+                                            data-toggle-target="#{{ managerListId }}"
+                                            data-toggle-label-open="(+{{ extraManagers|length }} autres)"
+                                            data-toggle-label-closed="(+{{ extraManagers|length }} autres)"
+                                        >
+                                            (+{{ extraManagers|length }} autres)
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <strong>Aucun gérant assigné</strong>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if extraManagers|length > 0 %}
+                            <div id="{{ managerListId }}" class="apartment-manager-list is-collapsed">
+                                {% for employee in extraManagers %}
+                                    <span class="admin-arrival-manager-inline">
+                                        <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
+                                        {% if employee.phoneNumber %}
+                                            <a class="inline-phone-link" href="tel:{{ employee.phoneNumber }}" aria-label="Appeler {{ employee.fullName }}">✆</a>
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="admin-arrival-card-actions">
+                    {% if shouldDiscourageSend %}
+                        <p class="muted">Déconseillé avant la date d’arrivée.</p>
+                    {% elseif reservation.isArrivalToday(todayDate) %}
+                        <p class="muted">Le séjour commence aujourd’hui, l’envoi est recommandé.</p>
+                    {% elseif reservation.hasSentAccessMessage %}
+                        <p class="muted">Dernier envoi : {{ reservation.accessMessageSentAt ? reservation.accessMessageSentAt|date('d/m/Y H:i') : '—' }}</p>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        action="{{ path('admin_reservation_send_access', {id: reservation.id}) }}"
+                        data-async-form
+                        data-update-target="#admin-arrivals-root"
+                        {% if shouldDiscourageSend %}
+                            data-confirm-reset
+                            data-confirm-title="Envoyer avant l’arrivée"
+                            data-confirm-message="L’arrivée n’est pas prévue aujourd’hui. Veux-tu envoyer les informations quand même ?"
+                        {% endif %}
+                    >
+                        <input type="hidden" name="context" value="arrivals">
+                        <button class="{{ reservation.hasSentAccessMessage ? 'secondary-button' : 'primary-button' }}" type="submit">
+                            {{ reservation.hasSentAccessMessage ? 'Renvoyer le message' : 'Envoyer les informations' }}
+                        </button>
+                    </form>
+                </div>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucune arrivée locataire n’est enregistrée pour le moment.</p>
+        {% endfor %}
+    </div>
+</div>

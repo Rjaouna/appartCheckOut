@@ -124,6 +124,25 @@
                 </div>
             </article>
 
+            <article class="employee-home-entry-card employee-home-entry-card-soft" data-click-url="{{ path('employee_arrivals') }}">
+                <div class="employee-home-entry-top">
+                    <span class="employee-home-entry-icon employee-home-entry-icon-soft" aria-hidden="true">
+                        <svg viewBox="0 0 64 64">
+                            <rect x="12" y="18" width="40" height="32" rx="12" fill="none" stroke="currentColor" stroke-width="4.2"/>
+                            <path d="M12 28h40" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                            <path d="M22 14v8M42 14v8" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                            <path d="M22 38h20M22 46h14" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="employee-home-entry-count">{{ arrivalCount }}</span>
+                </div>
+                <div class="employee-home-entry-copy">
+                    <p class="employee-home-card-label">Locataires à suivre</p>
+                    <h4><a class="employee-home-title-link" href="{{ path('employee_arrivals') }}">Mes arrivées</a></h4>
+                    <p>{{ arrivalCount }} arrivée{{ arrivalCount > 1 ? 's' : '' }} avec état d’avancement visible.</p>
+                </div>
+            </article>
+
             <article class="employee-home-entry-card employee-home-entry-card-soft" data-click-url="{{ path('employee_profile') }}">
                 <div class="employee-home-entry-top">
                     <span class="employee-home-entry-icon employee-home-entry-icon-soft" aria-hidden="true">

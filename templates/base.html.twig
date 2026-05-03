@@ -136,6 +136,13 @@
                                 <span class="action-menu-tile-label">Employés</span>
                                 <span class="action-menu-tile-caption">Profils, équipe et services</span>
                             </a>
+                            <a class="action-menu-tile" href="{{ path('admin_arrivals') }}">
+                                <span class="action-menu-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10ZM6 8h12V6H6v2Z" fill="currentColor"/></svg>
+                                </span>
+                                <span class="action-menu-tile-label">Arrivées</span>
+                                <span class="action-menu-tile-caption">Réservations et envois WhatsApp</span>
+                            </a>
                         {% endif %}
                         {% if is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_ADMIN') %}
                             <a class="action-menu-tile" href="{{ path('employee_dashboard') }}">
@@ -180,6 +187,13 @@
                                 <span class="action-menu-tile-label">Profil</span>
                                 <span class="action-menu-tile-caption">Informations et services activés</span>
                             </a>
+                            <a class="action-menu-tile" href="{{ path('employee_arrivals') }}">
+                                <span class="action-menu-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10ZM6 8h12V6H6v2Z" fill="currentColor"/></svg>
+                                </span>
+                                <span class="action-menu-tile-label">Locataires</span>
+                                <span class="action-menu-tile-caption">Arrivées et état d’avancement</span>
+                            </a>
                         {% endif %}
                         <button
                             class="action-menu-tile action-menu-tile-button"
@@ -222,11 +236,13 @@
                                 <a href="{{ path('admin_users') }}">Gérer l’équipe</a>
                                 <a href="{{ path('admin_anomalies') }}">Suivre les anomalies</a>
                                 <a href="{{ path('admin_dashboard') }}">Voir les check-outs</a>
+                                <a href="{{ path('admin_arrivals') }}">Gérer les arrivées</a>
                             {% else %}
                                 <a href="{{ path('employee_calendar') }}">Voir mon calendrier</a>
                                 <a href="{{ path('employee_apartments') }}">Ouvrir mes appartements</a>
                                 <a href="{{ path('employee_anomalies') }}">Suivre mes anomalies</a>
                                 <a href="{{ path('employee_profile') }}">Gérer mon profil</a>
+                                <a href="{{ path('employee_arrivals') }}">Voir mes locataires</a>
                             {% endif %}
                         </div>
 

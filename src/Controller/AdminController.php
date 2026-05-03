@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Anomaly;
 use App\Entity\Apartment;
 use App\Entity\ApartmentAccessStep;
+use App\Entity\ApartmentReservation;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
 use App\Entity\EquipmentCatalog;
@@ -18,6 +19,7 @@ use App\Enum\CheckoutStatus;
 use App\Enum\RoomType;
 use App\Enum\AnomalyStatus;
 use App\Service\AnomalyWorkflowManager;
+use App\Service\ApartmentReservationMessenger;
 use App\Service\CheckoutManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,16 +29,23 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/admin')]
 class AdminController extends AbstractController
 {
-    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'guidebook', 'assignment', 'rooms', 'anomalies', 'settings'];
+    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'guidebook', 'arrivals', 'assignment', 'rooms', 'anomalies', 'settings'];
 
     #[Route('', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(EntityManagerInterface $entityManager): Response
     {
         return $this->render('admin/dashboard.html.twig', $this->buildDashboardData($entityManager));
+    }
+
+    #[Route('/arrivals', name: 'admin_arrivals', methods: ['GET'])]
+    public function arrivals(EntityManagerInterface $entityManager): Response
+    {
+        return $this->render('admin/arrivals.html.twig', $this->buildArrivalsPageData($entityManager));
     }
 
     #[Route('/anomalies', name: 'admin_anomalies', methods: ['GET'])]
@@ -679,6 +688,113 @@ class AdminController extends AbstractController
         );
     }
 
+    #[Route('/apartments/{id}/reservations', name: 'admin_apartment_reservation_create', methods: ['POST'])]
+    public function createApartmentReservation(
+        Apartment $apartment,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ApartmentReservationMessenger $reservationMessenger
+    ): JsonResponse {
+        /** @var User|null $actor */
+        $actor = $this->getUser();
+
+        try {
+            $reservation = $this->buildApartmentReservationFromRequest(
+                new ApartmentReservation(),
+                $apartment,
+                $request,
+                $reservationMessenger,
+                $entityManager
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        $reservation->setCreatedBy($actor);
+        $apartment->addReservation($reservation);
+        $entityManager->persist($reservation);
+        $entityManager->flush();
+
+        $message = $reservation->isArrivalToday(new \DateTimeImmutable('today'))
+            ? 'Réservation enregistrée. Le message WhatsApp peut être envoyé aujourd’hui.'
+            : 'Réservation enregistrée.';
+
+        return $this->apartmentDetailResponse(
+            $apartment,
+            $entityManager,
+            $message,
+            $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
+        );
+    }
+
+    #[Route('/reservations/{id}/field', name: 'admin_reservation_field_update', methods: ['POST'])]
+    public function updateReservationField(
+        ApartmentReservation $reservation,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ApartmentReservationMessenger $reservationMessenger
+    ): JsonResponse {
+        $field = (string) $request->request->get('field');
+        $value = trim((string) $request->request->get('value'));
+
+        try {
+            match ($field) {
+                'guestName' => $this->applyReservationGuestName($reservation, $value),
+                'guestWhatsappNumber' => $reservation->setGuestWhatsappNumber($reservationMessenger->normalizeWhatsAppNumber($value)),
+                default => throw new \InvalidArgumentException('Champ réservation non modifiable.'),
+            };
+
+            $this->assertReservationDoesNotOverlap($reservation, $entityManager);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        return $this->reservationContextResponse($reservation, $request, $entityManager, 'Réservation mise à jour.');
+    }
+
+    #[Route('/reservations/{id}/send-access', name: 'admin_reservation_send_access', methods: ['POST'])]
+    public function sendReservationAccess(
+        ApartmentReservation $reservation,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ApartmentReservationMessenger $reservationMessenger
+    ): JsonResponse {
+        $siteUrl = $this->generateUrl('app_home', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $whatsAppUrl = $reservationMessenger->buildWhatsAppUrl($reservation, $siteUrl);
+
+        $reservation
+            ->setAccessMessageSentAt(new \DateTimeImmutable())
+            ->incrementAccessMessageSentCount();
+
+        $entityManager->flush();
+
+        $context = (string) $request->request->get('context', 'apartment');
+        $html = null;
+        if ($context === 'arrivals') {
+            $html = $this->renderView('admin/_arrivals_content.html.twig', $this->buildArrivalsPageData($entityManager));
+        } else {
+            $apartment = $reservation->getApartment();
+            if ($apartment instanceof Apartment) {
+                $html = $this->renderView(
+                    'admin/_apartment_detail_content.html.twig',
+                    $this->buildApartmentDetailData(
+                        $apartment,
+                        $entityManager,
+                        $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
+                    )
+                );
+            }
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $html,
+            'redirect' => $whatsAppUrl,
+            'message' => $reservation->getAccessMessageSentCount() > 1 ? 'Message WhatsApp renvoyé.' : 'Message WhatsApp prêt à être envoyé.',
+        ]);
+    }
+
     #[Route('/apartments/{id}/access-steps', name: 'admin_apartment_access_step_create', methods: ['POST'])]
     public function createApartmentAccessStep(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -1167,6 +1283,178 @@ class AdminController extends AbstractController
         ]);
     }
 
+    private function reservationContextResponse(
+        ApartmentReservation $reservation,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        string $message
+    ): JsonResponse {
+        $context = (string) $request->request->get('context', 'apartment');
+        $apartment = $reservation->getApartment();
+
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
+        }
+
+        return match ($context) {
+            'arrivals' => new JsonResponse([
+                'success' => true,
+                'html' => $this->renderView('admin/_arrivals_content.html.twig', $this->buildArrivalsPageData($entityManager)),
+                'message' => $message,
+            ]),
+            'dashboard' => new JsonResponse([
+                'success' => true,
+                'html' => $this->renderView('admin/_dashboard_content.html.twig', $this->buildDashboardData($entityManager)),
+                'message' => $message,
+            ]),
+            default => $this->apartmentDetailResponse(
+                $apartment,
+                $entityManager,
+                $message,
+                $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
+            ),
+        };
+    }
+
+    private function buildApartmentReservationFromRequest(
+        ApartmentReservation $reservation,
+        Apartment $apartment,
+        Request $request,
+        ApartmentReservationMessenger $reservationMessenger,
+        EntityManagerInterface $entityManager
+    ): ApartmentReservation {
+        $guestName = trim((string) $request->request->get('guestName'));
+        if ($guestName === '') {
+            throw new \InvalidArgumentException('Le nom du locataire est obligatoire.');
+        }
+
+        $arrivalDateRaw = trim((string) $request->request->get('arrivalDate'));
+        $departureDateRaw = trim((string) $request->request->get('departureDate'));
+        if ($arrivalDateRaw === '' || $departureDateRaw === '') {
+            throw new \InvalidArgumentException('La période de séjour est obligatoire.');
+        }
+
+        try {
+            $arrivalDate = new \DateTimeImmutable($arrivalDateRaw);
+            $departureDate = new \DateTimeImmutable($departureDateRaw);
+        } catch (\Exception) {
+            throw new \InvalidArgumentException('Les dates de réservation sont invalides.');
+        }
+
+        $arrivalDate = $arrivalDate->setTime(0, 0);
+        $departureDate = $departureDate->setTime(0, 0);
+
+        if ($departureDate < $arrivalDate) {
+            throw new \InvalidArgumentException('La date de départ doit être postérieure ou égale à la date d’arrivée.');
+        }
+
+        $reservation
+            ->setApartment($apartment)
+            ->setGuestName($guestName)
+            ->setGuestWhatsappNumber($reservationMessenger->normalizeWhatsAppNumber($request->request->get('guestWhatsappNumber')))
+            ->setArrivalDate($arrivalDate)
+            ->setDepartureDate($departureDate);
+
+        $this->assertReservationDoesNotOverlap($reservation, $entityManager);
+
+        return $reservation;
+    }
+
+    private function applyReservationGuestName(ApartmentReservation $reservation, string $value): void
+    {
+        if ($value === '') {
+            throw new \InvalidArgumentException('Le nom du locataire est obligatoire.');
+        }
+
+        $reservation->setGuestName($value);
+    }
+
+    private function assertReservationDoesNotOverlap(ApartmentReservation $reservation, EntityManagerInterface $entityManager): void
+    {
+        $apartment = $reservation->getApartment();
+        $arrivalDate = $reservation->getArrivalDate();
+        $departureDate = $reservation->getDepartureDate();
+
+        if (!$apartment instanceof Apartment || !$arrivalDate instanceof \DateTimeImmutable || !$departureDate instanceof \DateTimeImmutable) {
+            return;
+        }
+
+        $existingReservations = $entityManager->getRepository(ApartmentReservation::class)->findBy(
+            ['apartment' => $apartment],
+            ['arrivalDate' => 'ASC']
+        );
+
+        foreach ($existingReservations as $existingReservation) {
+            if (!$existingReservation instanceof ApartmentReservation) {
+                continue;
+            }
+
+            if ($existingReservation->getId() === $reservation->getId()) {
+                continue;
+            }
+
+            $existingArrival = $existingReservation->getArrivalDate();
+            $existingDeparture = $existingReservation->getDepartureDate();
+            if (!$existingArrival instanceof \DateTimeImmutable || !$existingDeparture instanceof \DateTimeImmutable) {
+                continue;
+            }
+
+            if ($arrivalDate <= $existingDeparture && $departureDate >= $existingArrival) {
+                throw new \InvalidArgumentException('Une autre réservation couvre déjà cette période pour cet appartement.');
+            }
+        }
+    }
+
+    /**
+     * @return list<ApartmentReservation>
+     */
+    private function findUpcomingReservations(EntityManagerInterface $entityManager, ?User $employee = null, int $limit = 50): array
+    {
+        $today = new \DateTimeImmutable('today');
+        $queryBuilder = $entityManager->createQueryBuilder()
+            ->select('reservation', 'apartment', 'createdBy')
+            ->from(ApartmentReservation::class, 'reservation')
+            ->join('reservation.apartment', 'apartment')
+            ->leftJoin('reservation.createdBy', 'createdBy')
+            ->where('apartment.status = :activeStatus')
+            ->andWhere('reservation.departureDate >= :today')
+            ->setParameter('activeStatus', ApartmentStatus::Active)
+            ->setParameter('today', $today, 'date_immutable')
+            ->orderBy('reservation.arrivalDate', 'ASC')
+            ->addOrderBy('reservation.id', 'DESC')
+            ->setMaxResults($limit);
+
+        if ($employee instanceof User) {
+            $queryBuilder
+                ->join('apartment.assignedEmployees', 'assignedEmployee')
+                ->andWhere('assignedEmployee = :employee')
+                ->setParameter('employee', $employee);
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @return list<ApartmentReservation>
+     */
+    private function findApartmentReservations(Apartment $apartment, EntityManagerInterface $entityManager): array
+    {
+        $today = new \DateTimeImmutable('today');
+
+        return $entityManager->createQueryBuilder()
+            ->select('reservation', 'createdBy')
+            ->from(ApartmentReservation::class, 'reservation')
+            ->leftJoin('reservation.createdBy', 'createdBy')
+            ->where('reservation.apartment = :apartment')
+            ->andWhere('reservation.departureDate >= :today')
+            ->setParameter('apartment', $apartment)
+            ->setParameter('today', $today, 'date_immutable')
+            ->orderBy('reservation.arrivalDate', 'ASC')
+            ->addOrderBy('reservation.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -1174,6 +1462,19 @@ class AdminController extends AbstractController
     {
         $anomalies = $entityManager->getRepository(Anomaly::class)->findBy(['apartment' => $apartment], ['createdAt' => 'DESC']);
         $normalizedSection = $this->normalizeApartmentDetailSection($currentSection);
+        $reservations = $this->findApartmentReservations($apartment, $entityManager);
+        $today = new \DateTimeImmutable('today');
+        $nextArrivalReservation = null;
+        foreach ($reservations as $reservation) {
+            if (!$reservation instanceof ApartmentReservation || !$reservation->getDepartureDate() instanceof \DateTimeImmutable) {
+                continue;
+            }
+
+            if ($reservation->getDepartureDate() >= $today) {
+                $nextArrivalReservation = $reservation;
+                break;
+            }
+        }
 
         return [
             'apartment' => $apartment,
@@ -1209,6 +1510,9 @@ class AdminController extends AbstractController
                 ->getQuery()
                 ->getResult(),
             'roomTypes' => RoomType::ordered(),
+            'reservations' => $reservations,
+            'nextArrivalReservation' => $nextArrivalReservation,
+            'todayDate' => $today,
             'hasOpenCheckout' => $this->hasOpenCheckout($apartment, $entityManager),
             'anomalyCount' => count($anomalies),
             'anomalyGroups' => $this->buildAnomalyGroups($anomalies, $this->buildApartmentRepeatCounts($apartment, $entityManager)),
@@ -1342,6 +1646,8 @@ class AdminController extends AbstractController
     {
         $apartmentRepository = $entityManager->getRepository(Apartment::class);
         $checkoutRepository = $entityManager->getRepository(Checkout::class);
+        $today = new \DateTimeImmutable('today');
+        $arrivalReservations = $this->findUpcomingReservations($entityManager, null, 20);
         $pendingServiceOffers = $entityManager->getRepository(ServiceOffer::class)->findBy(
             ['status' => ServiceOffer::STATUS_PENDING],
             ['createdAt' => 'DESC']
@@ -1368,10 +1674,42 @@ class AdminController extends AbstractController
             'scheduledCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::Todo], ['scheduledAt' => 'ASC'], 8),
             'activeCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::InProgress], ['scheduledAt' => 'ASC'], 8),
             'finishedCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::Completed], ['completedAt' => 'DESC'], 8),
+            'arrivalReservations' => $arrivalReservations,
+            'todayArrivalReservations' => array_values(array_filter(
+                $arrivalReservations,
+                static fn (ApartmentReservation $reservation): bool => $reservation->isArrivalToday($today)
+            )),
+            'upcomingArrivalReservations' => array_values(array_filter(
+                $arrivalReservations,
+                static fn (ApartmentReservation $reservation): bool => $reservation->isArrivalInFuture($today)
+            )),
+            'todayDate' => $today,
             'pendingServiceOffers' => $pendingServiceOffers,
             'employeeCount' => count(array_filter(
                 $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
                 static fn (User $user): bool => !in_array('ROLE_ADMIN', $user->getRoles(), true)
+            )),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildArrivalsPageData(EntityManagerInterface $entityManager): array
+    {
+        $today = new \DateTimeImmutable('today');
+        $reservations = $this->findUpcomingReservations($entityManager);
+
+        return [
+            'reservations' => $reservations,
+            'todayDate' => $today,
+            'todayCount' => count(array_filter(
+                $reservations,
+                static fn (ApartmentReservation $reservation): bool => $reservation->isArrivalToday($today)
+            )),
+            'futureCount' => count(array_filter(
+                $reservations,
+                static fn (ApartmentReservation $reservation): bool => $reservation->isArrivalInFuture($today)
             )),
         ];
     }

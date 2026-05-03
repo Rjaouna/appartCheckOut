@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Anomaly;
 use App\Entity\Apartment;
+use App\Entity\ApartmentReservation;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
 use App\Entity\Room;
@@ -157,6 +158,15 @@ class EmployeeController extends AbstractController
     {
         return $this->render('employee/apartments.html.twig', [
             'apartments' => $this->findAssignedApartments($entityManager),
+        ]);
+    }
+
+    #[Route('/arrivals', name: 'employee_arrivals', methods: ['GET'])]
+    public function arrivals(EntityManagerInterface $entityManager): Response
+    {
+        return $this->render('employee/arrivals.html.twig', [
+            'arrivals' => $this->findAssignedArrivals($entityManager),
+            'todayDate' => new \DateTimeImmutable('today'),
         ]);
     }
 
@@ -646,6 +656,7 @@ class EmployeeController extends AbstractController
             ->getResult();
 
         $apartments = $this->findAssignedApartments($entityManager);
+        $arrivals = $this->findAssignedArrivals($entityManager);
 
         return [
             'user' => $user,
@@ -660,6 +671,8 @@ class EmployeeController extends AbstractController
             'anomaliesPreview' => $anomaliesPreview,
             'anomalyCount' => count($anomaliesPreview),
             'apartments' => $apartments,
+            'arrivals' => $arrivals,
+            'arrivalCount' => count($arrivals),
             'activeServiceCount' => count($this->findEnabledEmployeeServices($user, $entityManager)),
         ];
     }
@@ -747,6 +760,32 @@ class EmployeeController extends AbstractController
             ->orderBy('apartment.isInventoryPriority', 'DESC')
             ->addOrderBy('apartment.inventoryDueAt', 'ASC')
             ->addOrderBy('apartment.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return list<ApartmentReservation>
+     */
+    private function findAssignedArrivals(EntityManagerInterface $entityManager): array
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $today = new \DateTimeImmutable('today');
+
+        return $entityManager->createQueryBuilder()
+            ->select('reservation', 'apartment')
+            ->from(ApartmentReservation::class, 'reservation')
+            ->join('reservation.apartment', 'apartment')
+            ->join('apartment.assignedEmployees', 'employee')
+            ->where('employee = :user')
+            ->andWhere('apartment.status = :apartmentStatus')
+            ->andWhere('reservation.departureDate >= :today')
+            ->setParameter('user', $user)
+            ->setParameter('apartmentStatus', ApartmentStatus::Active)
+            ->setParameter('today', $today, 'date_immutable')
+            ->orderBy('reservation.arrivalDate', 'ASC')
+            ->addOrderBy('reservation.id', 'DESC')
             ->getQuery()
             ->getResult();
     }

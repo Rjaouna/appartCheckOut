@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes arrivées locataires{% endblock %}
+
+{% block body %}
+    <section class="page-head employee-page-head">
+        <div>
+            <h1>Mes arrivées locataires</h1>
+            <p>{{ arrivals|length }} arrivée{{ arrivals|length > 1 ? 's' : '' }} à suivre.</p>
+        </div>
+        <div class="head-actions">
+            <a class="primary-button full-width" href="{{ path('employee_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    <section class="employee-home-card-grid employee-arrival-grid">
+        {% for reservation in arrivals %}
+            {% set apartment = reservation.apartment %}
+            <article class="employee-home-entry-card employee-home-entry-card-soft employee-arrival-card">
+                <div class="employee-home-entry-top">
+                    <span class="employee-home-entry-icon employee-home-entry-icon-soft" aria-hidden="true">
+                        <svg viewBox="0 0 64 64">
+                            <rect x="12" y="18" width="40" height="32" rx="12" fill="none" stroke="currentColor" stroke-width="4.2"/>
+                            <path d="M12 28h40" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                            <path d="M22 14v8M42 14v8" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="employee-home-entry-count">
+                        {% if reservation.hasSentAccessMessage %}
+                            Envoyé
+                        {% elseif reservation.isArrivalToday(todayDate) %}
+                            Aujourd’hui
+                        {% elseif reservation.isArrivalInFuture(todayDate) %}
+                            À venir
+                        {% else %}
+                            Passé
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="employee-home-entry-copy">
+                    <p class="employee-home-card-label">{{ apartment.name }}</p>
+                    <h4>{{ reservation.guestName }}</h4>
+                    <p>{{ reservation.stayDateLabel }}</p>
+                    <p>WhatsApp : {{ reservation.guestWhatsappNumber }}</p>
+                    {% if reservation.hasSentAccessMessage %}
+                        <p class="muted">Message envoyé le {{ reservation.accessMessageSentAt ? reservation.accessMessageSentAt|date('d/m/Y à H:i') : '—' }}.</p>
+                    {% elseif reservation.isArrivalToday(todayDate) %}
+                        <p class="muted">Les informations peuvent être envoyées aujourd’hui.</p>
+                    {% else %}
+                        <p class="muted">En attente du bon moment pour l’envoi.</p>
+                    {% endif %}
+                </div>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucun locataire à suivre pour le moment.</p>
+        {% endfor %}
+    </section>
+{% endblock %}
