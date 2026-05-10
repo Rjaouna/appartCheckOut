@@ -576,6 +576,7 @@ class EmployeeController extends AbstractController
      *     checkoutCount: int,
      *     todayCheckout: ?Checkout,
      *     nextCheckout: ?Checkout,
+     *     ongoingCheckouts: list<Checkout>,
      *     historyPreview: list<Checkout>,
      *     scheduledPreview: list<Checkout>,
      *     anomaliesPreview: list<Anomaly>,
@@ -631,8 +632,13 @@ class EmployeeController extends AbstractController
         $todayCheckout = null;
         $nextCheckout = null;
         $scheduledPreview = [];
+        $ongoingCheckouts = [];
 
         foreach ($checkouts as $checkout) {
+            if ($checkout->getStatus() !== CheckoutStatus::Todo) {
+                $ongoingCheckouts[] = $checkout;
+            }
+
             $scheduledAt = $checkout->getScheduledAt();
             if ($scheduledAt instanceof \DateTimeImmutable) {
                 if ($scheduledAt >= $todayStart && $scheduledAt < $todayEnd && $todayCheckout === null) {
@@ -678,6 +684,7 @@ class EmployeeController extends AbstractController
             'todayCheckoutTimeLabel' => $todayCheckout?->getScheduledAt() ? $this->formatFrenchDateTime($todayCheckout->getScheduledAt(), 'HH\'h\'mm') : null,
             'nextCheckout' => $nextCheckout,
             'nextCheckoutDateLabel' => $nextCheckout?->getScheduledAt() ? $this->formatFrenchDateTime($nextCheckout->getScheduledAt(), 'EEEE d MMMM \'à\' HH\'h\'mm') : null,
+            'ongoingCheckouts' => $ongoingCheckouts,
             'historyPreview' => $historyPreview,
             'scheduledPreview' => array_slice($scheduledPreview, 0, 4),
             'anomaliesPreview' => $anomaliesPreview,

@@ -3415,6 +3415,65 @@ body.nav-compact .floating-main-menu-button {
     gap: 22px;
 }
 
+.dashboard-ongoing-block {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    background:
+        radial-gradient(circle at top right, rgba(255, 56, 92, 0.1), transparent 34%),
+        linear-gradient(180deg, #fffaf8 0%, #fff 100%);
+}
+
+.dashboard-ongoing-head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.dashboard-ongoing-head h2,
+.dashboard-ongoing-head p {
+    margin: 0;
+}
+
+.dashboard-ongoing-list {
+    display: grid;
+    gap: 12px;
+}
+
+.dashboard-ongoing-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 18px;
+    border-radius: 22px;
+    border: 1px solid rgba(227, 220, 209, 0.92);
+    background: rgba(255, 255, 255, 0.96);
+}
+
+.dashboard-ongoing-copy {
+    display: grid;
+    gap: 4px;
+}
+
+.dashboard-ongoing-copy strong,
+.dashboard-ongoing-copy p {
+    margin: 0;
+}
+
+.dashboard-ongoing-copy p {
+    color: var(--muted);
+}
+
+.dashboard-ongoing-action {
+    margin-bottom: 0;
+    min-width: 156px;
+}
+
 .employee-home-primary-card,
 .employee-home-info-card,
 .employee-list-card,
@@ -3766,6 +3825,21 @@ body.nav-compact .floating-main-menu-button {
 .admin-dashboard-hub {
     display: grid;
     gap: 22px;
+}
+
+.dashboard-ongoing-block-admin {
+    margin-bottom: 0;
+}
+
+@media (max-width: 720px) {
+    .dashboard-ongoing-card {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-ongoing-action {
+        width: 100%;
+        min-width: 0;
+    }
 }
 
 .admin-dashboard-hero h1,

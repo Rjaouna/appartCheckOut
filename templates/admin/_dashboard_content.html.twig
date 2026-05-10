@@ -30,6 +30,38 @@
         </div>
     </section>
 
+    {% if ongoingCheckouts is defined and ongoingCheckouts|length > 0 %}
+        <section class="dashboard-ongoing-block dashboard-ongoing-block-admin">
+            <div class="dashboard-ongoing-head">
+                <div>
+                    <span class="employee-home-kicker">Reprise rapide</span>
+                    <h2>Check-outs en cours</h2>
+                </div>
+                <span class="status-badge is-warning">{{ ongoingCheckouts|length }}</span>
+            </div>
+
+            <div class="dashboard-ongoing-list">
+                {% for checkout in ongoingCheckouts %}
+                    <article class="dashboard-ongoing-card">
+                        <div class="dashboard-ongoing-copy">
+                            <strong>{{ checkout.apartment.name }}</strong>
+                            <p>
+                                {{ checkout.status.label }}
+                                {% if checkout.assignedTo %}
+                                    · {{ checkout.assignedTo.fullName }}
+                                {% endif %}
+                                {% if checkout.scheduledAt %}
+                                    · {{ checkout.scheduledAt|date('d/m/Y H:i') }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <a class="primary-button dashboard-ongoing-action" href="{{ path('admin_checkout_show', {id: checkout.id}) }}">Reprendre</a>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
     <section class="admin-dashboard-entry-grid">
         <article class="admin-dashboard-entry-card admin-dashboard-entry-card-primary" data-click-url="{{ path('admin_apartments') }}">
             <div class="admin-dashboard-entry-top">

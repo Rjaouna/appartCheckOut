@@ -1893,6 +1893,24 @@ class AdminController extends AbstractController
             'anomalyApartmentCards' => $this->buildApartmentCards($apartmentsWithAnomalies, $entityManager),
             'scheduledCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::Todo], ['scheduledAt' => 'ASC'], 8),
             'activeCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::InProgress], ['scheduledAt' => 'ASC'], 8),
+            'ongoingCheckouts' => $entityManager->createQueryBuilder()
+                ->select('checkout', 'apartment', 'assignedTo')
+                ->from(Checkout::class, 'checkout')
+                ->join('checkout.apartment', 'apartment')
+                ->leftJoin('checkout.assignedTo', 'assignedTo')
+                ->where('checkout.status IN (:statuses)')
+                ->setParameter('statuses', [
+                    CheckoutStatus::InProgress,
+                    CheckoutStatus::Paused,
+                    CheckoutStatus::PendingValidation,
+                    CheckoutStatus::Blocked,
+                ])
+                ->orderBy('checkout.startedAt', 'DESC')
+                ->addOrderBy('checkout.pausedAt', 'DESC')
+                ->addOrderBy('checkout.scheduledAt', 'ASC')
+                ->setMaxResults(8)
+                ->getQuery()
+                ->getResult(),
             'finishedCheckouts' => $checkoutRepository->findBy(['status' => CheckoutStatus::Completed], ['completedAt' => 'DESC'], 8),
             'arrivalReservations' => $arrivalReservations,
             'todayArrivalReservations' => array_values(array_filter(
