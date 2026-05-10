@@ -1,4 +1,4 @@
-{% set isOverview = currentSection is not defined or currentSection is null %}
+﻿{% set isOverview = currentSection is not defined or currentSection is null %}
 {% set overviewUrl = path('admin_apartment_show', {id: apartment.id}) %}
 {% set assignableEmployeeCount = 0 %}
 {% for employee in apartment.assignedEmployees %}
@@ -150,7 +150,7 @@
                         <h2>Lancer et suivre les check-outs</h2>
                         <p>Cette zone sert à programmer un nouveau passage, puis à garder la main sur les check-outs déjà ouverts.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
 
                 <div class="admin-detail-section-grid">
@@ -161,7 +161,8 @@
                                 <h3>Créer un check-out</h3>
                             </div>
                             <span class="status-badge">{{ hasOpenCheckout ? 'En cours ailleurs' : 'Disponible' }}</span>
-                        </div>                        {% if hasOpenCheckout %}
+                        </div>
+                        {% if hasOpenCheckout %}
                             <p class="muted">Un check-out est déjà en cours de traitement, mais tu peux programmer un autre passage à une date différente.</p>
                         {% endif %}
                         <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form admin-detail-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
@@ -221,7 +222,7 @@
                                             data-update-target="{{ detailUpdateTarget }}"
                                             data-confirm-reset
                                             data-confirm-title="Annuler le check-out"
-                                            data-confirm-message="Veux-tu vraiment annuler ce check-out ?"
+                                            data-confirm-message="Veux-tu vraiment annuler ce check-out "
                                         >
                                             <input type="hidden" name="section" value="{{ currentSection }}">
                                             <button class="secondary-button danger-button" type="submit">Annuler le check-out</button>
@@ -279,7 +280,7 @@
                         <h2>Adresse, codes et consignes</h2>
                         <p>Les informations sont regroupées par usage pour éviter de chercher dans toute la fiche.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
 
                 <div class="admin-detail-section-grid">
@@ -365,7 +366,7 @@
                         <h2>Accès appartement</h2>
                         <p>Prépare les étapes d’arrivée que le locataire verra dans son espace, avec texte et photo si besoin.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour Ã  la fiche</a>
                 </div>
 
                 <section class="admin-detail-focus-card">
@@ -389,7 +390,7 @@
                                         data-update-target="{{ detailUpdateTarget }}"
                                         data-confirm-reset
                                         data-confirm-title="Supprimer cette étape"
-                                        data-confirm-message="Veux-tu vraiment supprimer cette étape d’accès ?"
+                                        data-confirm-message="Veux-tu vraiment supprimer cette étape d’accès "
                                     >
                                         <input type="hidden" name="section" value="{{ currentSection }}">
                                         <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Supprimer l’étape {{ loop.index }}" title="Supprimer l’étape">
@@ -481,7 +482,7 @@
                         <h2>Préparer les informations du séjour</h2>
                         <p>Complète ici les informations que le locataire retrouvera une fois le code saisi. L’objectif est qu’il puisse se débrouiller sans t’appeler.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
 
                 <div class="admin-detail-section-grid">
@@ -568,7 +569,7 @@
                     </div>
                     <div class="admin-detail-panel-actions">
                         <button class="primary-button" type="button" data-apartment-reservation-modal-trigger>Réserver ce logement</button>
-                        <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                        <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour Ã  la fiche</a>
                     </div>
                 </div>
 
@@ -652,7 +653,7 @@
                                                 <strong class="admin-arrival-manager-inline">
                                                     <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: leadManager.id}) }}">{{ leadManager.fullName }}</a>
                                                     {% if leadManager.phoneNumber %}
-                                                        <a class="inline-phone-link" href="tel:{{ leadManager.phoneNumber }}" aria-label="Appeler {{ leadManager.fullName }}">✆</a>
+                                                        <a class="inline-phone-link" href="tel:{{ leadManager.phoneNumber }}" aria-label="Appeler {{ leadManager.fullName }}">âœ†</a>
                                                     {% endif %}
                                                 </strong>
                                                 {% if extraManagers|length > 0 %}
@@ -677,7 +678,7 @@
                                                 <span class="admin-arrival-manager-inline">
                                                     <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
                                                     {% if employee.phoneNumber %}
-                                                        <a class="inline-phone-link" href="tel:{{ employee.phoneNumber }}" aria-label="Appeler {{ employee.fullName }}">✆</a>
+                                                        <a class="inline-phone-link" href="tel:{{ employee.phoneNumber }}" aria-label="Appeler {{ employee.fullName }}">âœ†</a>
                                                     {% endif %}
                                                 </span>
                                             {% endfor %}
@@ -703,7 +704,7 @@
                                     {% if shouldDiscourageSend %}
                                         data-confirm-reset
                                         data-confirm-title="Envoyer avant l’arrivée"
-                                        data-confirm-message="L’arrivée n’est pas prévue aujourd’hui. Veux-tu envoyer les informations quand même ?"
+                                        data-confirm-message="L’arrivée n’est pas prévue aujourd’hui. Veux-tu envoyer les informations quand même "
                                     {% endif %}
                                 >
                                     <input type="hidden" name="context" value="apartment">
@@ -727,7 +728,7 @@
                         <h2>Assignation</h2>
                         <p>Choisis les employés terrain qui gèrent cet appartement.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
 
                 <form method="post" action="{{ path('admin_apartment_assign', {id: apartment.id}) }}" class="stack-form employee-home-info-card employee-home-info-card-soft admin-assignment-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
@@ -753,7 +754,7 @@
                         <h2>Pièces et équipements</h2>
                         <p>Construis la structure de l’appartement avec des ajouts rapides puis enrichis chaque pièce.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
 
                 <section class="admin-detail-focus-card">
@@ -796,7 +797,7 @@
                                         data-update-target="{{ detailUpdateTarget }}"
                                         data-confirm-reset
                                         data-confirm-title="Supprimer la pièce"
-                                        data-confirm-message="Veux-tu vraiment supprimer cette pièce vide ?"
+                                        data-confirm-message="Veux-tu vraiment supprimer cette pièce vide "
                                     >
                                         <input type="hidden" name="section" value="{{ currentSection }}">
                                         <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Supprimer la pièce {{ room.name }}" title="Supprimer la pièce">
@@ -820,11 +821,11 @@
                                         data-update-target="{{ detailUpdateTarget }}"
                                         data-confirm-reset
                                         data-confirm-title="Supprimer l’équipement"
-                                        data-confirm-message="Veux-tu vraiment supprimer cet équipement de la pièce ?"
+                                        data-confirm-message="Veux-tu vraiment supprimer cet équipement de la pièce "
                                     >
                                         <input type="hidden" name="section" value="{{ currentSection }}">
                                         <span>{{ equipment.displayLabel }}</span>
-                                        <button class="equipment-tag-remove" type="submit" aria-label="Supprimer {{ equipment.displayLabel }}" title="Supprimer {{ equipment.displayLabel }}">×</button>
+                                        <button class="equipment-tag-remove" type="submit" aria-label="Supprimer {{ equipment.displayLabel }}" title="Supprimer {{ equipment.displayLabel }}">Ã—</button>
                                     </form>
                                 {% else %}
                                     <span class="empty-inline">Aucun équipement ajouté.</span>
@@ -887,7 +888,7 @@
                                             <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
                                         </div>
                                         <div class="apartment-name-modal-form room-equipment-modal-form">
-                                            <p class="muted" data-room-equipment-modal-label>Quel nombre veux-tu ajouter ?</p>
+                                            <p class="muted" data-room-equipment-modal-label>Quel nombre veux-tu ajouter </p>
                                             <label>
                                                 <span>Quantite</span>
                                                 <input type="number" min="1" value="1" data-room-equipment-modal-input>
@@ -916,7 +917,7 @@
                     </div>
                     <div class="admin-detail-panel-actions">
                         <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Ouvrir la vue anomalies</a>
-                        <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                        <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour Ã  la fiche</a>
                     </div>
                 </div>
 
@@ -941,7 +942,7 @@
                         <h2>Statut et archivage</h2>
                         <p>Utilise cette zone seulement pour changer le statut global de l’appartement ou le retirer du circuit.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour Ã  la fiche</a>
                 </div>
                 <div class="panel-head">
                     <h3>Statut actuel</h3>
@@ -970,7 +971,7 @@
                             data-async-form
                             data-confirm-reset
                             data-confirm-title="Supprimer l’appartement"
-                            data-confirm-message="Veux-tu vraiment supprimer cet appartement ? Cette action est définitive."
+                            data-confirm-message="Veux-tu vraiment supprimer cet appartement Cette action est définitive."
                         >
                             <input type="hidden" name="section" value="{{ currentSection }}">
                             <button class="secondary-button danger-button" type="submit">Supprimer</button>

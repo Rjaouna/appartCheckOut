@@ -482,6 +482,32 @@ select {
     border: 1px solid var(--border);
 }
 
+.app-back-button {
+    justify-content: flex-start;
+    min-width: 168px;
+    background: #ffffff;
+    color: var(--text);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+}
+
+.app-back-button::before {
+    content: '←';
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.head-actions .app-back-button,
+.apartment-hero-actions .app-back-button,
+.admin-detail-section-head .app-back-button {
+    order: -10;
+}
+
+.head-actions .app-back-button:not(.full-width),
+.apartment-hero-actions .app-back-button:not(.full-width) {
+    align-self: flex-start;
+}
+
 .admin-dark-button {
     background: var(--accent);
     color: #ffffff;
@@ -498,6 +524,12 @@ select {
 .secondary-button:hover,
 .chip-button:hover {
     transform: translateY(-1px);
+}
+
+.app-back-button:hover {
+    background: #fffdfd;
+    border-color: rgba(255, 56, 92, 0.22);
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
 }
 
 .full-width {
@@ -3135,7 +3167,8 @@ body.nav-compact .floating-main-menu-button {
     z-index: 2;
     overflow: hidden;
     box-shadow: 0 20px 42px rgba(15, 23, 42, 0.14);
-    transition: background 0.9s ease, border-color 0.9s ease, box-shadow 0.9s ease;
+    transform-origin: center center;
+    transition: background 1.1s ease, border-color 1.1s ease, box-shadow 1.1s ease;
 }
 
 .check-line.is-just-validated::after {
@@ -3156,15 +3189,17 @@ body.nav-compact .floating-main-menu-button {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.28) 35%, transparent 70%);
-    transform: translateX(-120%);
-    animation: checkLineSweep 1.2s ease;
+    background:
+        radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.12) 34%, transparent 70%),
+        linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.24) 35%, transparent 70%);
+    transform: scale(1.08);
+    animation: checkLineVacuumPulse 0.9s ease;
     pointer-events: none;
 }
 
 .check-line.is-just-validated-success {
     border-color: #67b88c;
-    background: linear-gradient(135deg, #dff6e6 0%, #effaf2 100%);
+    background: linear-gradient(135deg, #d7f4df 0%, #eefaf2 100%);
 }
 
 .check-line.is-just-validated-success::after {
@@ -3174,7 +3209,7 @@ body.nav-compact .floating-main-menu-button {
 
 .check-line.is-just-validated-warning {
     border-color: #df9850;
-    background: linear-gradient(135deg, #ffe7cb 0%, #fff5e8 100%);
+    background: linear-gradient(135deg, #ffe2c0 0%, #fff4e6 100%);
 }
 
 .check-line.is-just-validated-warning::after {
@@ -3201,16 +3236,49 @@ body.nav-compact .floating-main-menu-button {
     }
 }
 
-@keyframes checkLineSweep {
+@keyframes checkLineVacuumPulse {
     0% {
-        transform: translateX(-120%);
+        transform: scale(1.06);
         opacity: 0;
     }
-    18% {
+    25% {
+        transform: scale(1);
         opacity: 1;
     }
     100% {
-        transform: translateX(120%);
+        transform: scale(0.5);
+        opacity: 0;
+    }
+}
+
+.check-line.is-next-up {
+    position: relative;
+}
+
+.check-line.is-next-up::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: -8px;
+    height: 16px;
+    border-radius: 999px;
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.12) 0%, rgba(15, 23, 42, 0) 70%);
+    animation: checkLineWhooshShadow 0.75s ease 0.22s both;
+    pointer-events: none;
+}
+
+@keyframes checkLineWhooshShadow {
+    0% {
+        transform: translateY(12px) scaleX(0.72);
+        opacity: 0;
+    }
+    45% {
+        transform: translateY(4px) scaleX(1);
+        opacity: 0.22;
+    }
+    100% {
+        transform: translateY(0) scaleX(0.84);
         opacity: 0;
     }
 }
@@ -5363,13 +5431,17 @@ a.apartment-manager-link:focus-visible {
 }
 
 .admin-detail-back-button {
-    background: linear-gradient(135deg, #20324f 0%, #0f62fe 100%);
-    color: #fff;
-    border-color: transparent;
+    background: #ffffff;
+    color: var(--text);
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
 }
 
 .admin-detail-back-button:hover {
-    color: #fff;
+    color: var(--text);
+    background: #fffdfd;
+    border-color: rgba(255, 56, 92, 0.22);
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
 }
 
 .admin-detail-section-grid {

@@ -1802,6 +1802,11 @@ function animateCheckoutLineTransition(targetSelector, transition) {
             ? 'is-just-validated-success'
             : 'is-just-validated-warning';
         const validationLine = target.querySelector(`[data-check-line-id="${transition.lineId}"]`);
+        const validatedStartTop = typeof transition.positions?.[transition.lineId] === 'number'
+            ? transition.positions[transition.lineId]
+            : null;
+        let promotedLine = null;
+        let promotedDistance = Number.POSITIVE_INFINITY;
 
         target.querySelectorAll('[data-check-line-id]').forEach((item) => {
             if (!(item instanceof HTMLElement)) {
@@ -1820,41 +1825,98 @@ function animateCheckoutLineTransition(targetSelector, transition) {
                 return;
             }
 
+            if (
+                item !== validationLine
+                && validatedStartTop !== null
+                && item.getBoundingClientRect().top <= validatedStartTop + 14
+            ) {
+                const distanceToValidatedSlot = Math.abs(item.getBoundingClientRect().top - validatedStartTop);
+                if (distanceToValidatedSlot < promotedDistance) {
+                    promotedDistance = distanceToValidatedSlot;
+                    promotedLine = item;
+                }
+            }
+
             item.animate([
-                {transform: `translateY(${deltaY}px)`},
-                {transform: 'translateY(0)'},
+                { transform: `translateY(${deltaY}px)` },
+                { transform: 'translateY(0)' },
             ], {
-                duration: 1100,
-                easing: 'cubic-bezier(0.2, 0.9, 0.2, 1)',
+                duration: 920,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
                 fill: 'both',
             });
         });
 
         if (validationLine instanceof HTMLElement) {
             validationLine.classList.add('is-just-validated', statusToneClass);
-            validationLine.dataset.validationNotice = 'Valide et deplace plus bas';
+            validationLine.dataset.validationNotice = 'Validé';
 
-            const validatedStartTop = typeof transition.positions?.[transition.lineId] === 'number'
-                ? transition.positions[transition.lineId]
-                : validationLine.getBoundingClientRect().top;
-            const validatedDeltaY = validatedStartTop - validationLine.getBoundingClientRect().top;
+            const validatedOriginTop = validatedStartTop ?? validationLine.getBoundingClientRect().top;
+            const validatedDeltaY = validatedOriginTop - validationLine.getBoundingClientRect().top;
 
             validationLine.animate([
                 {
-                    transform: `translateY(${validatedDeltaY}px) scale(1.02)`,
+                    transform: `translateY(${validatedDeltaY}px) scale(1)`,
+                    opacity: 1,
+                    filter: 'blur(0)',
                     boxShadow: '0 22px 38px rgba(15, 23, 42, 0.16)',
                 },
                 {
-                    transform: `translateY(${validatedDeltaY * 0.42}px) scale(1.03)`,
-                    boxShadow: '0 26px 44px rgba(15, 23, 42, 0.18)',
-                    offset: 0.45,
+                    transform: `translateY(${validatedDeltaY * 0.54}px) scale(0.84)`,
+                    opacity: 0.92,
+                    filter: 'blur(0.4px)',
+                    boxShadow: '0 18px 32px rgba(15, 23, 42, 0.14)',
+                    offset: 0.22,
+                },
+                {
+                    transform: `translateY(${validatedDeltaY * 0.78}px) scale(0.46)`,
+                    opacity: 0.32,
+                    filter: 'blur(1.8px)',
+                    boxShadow: '0 10px 20px rgba(15, 23, 42, 0.08)',
+                    offset: 0.48,
+                },
+                {
+                    transform: 'translateY(0) scale(0.9)',
+                    opacity: 0.1,
+                    filter: 'blur(2.6px)',
+                    boxShadow: '0 0 0 rgba(15, 23, 42, 0)',
+                    offset: 0.68,
                 },
                 {
                     transform: 'translateY(0) scale(1)',
+                    opacity: 1,
+                    filter: 'blur(0)',
                     boxShadow: '0 20px 42px rgba(15, 23, 42, 0.14)',
                 },
             ], {
-                duration: 1350,
+                duration: 1500,
+                easing: 'cubic-bezier(0.18, 1, 0.32, 1)',
+                fill: 'both',
+            });
+        }
+
+        if (promotedLine instanceof HTMLElement) {
+            promotedLine.classList.add('is-next-up');
+            promotedLine.animate([
+                {
+                    transform: 'translateY(40px) scale(0.97)',
+                    opacity: 0.28,
+                    filter: 'blur(1.6px)',
+                },
+                {
+                    transform: 'translateY(-8px) scale(1.01)',
+                    opacity: 1,
+                    filter: 'blur(0)',
+                    offset: 0.72,
+                },
+                {
+                    transform: 'translateY(0) scale(1)',
+                    opacity: 1,
+                    filter: 'blur(0)',
+                },
+            ], {
+                duration: 720,
+                delay: 260,
                 easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
                 fill: 'both',
             });
@@ -1865,7 +1927,10 @@ function animateCheckoutLineTransition(targetSelector, transition) {
                 validationLine.classList.remove('is-just-validated', 'is-just-validated-success', 'is-just-validated-warning');
                 delete validationLine.dataset.validationNotice;
             }
-        }, 2200);
+            if (promotedLine instanceof HTMLElement) {
+                promotedLine.classList.remove('is-next-up');
+            }
+        }, 2300);
     });
 }
 

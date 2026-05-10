@@ -21,8 +21,8 @@
                 <input type="hidden" name="_token" value="{{ csrf_token('delete_anomaly_' ~ anomaly.id) }}">
                 <button class="danger-button secondary-button" type="submit">Supprimer l'anomalie</button>
             </form>
-            <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: anomaly.apartment.id}) }}">Retour appartement</a>
-            <a class="secondary-button" href="{{ path('admin_anomalies') }}">Retour anomalies</a>
+            <a class="secondary-button app-back-button" href="{{ path('admin_apartment_anomalies', {id: anomaly.apartment.id}) }}">Retour appartement</a>
+            <a class="secondary-button app-back-button" href="{{ path('admin_anomalies') }}">Retour anomalies</a>
         </div>
     </section>
 
