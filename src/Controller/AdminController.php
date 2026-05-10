@@ -1775,7 +1775,15 @@ class AdminController extends AbstractController
 
     private function hasCheckoutHistory(Apartment $apartment, EntityManagerInterface $entityManager): bool
     {
-        return $entityManager->getRepository(Checkout::class)->count(['apartment' => $apartment]) > 0;
+        return $entityManager->createQueryBuilder()
+            ->select('COUNT(checkout.id)')
+            ->from(Checkout::class, 'checkout')
+            ->where('checkout.apartment = :apartment')
+            ->andWhere('checkout.status NOT IN (:excludedStatuses)')
+            ->setParameter('apartment', $apartment)
+            ->setParameter('excludedStatuses', [CheckoutStatus::Cancelled, CheckoutStatus::Completed])
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
     }
 
     private function hasOpenAnomalies(Apartment $apartment, EntityManagerInterface $entityManager): bool
