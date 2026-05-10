@@ -23,27 +23,52 @@
             </button>
             <form id="admin-apartment-create-form" method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form admin-create-form is-collapsed">
                 <input type="hidden" name="_token" value="{{ csrf_token('admin_apartment_create') }}">
-                <label><span>Nom *</span><input name="name" required></label>
-                <label><span>Adresse *</span><input name="addressLine1" required></label>
+                <label><span>Nom *</span><input name="name" required data-apartment-template-name></label>
+                <button
+                    class="secondary-button apartment-template-toggle-button"
+                    type="button"
+                    data-toggle-target="#admin-apartment-template-fields"
+                    data-toggle-label-closed="A partir d un modele"
+                    data-toggle-label-open="Revenir a une creation vide"
+                >
+                    A partir d un modele
+                </button>
+                <div id="admin-apartment-template-fields" class="admin-apartment-template-fields is-collapsed" hidden>
+                    <p class="muted">Renseigne d abord le nom de l appartement, puis choisis un logement existant a dupliquer.</p>
+                    <label>
+                        <span>Appartement modele</span>
+                        <select name="templateApartmentId" data-apartment-template-select disabled>
+                            <option value="">Choisir un appartement existant</option>
+                            {% for templateApartment in apartmentTemplates %}
+                                <option value="{{ templateApartment.id }}">{{ templateApartment.name }} - {{ templateApartment.city }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+                <label><span>Adresse *</span><input name="addressLine1"></label>
                 <label><span>Complement</span><input name="addressLine2"></label>
                 <div class="grid-two">
-                    <label><span>Ville *</span><input name="city" required></label>
+                    <label><span>Ville *</span><input name="city"></label>
                     <label><span>Code postal</span><input name="postalCode"></label>
                 </div>
                 <div class="grid-two">
-                <label><span>Étage</span><input name="floor"></label>
+                    <label><span>Etage</span><input name="floor"></label>
                     <label><span>Porte</span><input name="doorNumber"></label>
                 </div>
-                <label><span>Numéro de boîte aux lettres</span><input name="mailboxNumber"></label>
+                <label><span>Numero de boite aux lettres</span><input name="mailboxNumber"></label>
                 <label><span>Lien Google Maps</span><input name="googleMapsLink"></label>
                 <div class="grid-two">
                     <label><span>Code immeuble</span><input name="buildingAccessCode"></label>
-                <label><span>Code boîte à clés / code porte</span><input name="keyBoxCode"></label>
+                    <label><span>Code boite a cles / code porte</span><input name="keyBoxCode"></label>
                 </div>
-                <label><span>Instructions d'entrée</span><textarea name="entryInstructions" rows="3"></textarea></label>
+                <label><span>Instructions d entree</span></label>
+                <div class="trix-field-shell">
+                    <input id="apartment-create-entry-instructions" type="hidden" name="entryInstructions" value="">
+                    <trix-editor input="apartment-create-entry-instructions" class="trix-content apartment-trix-editor"></trix-editor>
+                </div>
                 <div class="grid-two">
                     <label><span>Etat *</span>
-                        <select name="conditionStatus" required>
+                        <select name="conditionStatus">
                             <option value="Tres bon etat">Tres bon etat</option>
                             <option value="Bon etat" selected>Bon etat</option>
                             <option value="Correct">Correct</option>
@@ -52,7 +77,7 @@
                         </select>
                     </label>
                     <label><span>Statut *</span>
-                        <select name="status" required>
+                        <select name="status">
                             {% for item in apartmentStatuses %}
                                 <option value="{{ item.value }}">{{ item.label }}</option>
                             {% endfor %}
@@ -60,19 +85,23 @@
                     </label>
                 </div>
                 <div class="grid-two">
-                    <label><span>Nombre de chambres *</span><input type="number" name="bedroomCount" min="0" value="1" required></label>
+                    <label><span>Nombre de chambres *</span><input type="number" name="bedroomCount" min="0" value="1"></label>
                 </div>
                 <div class="grid-two">
-                    <label><span>Nom du proprietaire *</span><input name="ownerName" required></label>
-                    <label><span>Numero de telephone *</span><input name="ownerPhone" required></label>
+                    <label><span>Nom du proprietaire *</span><input name="ownerName"></label>
+                    <label><span>Numero de telephone *</span><input name="ownerPhone"></label>
                 </div>
-                <label><span>Notes internes</span><textarea name="internalNotes" rows="3"></textarea></label>
+                <label><span>Notes internes</span></label>
+                <div class="trix-field-shell">
+                    <input id="apartment-create-internal-notes" type="hidden" name="internalNotes" value="">
+                    <trix-editor input="apartment-create-internal-notes" class="trix-content apartment-trix-editor"></trix-editor>
+                </div>
                 <label class="checkbox-row">
                     <input type="checkbox" name="isInventoryPriority" value="1">
-                    <span>Faire remonter dans la liste employé</span>
+                    <span>Faire remonter dans la liste employe</span>
                 </label>
                 <label><span>Inventaire prevu pour</span><input type="datetime-local" name="inventoryDueAt"></label>
-                <label><span>Assigner à</span>
+                <label><span>Assigner a</span>
                     <select name="assignedEmployees[]" multiple size="4">
                         {% for employee in employees %}
                             {% if 'ROLE_ADMIN' not in employee.roles %}
@@ -88,3 +117,4 @@
         {% include 'admin/_apartments_list.html.twig' %}
     </section>
 {% endblock %}
+

@@ -2983,6 +2983,125 @@ body.nav-compact .floating-main-menu-button {
     margin-bottom: 20px;
 }
 
+.room-completion-state {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    padding: 34px 22px;
+    border: 1px solid rgba(255, 56, 92, 0.18);
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top, rgba(255, 56, 92, 0.12), transparent 48%),
+        linear-gradient(180deg, #fffafc 0%, #ffffff 100%);
+    text-align: center;
+    animation: roomCompletionReveal 0.7s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.checkout-completion-state {
+    min-height: 58vh;
+    align-content: center;
+}
+
+.checkout-completion-icon {
+    width: 96px;
+    height: 96px;
+}
+
+.room-completion-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 56, 92, 0.12);
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.room-completion-icon {
+    width: 88px;
+    height: 88px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6a88 0%, #ff385c 100%);
+    color: #fff;
+    box-shadow: 0 24px 40px rgba(255, 56, 92, 0.24);
+    animation: roomCompletionPulse 1.2s ease;
+}
+
+.room-completion-icon svg {
+    width: 44px;
+    height: 44px;
+}
+
+.room-completion-state h2 {
+    margin: 0;
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+}
+
+.room-completion-state p {
+    max-width: 440px;
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.room-completion-progress {
+    width: min(320px, 100%);
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+}
+
+.room-completion-progress span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-origin: left center;
+    background: linear-gradient(90deg, #ff7a96 0%, #ff385c 100%);
+    animation: roomCompletionProgress 1.85s linear forwards;
+}
+
+@keyframes roomCompletionReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes roomCompletionPulse {
+    0% {
+        transform: scale(0.84);
+        box-shadow: 0 0 0 rgba(255, 56, 92, 0.16);
+    }
+    60% {
+        transform: scale(1.04);
+        box-shadow: 0 26px 44px rgba(255, 56, 92, 0.26);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 24px 40px rgba(255, 56, 92, 0.24);
+    }
+}
+
+@keyframes roomCompletionProgress {
+    0% {
+        transform: scaleX(0);
+    }
+    100% {
+        transform: scaleX(1);
+    }
+}
+
 .room-check-head h2 {
     margin: 0;
 }
@@ -2997,18 +3116,103 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .check-line.is-complete {
-    border-color: #dcecdf;
-    background: #fcfffd;
+    border-color: #d2e6d8;
+    background: linear-gradient(180deg, #fcfffd 0%, #f8fcf9 100%);
 }
 
 .check-line.is-ok {
-    border-color: #cfe8d8;
-    background: #f7fcf8;
+    border-color: #bde1ca;
+    background: linear-gradient(135deg, #eefaf1 0%, #f7fcf8 100%);
 }
 
 .check-line.is-issue {
-    border-color: #f3d1ab;
-    background: #fffaf4;
+    border-color: #efc28b;
+    background: linear-gradient(135deg, #fff2e2 0%, #fffaf4 100%);
+}
+
+.check-line.is-just-validated {
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+    box-shadow: 0 20px 42px rgba(15, 23, 42, 0.14);
+    transition: background 0.9s ease, border-color 0.9s ease, box-shadow 0.9s ease;
+}
+
+.check-line.is-just-validated::after {
+    content: attr(data-validation-notice);
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    max-width: 220px;
+    padding: 7px 12px;
+    border-radius: 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    animation: checkLineValidationPop 1.4s ease;
+}
+
+.check-line.is-just-validated::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.28) 35%, transparent 70%);
+    transform: translateX(-120%);
+    animation: checkLineSweep 1.2s ease;
+    pointer-events: none;
+}
+
+.check-line.is-just-validated-success {
+    border-color: #67b88c;
+    background: linear-gradient(135deg, #dff6e6 0%, #effaf2 100%);
+}
+
+.check-line.is-just-validated-success::after {
+    background: #18794e;
+    color: #fff;
+}
+
+.check-line.is-just-validated-warning {
+    border-color: #df9850;
+    background: linear-gradient(135deg, #ffe7cb 0%, #fff5e8 100%);
+}
+
+.check-line.is-just-validated-warning::after {
+    background: #b45309;
+    color: #fff;
+}
+
+@keyframes checkLineValidationPop {
+    0% {
+        transform: translateY(10px) scale(0.9);
+        opacity: 0;
+    }
+    20% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    78% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-6px) scale(0.96);
+        opacity: 0;
+    }
+}
+
+@keyframes checkLineSweep {
+    0% {
+        transform: translateX(-120%);
+        opacity: 0;
+    }
+    18% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(120%);
+        opacity: 0;
+    }
 }
 
 .anomaly-room-grid {
@@ -4186,6 +4390,15 @@ body.nav-compact .floating-main-menu-button {
     gap: 8px;
 }
 
+.admin-room-equipment-manual-card {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid rgba(34, 34, 34, 0.08);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 248, 0.92));
+}
+
 .admin-room-equipment-picker select,
 .admin-room-equipment-manual input {
     width: 100%;
@@ -4200,9 +4413,59 @@ body.nav-compact .floating-main-menu-button {
     padding-right: 8px;
 }
 
+.admin-room-equipment-catalog-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.admin-room-equipment-option {
+    border: 1px solid rgba(255, 56, 92, 0.18);
+    background: rgba(255, 56, 92, 0.08);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-room-equipment-option:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 56, 92, 0.14);
+    border-color: rgba(255, 56, 92, 0.34);
+}
+
+.admin-room-equipment-quantity {
+    display: grid;
+    gap: 8px;
+}
+
+.room-equipment-modal-content {
+    max-width: 32rem;
+}
+
+.room-equipment-modal-form {
+    display: grid;
+    gap: 14px;
+}
+
 .admin-room-equipment-picker small {
     color: var(--muted);
     line-height: 1.4;
+}
+
+.admin-apartment-template-fields {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 22px;
+    border: 1px dashed rgba(255, 56, 92, 0.22);
+    background: rgba(255, 248, 250, 0.82);
+}
+
+.apartment-template-toggle-button {
+    width: 100%;
 }
 
 .admin-users-create-form {
@@ -5366,6 +5629,101 @@ a.apartment-manager-link:focus-visible {
     border-radius: 16px;
     padding: 14px 16px;
     background: #fff;
+}
+
+.formatted-rich-text {
+    color: var(--text);
+    line-height: 1.65;
+}
+
+.formatted-rich-text p,
+.formatted-rich-text ul,
+.formatted-rich-text ol {
+    margin: 0;
+}
+
+.formatted-rich-text p + p,
+.formatted-rich-text p + ul,
+.formatted-rich-text p + ol,
+.formatted-rich-text ul + p,
+.formatted-rich-text ol + p,
+.formatted-rich-text ul + ul,
+.formatted-rich-text ol + ol {
+    margin-top: 10px;
+}
+
+.formatted-rich-text ul,
+.formatted-rich-text ol {
+    padding-left: 18px;
+}
+
+.trix-field-shell {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.trix-field-shell trix-toolbar {
+    padding: 12px 12px 0;
+    border-bottom: 0;
+    background: #fff8fa;
+}
+
+.trix-field-shell trix-editor {
+    min-height: 180px;
+    padding: 14px 16px 16px;
+    border: 0;
+    line-height: 1.65;
+}
+
+.trix-field-shell trix-editor:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px rgba(255, 56, 92, 0.12);
+}
+
+.trix-field-shell .trix-button-group--file-tools {
+    display: none !important;
+}
+
+.rich-text-editor {
+    display: grid;
+    gap: 10px;
+}
+
+.rich-text-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.rich-text-toolbar-button {
+    border: 1px solid rgba(34, 34, 34, 0.08);
+    background: #fff8fa;
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.rich-text-input {
+    min-height: 160px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    background: #fff;
+    line-height: 1.65;
+}
+
+.rich-text-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 56, 92, 0.12);
+}
+
+.rich-text-editor.is-empty .rich-text-input:before {
+    content: attr(data-placeholder);
+    color: var(--muted);
 }
 
 .phone-input-shell {

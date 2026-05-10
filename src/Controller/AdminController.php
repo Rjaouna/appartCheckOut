@@ -35,6 +35,15 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class AdminController extends AbstractController
 {
     private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'guidebook', 'arrivals', 'assignment', 'rooms', 'anomalies', 'settings'];
+    private const APARTMENT_RICH_TEXT_FIELDS = [
+        'entryInstructions',
+        'internalNotes',
+        'guestWifiInstructions',
+        'guestHouseRules',
+        'guestDepartureInstructions',
+        'guestEmergencyInfo',
+        'guestEquipmentInfo',
+    ];
 
     #[Route('', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(EntityManagerInterface $entityManager): Response
@@ -497,46 +506,75 @@ class AdminController extends AbstractController
     public function createApartment(Request $request, EntityManagerInterface $entityManager): Response
     {
         if (!$this->isCsrfTokenValid('admin_apartment_create', (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Jeton de sécurité invalide.');
+            throw $this->createAccessDeniedException('Jeton de securite invalide.');
         }
 
-        $addressLine1 = (string) $request->request->get('addressLine1');
-        $city = (string) $request->request->get('city');
-        $postalCode = trim((string) $request->request->get('postalCode'));
+        $name = trim((string) $request->request->get('name'));
+        if ($name === '') {
+            $this->addFlash('error', 'Le nom de l appartement est obligatoire.');
+
+            return $this->redirectToRoute('admin_apartments');
+        }
+
+        $templateApartmentId = max(0, (int) $request->request->get('templateApartmentId'));
+        $templateApartment = $templateApartmentId > 0
+            ? $entityManager->getRepository(Apartment::class)->find($templateApartmentId)
+            : null;
 
         $apartment = (new Apartment())
-            ->setName((string) $request->request->get('name'))
+            ->setName($name)
             ->setReferenceCode($this->generateApartmentReference($entityManager))
-            ->setAddressLine1($addressLine1)
-            ->setAddressLine2($this->nullable($request->request->get('addressLine2')))
-            ->setCity($city)
-            ->setPostalCode($postalCode)
-            ->setFloor($this->nullable($request->request->get('floor')))
-            ->setDoorNumber($this->nullable($request->request->get('doorNumber')))
-            ->setMailboxNumber($this->nullable($request->request->get('mailboxNumber')))
-            ->setWazeLink($this->buildWazeLink($addressLine1, $city, $postalCode))
-            ->setGoogleMapsLink($this->nullable($request->request->get('googleMapsLink')))
-            ->setBuildingAccessCode($this->nullable($request->request->get('buildingAccessCode')))
-            ->setKeyBoxCode($this->nullable($request->request->get('keyBoxCode')))
-            ->setEntryInstructions((string) $request->request->get('entryInstructions', ''))
-            ->setConditionStatus((string) $request->request->get('conditionStatus', 'Bon etat'))
-            ->setBedroomCount((int) $request->request->get('bedroomCount', 0))
-            ->setSleepsCount(0)
-            ->setOwnerName($this->nullable($request->request->get('ownerName')))
-            ->setOwnerPhone($this->nullable($request->request->get('ownerPhone')))
-            ->setInternalNotes($this->nullable($request->request->get('internalNotes')))
-            ->setStatus(ApartmentStatus::from((string) $request->request->get('status', ApartmentStatus::Active->value)))
-            ->setIsInventoryPriority($request->request->getBoolean('isInventoryPriority'))
             ->setIsTenantAccessEnabled(true);
 
-        $inventoryDueAt = $request->request->get('inventoryDueAt');
-        if (is_string($inventoryDueAt) && $inventoryDueAt !== '') {
-            $apartment->setInventoryDueAt(new \DateTimeImmutable($inventoryDueAt));
+        if ($templateApartment instanceof Apartment) {
+            $this->duplicateApartmentTemplate($templateApartment, $apartment);
+        } else {
+            $addressLine1 = trim((string) $request->request->get('addressLine1'));
+            $city = trim((string) $request->request->get('city'));
+            $postalCode = trim((string) $request->request->get('postalCode'));
+
+            if ($addressLine1 === '' || $city === '') {
+                $this->addFlash('error', 'Adresse et ville sont obligatoires pour creer un appartement vide.');
+
+                return $this->redirectToRoute('admin_apartments');
+            }
+
+            $apartment
+                ->setAddressLine1($addressLine1)
+                ->setAddressLine2($this->nullable($request->request->get('addressLine2')))
+                ->setCity($city)
+                ->setPostalCode($postalCode)
+                ->setFloor($this->nullable($request->request->get('floor')))
+                ->setDoorNumber($this->nullable($request->request->get('doorNumber')))
+                ->setMailboxNumber($this->nullable($request->request->get('mailboxNumber')))
+                ->setGoogleMapsLink($this->nullable($request->request->get('googleMapsLink')))
+                ->setBuildingAccessCode($this->nullable($request->request->get('buildingAccessCode')))
+                ->setKeyBoxCode($this->nullable($request->request->get('keyBoxCode')))
+                ->setEntryInstructions($this->sanitizeRichText($request->request->get('entryInstructions')))
+                ->setConditionStatus((string) $request->request->get('conditionStatus', 'Bon etat'))
+                ->setBedroomCount((int) $request->request->get('bedroomCount', 0))
+                ->setSleepsCount(0)
+                ->setOwnerName($this->nullable($request->request->get('ownerName')))
+                ->setOwnerPhone($this->nullable($request->request->get('ownerPhone')))
+                ->setInternalNotes($this->sanitizeRichText($request->request->get('internalNotes'), true))
+                ->setStatus(ApartmentStatus::from((string) $request->request->get('status', ApartmentStatus::Active->value)))
+                ->setIsInventoryPriority($request->request->getBoolean('isInventoryPriority'));
+
+            $inventoryDueAt = $request->request->get('inventoryDueAt');
+            if (is_string($inventoryDueAt) && $inventoryDueAt !== '') {
+                $apartment->setInventoryDueAt(new \DateTimeImmutable($inventoryDueAt));
+            }
+
+            foreach ($entityManager->getRepository(User::class)->findBy(['id' => (array) $request->request->all('assignedEmployees')]) as $employee) {
+                $apartment->addAssignedEmployee($employee);
+            }
         }
 
-        foreach ($entityManager->getRepository(User::class)->findBy(['id' => (array) $request->request->all('assignedEmployees')]) as $employee) {
-            $apartment->addAssignedEmployee($employee);
-        }
+        $apartment->setWazeLink($this->buildWazeLink(
+            $apartment->getAddressLine1(),
+            $apartment->getCity(),
+            $apartment->getPostalCode()
+        ));
 
         $entityManager->persist($apartment);
         $entityManager->flush();
@@ -579,12 +617,13 @@ class AdminController extends AbstractController
     public function updateApartmentField(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $field = (string) $request->request->get('field');
-        $value = trim((string) $request->request->get('value'));
+        $rawValue = (string) $request->request->get('value');
+        $value = $this->isApartmentRichTextField($field) ? $rawValue : trim($rawValue);
 
         try {
             $this->applyAdminApartmentFieldUpdate($apartment, $field, $value);
             $entityManager->flush();
-        } catch (\InvalidArgumentException $exception) {
+        } catch (InvalidArgumentException $exception) {
             return new JsonResponse([
                 'success' => false,
                 'message' => $exception->getMessage(),
@@ -993,12 +1032,20 @@ class AdminController extends AbstractController
     {
         $displayOrder = $room->getRoomEquipments()->count() + 1;
         $notes = $this->nullable($request->request->get('notes'));
+        $selectedQuantity = $request->request->get('selectedQuantity');
+        $quantitySource = is_numeric((string) $selectedQuantity) && (int) $selectedQuantity > 0
+            ? (int) $selectedQuantity
+            : (int) $request->request->get('quantity', 1);
+        $quantity = max(1, $quantitySource);
         $addedCount = 0;
 
-        $catalogIds = array_values(array_filter(
-            array_map('intval', (array) $request->request->all('catalogEquipmentIds')),
+        $catalogIds = array_values(array_unique(array_filter(
+            array_merge(
+                array_map('intval', (array) $request->request->all('catalogEquipmentIds')),
+                [max(0, (int) $request->request->get('catalogEquipmentId'))]
+            ),
             static fn (int $id): bool => $id > 0
-        ));
+        )));
 
         if ($catalogIds !== []) {
             $catalogItems = $entityManager->getRepository(EquipmentCatalog::class)->findBy(['id' => $catalogIds]);
@@ -1012,12 +1059,13 @@ class AdminController extends AbstractController
                 $equipment
                     ->setDisplayOrder($displayOrder++)
                     ->setNotes($notes)
+                    ->setQuantity($quantity)
                     ->setCatalogEquipment($catalogEquipment)
                     ->setLabel($catalogEquipment->getName());
 
                 $room->addRoomEquipment($equipment);
                 $entityManager->persist($equipment);
-                $addedCount++;
+                ++$addedCount;
             }
         }
 
@@ -1027,17 +1075,18 @@ class AdminController extends AbstractController
             $equipment
                 ->setDisplayOrder($displayOrder++)
                 ->setNotes($notes)
+                ->setQuantity($quantity)
                 ->setLabel($manualLabel);
 
             $room->addRoomEquipment($equipment);
             $entityManager->persist($equipment);
-            $addedCount++;
+            ++$addedCount;
         }
 
         if ($addedCount === 0) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Sélectionne au moins un équipement ou saisis un équipement manuel.',
+                'message' => 'Selectionne un equipement ou saisis un equipement manuel.',
             ], 422);
         }
 
@@ -1046,7 +1095,7 @@ class AdminController extends AbstractController
         return $this->apartmentDetailResponse(
             $room->getApartment(),
             $entityManager,
-            $addedCount > 1 ? 'Équipements ajoutés.' : 'Équipement ajouté.',
+            $addedCount > 1 ? 'Equipements ajoutes.' : 'Equipement ajoute.',
             $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
         );
     }
@@ -1130,8 +1179,12 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Employé introuvable.'], 422);
         }
 
+        if (in_array('ROLE_ADMIN', $employee->getRoles(), true)) {
+            return new JsonResponse(['success' => false, 'message' => 'Choisis un employe terrain pour ce check-out.'], 422);
+        }
+
         if (!$apartment->getAssignedEmployees()->contains($employee)) {
-            return new JsonResponse(['success' => false, 'message' => 'Choisis un employé assigné à cet appartement.'], 422);
+            $apartment->addAssignedEmployee($employee);
         }
 
         $scheduledAtRaw = (string) $request->request->get('scheduledAt');
@@ -1199,13 +1252,18 @@ class AdminController extends AbstractController
         }
 
         $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
 
         try {
             $checkoutManager->updateLine(
                 $line,
                 EquipmentCheckStatus::from((string) $request->request->get('status')),
                 $request->request->get('comment'),
-                $request->files->get('photo')
+                $request->files->get('photo'),
+                $actor,
             );
             $entityManager->flush();
         } catch (\InvalidArgumentException $exception) {
@@ -1247,7 +1305,15 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
         }
 
-        return $this->adminRedirectToDashboardResponse('Check-out terminé.');
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_checkout_completion.html.twig', [
+                'apartmentName' => $checkout->getApartment()?->getName() ?? 'Appartement',
+            ]),
+            'redirect' => $this->generateUrl('admin_dashboard'),
+            'redirectDelayMs' => 2000,
+            'message' => 'Check-out terminé.',
+        ]);
     }
 
     #[Route('/checkouts/{id}/schedule', name: 'admin_checkout_schedule_update', methods: ['POST'])]
@@ -1747,7 +1813,11 @@ class AdminController extends AbstractController
         if ($group['totalCount'] > 0 && $group['checkedCount'] >= $group['totalCount']) {
             return new JsonResponse([
                 'success' => true,
+                'html' => $this->renderView('employee/_room_completion.html.twig', [
+                    'roomName' => $group['room']->getName(),
+                ]),
                 'redirect' => $this->generateUrl('admin_checkout_show', ['id' => $checkout->getId()]),
+                'redirectDelayMs' => 1900,
                 'message' => 'Pièce terminée. Retour à la liste des pièces.',
             ]);
         }
@@ -1892,6 +1962,7 @@ class AdminController extends AbstractController
             'apartments' => $apartments,
             'employees' => $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
             'apartmentStatuses' => ApartmentStatus::cases(),
+            'apartmentTemplates' => $entityManager->getRepository(Apartment::class)->findBy([], ['name' => 'ASC']),
             'openAnomalyCounts' => $openAnomalyCounts,
         ];
     }
@@ -2244,6 +2315,104 @@ class AdminController extends AbstractController
         return mb_substr($label, 0, 160);
     }
 
+    private function isApartmentRichTextField(string $field): bool
+    {
+        return in_array($field, self::APARTMENT_RICH_TEXT_FIELDS, true);
+    }
+
+    private function sanitizeRichText(mixed $value, bool $allowNull = false): ?string
+    {
+        if ($value === null) {
+            return $allowNull ? null : '';
+        }
+
+        $html = trim((string) $value);
+        if ($html === '') {
+            return $allowNull ? null : '';
+        }
+
+        $html = str_replace(["\r\n", "\r"], "\n", $html);
+        $html = preg_replace('/<\s*div[^>]*>/i', '<p>', $html) ?? $html;
+        $html = preg_replace('/<\s*\/\s*div\s*>/i', '</p>', $html) ?? $html;
+        $html = preg_replace('/<\s*span[^>]*>/i', '', $html) ?? $html;
+        $html = preg_replace('/<\s*\/\s*span\s*>/i', '', $html) ?? $html;
+        $html = preg_replace('/\n{2,}/', "\n", $html) ?? $html;
+        $html = preg_replace('/\n/', '<br>', $html) ?? $html;
+        $html = strip_tags($html, '<p><br><strong><b><em><i><u><ul><ol><li>');
+        $html = preg_replace('/<(\/?)([a-z0-9]+)(?:\s[^>]*)?>/i', '<$1$2>', $html) ?? $html;
+        $html = str_ireplace(['<b>', '</b>', '<i>', '</i>'], ['<strong>', '</strong>', '<em>', '</em>'], $html);
+        $html = preg_replace('/(<br>\s*){3,}/i', '<br><br>', $html) ?? $html;
+        $html = preg_replace('/<p>\s*<\/p>/i', '', $html) ?? $html;
+        $html = trim($html);
+
+        return $html === '' && $allowNull ? null : $html;
+    }
+
+    private function duplicateApartmentTemplate(Apartment $templateApartment, Apartment $apartment): void
+    {
+        $apartment
+            ->setAddressLine1($templateApartment->getAddressLine1())
+            ->setAddressLine2($templateApartment->getAddressLine2())
+            ->setCity($templateApartment->getCity())
+            ->setPostalCode($templateApartment->getPostalCode())
+            ->setFloor($templateApartment->getFloor())
+            ->setDoorNumber($templateApartment->getDoorNumber())
+            ->setMailboxNumber($templateApartment->getMailboxNumber())
+            ->setGoogleMapsLink($templateApartment->getGoogleMapsLink())
+            ->setBuildingAccessCode($templateApartment->getBuildingAccessCode())
+            ->setKeyBoxCode($templateApartment->getKeyBoxCode())
+            ->setEntryInstructions($templateApartment->getEntryInstructions())
+            ->setConditionStatus($templateApartment->getConditionStatus())
+            ->setBedroomCount($templateApartment->getBedroomCount())
+            ->setSleepsCount($templateApartment->getSleepsCount())
+            ->setOwnerName($templateApartment->getOwnerName())
+            ->setOwnerPhone($templateApartment->getOwnerPhone())
+            ->setInternalNotes($templateApartment->getInternalNotes())
+            ->setGuestWifiName($templateApartment->getGuestWifiName())
+            ->setGuestWifiPassword($templateApartment->getGuestWifiPassword())
+            ->setGuestWifiInstructions($templateApartment->getGuestWifiInstructions())
+            ->setGuestHouseRules($templateApartment->getGuestHouseRules())
+            ->setGuestDepartureInstructions($templateApartment->getGuestDepartureInstructions())
+            ->setGuestEmergencyInfo($templateApartment->getGuestEmergencyInfo())
+            ->setGuestEquipmentInfo($templateApartment->getGuestEquipmentInfo())
+            ->setGeneralPhotos($templateApartment->getGeneralPhotos())
+            ->setStatus(ApartmentStatus::Active)
+            ->setIsInventoryPriority($templateApartment->isInventoryPriority())
+            ->setInventoryDueAt($templateApartment->getInventoryDueAt());
+
+        foreach ($templateApartment->getAssignedEmployees() as $employee) {
+            $apartment->addAssignedEmployee($employee);
+        }
+
+        foreach ($templateApartment->getOrderedAccessSteps() as $existingStep) {
+            $step = (new ApartmentAccessStep())
+                ->setInstruction($existingStep->getInstruction())
+                ->setImagePath($existingStep->getImagePath())
+                ->setDisplayOrder($existingStep->getDisplayOrder());
+            $apartment->addAccessStep($step);
+        }
+
+        foreach ($templateApartment->getActiveRooms() as $existingRoom) {
+            $room = (new Room())
+                ->setType($existingRoom->getType())
+                ->setName($existingRoom->getName())
+                ->setDisplayOrder($existingRoom->getDisplayOrder())
+                ->setNotes($existingRoom->getNotes());
+            $apartment->addRoom($room);
+
+            foreach ($existingRoom->getActiveRoomEquipments() as $existingEquipment) {
+                $equipment = (new RoomEquipment())
+                    ->setCatalogEquipment($existingEquipment->getCatalogEquipment())
+                    ->setLabel($existingEquipment->getLabel())
+                    ->setDisplayOrder($existingEquipment->getDisplayOrder())
+                    ->setQuantity($existingEquipment->getQuantity())
+                    ->setNotes($existingEquipment->getNotes())
+                    ->setIsActive($existingEquipment->isActive());
+                $room->addRoomEquipment($equipment);
+            }
+        }
+    }
+
     private function applyAdminApartmentFieldUpdate(Apartment $apartment, string $field, string $value): void
     {
         $normalizedValue = $value === '' ? null : $value;
@@ -2259,17 +2428,17 @@ class AdminController extends AbstractController
             'buildingAccessCode' => $apartment->setBuildingAccessCode($normalizedValue),
             'keyBoxCode' => $apartment->setKeyBoxCode($normalizedValue),
             'googleMapsLink' => $apartment->setGoogleMapsLink($normalizedValue),
-            'entryInstructions' => $apartment->setEntryInstructions($value === '' ? 'Aucune consigne pour le moment.' : $value),
+            'entryInstructions' => $apartment->setEntryInstructions($value === '' ? 'Aucune consigne pour le moment.' : $this->sanitizeRichText($value)),
             'ownerName' => $apartment->setOwnerName($normalizedValue),
             'ownerPhone' => $apartment->setOwnerPhone($normalizedValue),
-            'internalNotes' => $apartment->setInternalNotes($normalizedValue),
+            'internalNotes' => $apartment->setInternalNotes($this->sanitizeRichText($value, true)),
             'guestWifiName' => $apartment->setGuestWifiName($normalizedValue),
             'guestWifiPassword' => $apartment->setGuestWifiPassword($normalizedValue),
-            'guestWifiInstructions' => $apartment->setGuestWifiInstructions($normalizedValue),
-            'guestHouseRules' => $apartment->setGuestHouseRules($normalizedValue),
-            'guestDepartureInstructions' => $apartment->setGuestDepartureInstructions($normalizedValue),
-            'guestEmergencyInfo' => $apartment->setGuestEmergencyInfo($normalizedValue),
-            'guestEquipmentInfo' => $apartment->setGuestEquipmentInfo($normalizedValue),
+            'guestWifiInstructions' => $apartment->setGuestWifiInstructions($this->sanitizeRichText($value, true)),
+            'guestHouseRules' => $apartment->setGuestHouseRules($this->sanitizeRichText($value, true)),
+            'guestDepartureInstructions' => $apartment->setGuestDepartureInstructions($this->sanitizeRichText($value, true)),
+            'guestEmergencyInfo' => $apartment->setGuestEmergencyInfo($this->sanitizeRichText($value, true)),
+            'guestEquipmentInfo' => $apartment->setGuestEquipmentInfo($this->sanitizeRichText($value, true)),
             default => throw new \InvalidArgumentException('Champ non modifiable.'),
         };
 

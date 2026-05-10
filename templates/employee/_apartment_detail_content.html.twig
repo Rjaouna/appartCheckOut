@@ -87,7 +87,13 @@
                 <div class="editable-field-display">
                     <div class="editable-field-copy">
                         <span class="editable-field-label">Instructions d'entrée</span>
-                        <strong>{{ apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</strong>
+                        <div class="formatted-rich-text">
+                            {% if apartment.entryInstructions %}
+                                {{ apartment.entryInstructions|raw }}
+                            {% else %}
+                                <p>Aucune consigne pour le moment.</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>

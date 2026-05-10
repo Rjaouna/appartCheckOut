@@ -86,7 +86,13 @@
                     </article>
                     <article class="public-tenant-quick-card">
                         <span class="editable-field-label">Consignes d’entrée</span>
-                        <strong>{{ apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</strong>
+                        <div class="formatted-rich-text">
+                            {% if apartment.entryInstructions %}
+                                {{ apartment.entryInstructions|raw }}
+                            {% else %}
+                                <p>Aucune consigne pour le moment.</p>
+                            {% endif %}
+                        </div>
                     </article>
                 </div>
             </article>
@@ -137,7 +143,7 @@
                                     {% endif %}
                                 </dl>
                                 {% if apartment.guestWifiInstructions %}
-                                    <p>{{ apartment.guestWifiInstructions|nl2br }}</p>
+                                    <div class="formatted-rich-text">{{ apartment.guestWifiInstructions|raw }}</div>
                                 {% endif %}
                             </article>
                         {% endif %}
@@ -145,28 +151,28 @@
                         {% if apartment.guestHouseRules %}
                             <article class="public-guidebook-item">
                                 <h3>Règles du logement</h3>
-                                <p>{{ apartment.guestHouseRules|nl2br }}</p>
+                                <div class="formatted-rich-text">{{ apartment.guestHouseRules|raw }}</div>
                             </article>
                         {% endif %}
 
                         {% if apartment.guestDepartureInstructions %}
                             <article class="public-guidebook-item">
                                 <h3>Départ</h3>
-                                <p>{{ apartment.guestDepartureInstructions|nl2br }}</p>
+                                <div class="formatted-rich-text">{{ apartment.guestDepartureInstructions|raw }}</div>
                             </article>
                         {% endif %}
 
                         {% if apartment.guestEmergencyInfo %}
                             <article class="public-guidebook-item">
                                 <h3>Urgences</h3>
-                                <p>{{ apartment.guestEmergencyInfo|nl2br }}</p>
+                                <div class="formatted-rich-text">{{ apartment.guestEmergencyInfo|raw }}</div>
                             </article>
                         {% endif %}
 
                         {% if apartment.guestEquipmentInfo %}
                             <article class="public-guidebook-item">
                                 <h3>Équipements utiles</h3>
-                                <p>{{ apartment.guestEquipmentInfo|nl2br }}</p>
+                                <div class="formatted-rich-text">{{ apartment.guestEquipmentInfo|raw }}</div>
                             </article>
                         {% endif %}
                     </div>

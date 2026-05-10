@@ -1,10 +1,19 @@
 {% set compact = compact|default(false) %}
 {% set multiline = multiline|default(false) %}
+{% set richText = richText|default(false) %}
 <div class="editable-field-row {{ compact ? 'editable-field-row-compact' : '' }}">
     <div class="editable-field-display">
         <div class="editable-field-copy">
             <span class="editable-field-label">{{ label }}</span>
-            {% if field == 'addressLine1' and apartment.wazeLink %}
+            {% if richText %}
+                <div class="formatted-rich-text">
+                    {% if rawValue %}
+                        {{ rawValue|raw }}
+                    {% else %}
+                        <p>{{ value }}</p>
+                    {% endif %}
+                </div>
+            {% elseif field == 'addressLine1' and apartment.wazeLink %}
                 <strong><a class="address-link" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">{{ value }}</a></strong>
             {% elseif field == 'googleMapsLink' and rawValue %}
                 <strong><a class="inline-detail-link" href="{{ rawValue }}" target="_blank" rel="noreferrer">Ouvrir</a></strong>
@@ -36,7 +45,13 @@
         {% if currentSection is defined and currentSection %}
             <input type="hidden" name="section" value="{{ currentSection }}">
         {% endif %}
-        {% if multiline %}
+        {% if multiline and richText %}
+            {% set trixInputId = 'admin-editable-input-' ~ field %}
+            <div class="trix-field-shell">
+                <input id="{{ trixInputId }}" type="hidden" name="value" value="{{ rawValue|default('')|e('html_attr') }}">
+                <trix-editor input="{{ trixInputId }}" class="trix-content apartment-trix-editor"></trix-editor>
+            </div>
+        {% elseif multiline %}
             <textarea name="value" rows="4">{{ rawValue }}</textarea>
         {% else %}
             <input type="text" name="value" value="{{ rawValue }}">

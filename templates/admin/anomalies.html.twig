@@ -126,7 +126,7 @@
                         {% include 'admin/_apartment_icon.html.twig' %}
                         <span class="status-badge is-success">{{ anomaly.status.label }}</span>
                     </div>
-                    <strong>{{ anomaly.roomEquipment.label }}</strong>
+                    <strong>{{ anomaly.roomEquipment.displayLabel }}</strong>
                     <p>{{ anomaly.apartment.name }}</p>
                     <div class="card-detail-list">
                         <span>Responsable: {{ anomaly.createdBy.fullName }}</span>

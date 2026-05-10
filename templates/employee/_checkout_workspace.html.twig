@@ -3,7 +3,7 @@
 {% set checkoutRoomRoute = checkoutRoomRoute|default('employee_checkout_room_show') %}
 {% set checkoutCompleteRoute = checkoutCompleteRoute|default('employee_checkout_complete') %}
 
-<div class="workspace-main workspace-main-full">
+<div id="checkout-workspace-root" class="workspace-main workspace-main-full">
     <aside id="apartment-info-panel" class="mobile-info-card is-collapsed">
         <div class="apartment-detail-hero">
             <div class="info-cluster">
@@ -54,11 +54,17 @@
 
             <section class="apartment-detail-card apartment-detail-card-wide">
                 <h3>Consignes</h3>
-                <p class="detail-note">{{ checkout.apartment.entryInstructions ?: 'Aucune consigne pour le moment.' }}</p>
+                <div class="detail-note formatted-rich-text">
+                    {% if checkout.apartment.entryInstructions %}
+                        {{ checkout.apartment.entryInstructions|raw }}
+                    {% else %}
+                        <p>Aucune consigne pour le moment.</p>
+                    {% endif %}
+                </div>
                 {% if checkout.apartment.internalNotes %}
                     <div class="detail-note-soft">
                         <strong>Notes internes</strong>
-                        <p>{{ checkout.apartment.internalNotes }}</p>
+                        <div class="formatted-rich-text">{{ checkout.apartment.internalNotes|raw }}</div>
                     </div>
                 {% endif %}
             </section>
@@ -112,6 +118,7 @@
                 method="post"
                 action="{{ path(checkoutCompleteRoute, {id: checkout.id}) }}"
                 data-async-form
+                data-update-target="#checkout-workspace"
                 data-confirm-reset
                 data-confirm-title="Clôturer le check-out"
                 data-confirm-message="Veux-tu vraiment terminer ce check-out ? Tu seras redirigé vers l’accueil."

@@ -1,10 +1,13 @@
 <article class="check-line is-issue">
     <div class="check-line-top">
         <div>
-            <strong>{{ anomaly.roomEquipment.label }}</strong>
+            <strong>{{ anomaly.roomEquipment.displayLabel }}</strong>
             <p>{{ anomaly.type.label }} • {{ anomaly.createdBy.fullName }} • {{ anomaly.createdAt|date('d/m/Y H:i') }}</p>
         </div>
         <div class="anomaly-toolbar">
+            {% if anomaly.createdBy %}
+                <span class="status-badge is-neutral">{{ anomaly.createdBy.fullName }}</span>
+            {% endif %}
             <span class="status-badge {{ anomaly.status.value == 'closed' ? 'is-success' : 'is-warning' }}">{{ anomaly.status.label }}</span>
             <form
                 method="post"
@@ -56,9 +59,9 @@
             class="anomaly-photo-button"
             type="button"
             data-lightbox-src="{{ anomaly.photoPath }}"
-            data-lightbox-alt="{{ anomaly.roomEquipment.label }}"
+            data-lightbox-alt="{{ anomaly.roomEquipment.displayLabel }}"
         >
-            <img class="anomaly-photo-thumb" src="{{ anomaly.photoPath }}" alt="{{ anomaly.roomEquipment.label }}">
+            <img class="anomaly-photo-thumb" src="{{ anomaly.photoPath }}" alt="{{ anomaly.roomEquipment.displayLabel }}">
         </button>
     {% endif %}
 

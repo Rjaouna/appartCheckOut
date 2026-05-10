@@ -28,6 +28,9 @@ class RoomEquipment
     private int $displayOrder = 0;
 
     #[ORM\Column]
+    private int $quantity = 1;
+
+    #[ORM\Column]
     private bool $isActive = true;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -86,6 +89,18 @@ class RoomEquipment
         return $this;
     }
 
+    public function getQuantity(): int
+    {
+        return $this->quantity;
+    }
+
+    public function setQuantity(int $quantity): self
+    {
+        $this->quantity = max(1, $quantity);
+
+        return $this;
+    }
+
     public function isActive(): bool
     {
         return $this->isActive;
@@ -108,5 +123,12 @@ class RoomEquipment
         $this->notes = $notes;
 
         return $this;
+    }
+
+    public function getDisplayLabel(): string
+    {
+        return $this->quantity > 1
+            ? sprintf('%s x%d', $this->label, $this->quantity)
+            : $this->label;
     }
 }

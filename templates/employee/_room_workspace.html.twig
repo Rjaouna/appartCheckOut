@@ -19,11 +19,11 @@
     </div>
 
     {% for line in roomGroup.lines %}
-        <article class="check-line {{ line.status ? 'is-complete' : 'is-open' }} {{ line.status and line.status.value == 'ok' ? 'is-ok' : '' }} {{ line.status and line.status.value != 'ok' ? 'is-issue' : '' }}">
+        <article class="check-line {{ line.status ? 'is-complete' : 'is-open' }} {{ line.status and line.status.value == 'ok' ? 'is-ok' : '' }} {{ line.status and line.status.value != 'ok' ? 'is-issue' : '' }}" data-check-line-id="{{ line.id }}">
             <div class="check-line-top">
                 <div>
-                    <strong>{{ line.roomEquipment.label }}</strong>
-                    <p>{{ line.status ? line.status.label : 'À vérifier' }}</p>
+                    <strong>{{ line.roomEquipment.displayLabel }}</strong>
+                    <p>{{ line.status ? line.status.label : 'À vérifier' }}{% if line.status and line.checkedBy %} • par {{ line.checkedBy.fullName }}{% endif %}</p>
                 </div>
                 {% if line.status %}
                     <span class="status-badge {{ line.status.value == 'ok' ? 'is-success' : 'is-warning' }}">{{ line.status.label }}</span>

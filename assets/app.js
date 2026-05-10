@@ -19,17 +19,23 @@ syncTopBarOnScroll();
 registerServiceWorker();
 setupInstallPrompt();
 syncPanelTriggers(document);
+initializeRichTextEditors(document);
+syncApartmentTemplateSelectState();
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         startDashboardPolling();
         syncTopBarOnScroll();
         syncPanelTriggers(document);
+        initializeRichTextEditors(document);
+        syncApartmentTemplateSelectState();
     });
 } else {
     startDashboardPolling();
     syncTopBarOnScroll();
     syncPanelTriggers(document);
+    initializeRichTextEditors(document);
+    syncApartmentTemplateSelectState();
 }
 
 document.addEventListener('submit', async (event) => {
@@ -50,6 +56,7 @@ document.addEventListener('submit', async (event) => {
 
     event.preventDefault();
     clearInlineFormError(form);
+    syncRichTextEditors(form);
 
     if (!validateReservationCreationForm(form)) {
         return;
@@ -60,6 +67,7 @@ document.addEventListener('submit', async (event) => {
         submitButton.disabled = true;
     }
 
+    const checkoutLineTransition = captureCheckoutLineTransition(form);
     const formData = new FormData(form);
     const csrfToken = getAppCsrfToken();
 
@@ -103,8 +111,22 @@ document.addEventListener('submit', async (event) => {
                     target.innerHTML = payload.html;
                 }
 
+                initializeRichTextEditors(document.querySelector(targetSelector) || document);
+                syncApartmentTemplateSelectState();
                 restoreUiState(targetSelector, uiState);
+                animateCheckoutLineTransition(targetSelector, checkoutLineTransition);
             }
+        }
+
+        if (payload.redirect && Number.isFinite(Number(payload.redirectDelayMs)) && Number(payload.redirectDelayMs) > 0) {
+            if (payload.message) {
+                storePendingToast(payload.message, 'success');
+            }
+
+            window.setTimeout(() => {
+                window.location.href = payload.redirect;
+            }, Number(payload.redirectDelayMs));
+            return;
         }
 
         if (payload.redirect) {
@@ -826,9 +848,24 @@ document.addEventListener('click', (event) => {
         const target = targetSelector ? document.querySelector(targetSelector) : null;
         if (target instanceof HTMLElement) {
             const isCollapsed = target.classList.toggle('is-collapsed');
+            target.hidden = isCollapsed;
             toggleTrigger.textContent = isCollapsed
                 ? (toggleTrigger.getAttribute('data-toggle-label-closed') || 'Afficher')
                 : (toggleTrigger.getAttribute('data-toggle-label-open') || 'Masquer');
+            syncApartmentTemplateSelectState();
+        }
+        return;
+    }
+
+    const richTextTrigger = event.target instanceof Element ? event.target.closest('[data-rich-text-command]') : null;
+    if (richTextTrigger instanceof HTMLButtonElement) {
+        event.preventDefault();
+        const editor = richTextTrigger.closest('[data-rich-text-editor]');
+        const input = editor?.querySelector('[data-rich-text-input]');
+        if (input instanceof HTMLElement) {
+            input.focus();
+            document.execCommand(richTextTrigger.dataset.richTextCommand || '', false);
+            syncRichTextEditor(editor);
         }
         return;
     }
@@ -943,6 +980,20 @@ document.addEventListener('click', (event) => {
             form.dataset.reservationCalendarMonth = formatReservationIso(currentMonth);
             renderReservationRangePicker(form);
         }
+        return;
+    }
+
+    const roomEquipmentTrigger = event.target instanceof Element ? event.target.closest('[data-room-equipment-open-modal]') : null;
+    if (roomEquipmentTrigger instanceof HTMLButtonElement) {
+        event.preventDefault();
+        openRoomEquipmentQuantityModal(roomEquipmentTrigger);
+        return;
+    }
+
+    const roomEquipmentConfirmTrigger = event.target instanceof Element ? event.target.closest('[data-room-equipment-confirm]') : null;
+    if (roomEquipmentConfirmTrigger instanceof HTMLButtonElement) {
+        event.preventDefault();
+        confirmRoomEquipmentQuantity(roomEquipmentConfirmTrigger);
         return;
     }
 
@@ -1100,11 +1151,20 @@ document.addEventListener('click', (event) => {
 
 document.addEventListener('input', (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLInputElement)) {
+    if (!(target instanceof HTMLInputElement) && !(target instanceof HTMLElement)) {
         return;
     }
 
-    if (target.name === 'guestWhatsappNumber') {
+    if (target instanceof HTMLElement && target.hasAttribute('data-rich-text-input')) {
+        syncRichTextEditor(target.closest('[data-rich-text-editor]'));
+        return;
+    }
+
+    if (target instanceof HTMLInputElement && target.hasAttribute('data-apartment-template-name')) {
+        syncApartmentTemplateSelectState();
+    }
+
+    if (target instanceof HTMLInputElement && target.name === 'guestWhatsappNumber') {
         const form = target.form;
         if (form instanceof HTMLFormElement) {
             if (validateReservationWhatsAppInput(target)) {
@@ -1112,6 +1172,31 @@ document.addEventListener('input', (event) => {
             }
         }
     }
+});
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || form.id !== 'admin-apartment-create-form') {
+        return;
+    }
+
+    syncRichTextEditors(form);
+
+    const templateFields = form.querySelector('#admin-apartment-template-fields');
+    const templateSelect = form.querySelector('[data-apartment-template-select]');
+    if (!(templateFields instanceof HTMLElement) || !(templateSelect instanceof HTMLSelectElement)) {
+        return;
+    }
+
+    const templateModeOpen = !templateFields.classList.contains('is-collapsed') && !templateFields.hidden;
+    if (templateModeOpen && !templateSelect.disabled && templateSelect.value === '') {
+        event.preventDefault();
+        showToast('Choisis un appartement modele a dupliquer.', 'error');
+    }
+});
+
+document.addEventListener('trix-file-accept', (event) => {
+    event.preventDefault();
 });
 
 document.addEventListener('change', (event) => {
@@ -1499,6 +1584,121 @@ function startDashboardPolling() {
     });
 }
 
+function initializeRichTextEditors(scope = document) {
+    if (!scope || typeof scope.querySelectorAll !== 'function') {
+        return;
+    }
+
+    scope.querySelectorAll('[data-rich-text-editor]').forEach((editor) => {
+        syncRichTextEditor(editor);
+    });
+}
+
+function syncRichTextEditor(editor) {
+    if (!(editor instanceof HTMLElement)) {
+        return;
+    }
+
+    const input = editor.querySelector('[data-rich-text-input]');
+    const source = editor.querySelector('[data-rich-text-source]');
+    if (!(input instanceof HTMLElement) || !(source instanceof HTMLTextAreaElement)) {
+        return;
+    }
+
+    source.value = input.innerHTML.trim();
+    editor.classList.toggle('is-empty', input.textContent.trim() === '');
+}
+
+function syncRichTextEditors(scope = document) {
+    if (!scope || typeof scope.querySelectorAll !== 'function') {
+        return;
+    }
+
+    scope.querySelectorAll('[data-rich-text-editor]').forEach((editor) => {
+        syncRichTextEditor(editor);
+    });
+}
+
+function syncApartmentTemplateSelectState() {
+    const form = document.getElementById('admin-apartment-create-form');
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    const nameInput = form.querySelector('[data-apartment-template-name]');
+    const templateSelect = form.querySelector('[data-apartment-template-select]');
+    const templateFields = form.querySelector('#admin-apartment-template-fields');
+    if (!(nameInput instanceof HTMLInputElement) || !(templateSelect instanceof HTMLSelectElement) || !(templateFields instanceof HTMLElement)) {
+        return;
+    }
+
+    const templateModeOpen = !templateFields.classList.contains('is-collapsed') && !templateFields.hidden;
+    templateSelect.disabled = !templateModeOpen || nameInput.value.trim() === '';
+
+    if (templateSelect.disabled) {
+        templateSelect.value = '';
+    }
+}
+
+function openRoomEquipmentQuantityModal(trigger) {
+    if (!(trigger instanceof HTMLButtonElement)) {
+        return;
+    }
+
+    const modalSelector = trigger.getAttribute('data-modal-target');
+    const formSelector = trigger.getAttribute('data-form-target');
+    const modalElement = modalSelector ? document.querySelector(modalSelector) : null;
+    const form = formSelector ? document.querySelector(formSelector) : null;
+    if (!(modalElement instanceof HTMLElement) || !(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    modalElement.dataset.roomEquipmentFormTarget = formSelector || '';
+    modalElement.dataset.roomEquipmentId = trigger.dataset.equipmentId || '';
+
+    const label = modalElement.querySelector('[data-room-equipment-modal-label]');
+    if (label instanceof HTMLElement) {
+        label.textContent = `Combien de ${trigger.dataset.equipmentLabel || 'cet equipement'} veux-tu ajouter ?`;
+    }
+
+    const quantityInput = modalElement.querySelector('[data-room-equipment-modal-input]');
+    if (quantityInput instanceof HTMLInputElement) {
+        quantityInput.value = '1';
+    }
+
+    showModalElement(modalElement);
+}
+
+function confirmRoomEquipmentQuantity(trigger) {
+    if (!(trigger instanceof HTMLButtonElement)) {
+        return;
+    }
+
+    const modalElement = trigger.closest('.modal');
+    if (!(modalElement instanceof HTMLElement)) {
+        return;
+    }
+
+    const formSelector = modalElement.dataset.roomEquipmentFormTarget || '';
+    const equipmentId = modalElement.dataset.roomEquipmentId || '';
+    const form = formSelector ? document.querySelector(formSelector) : null;
+    if (!(form instanceof HTMLFormElement) || equipmentId === '') {
+        return;
+    }
+
+    const quantityInput = modalElement.querySelector('[data-room-equipment-modal-input]');
+    const hiddenQuantityInput = form.querySelector('[data-room-equipment-quantity-hidden]');
+    const hiddenCatalogInput = form.querySelector('input[name="catalogEquipmentId"]');
+    if (!(quantityInput instanceof HTMLInputElement) || !(hiddenQuantityInput instanceof HTMLInputElement) || !(hiddenCatalogInput instanceof HTMLInputElement)) {
+        return;
+    }
+
+    hiddenCatalogInput.value = equipmentId;
+    hiddenQuantityInput.value = `${Math.max(1, Number.parseInt(quantityInput.value || '1', 10) || 1)}`;
+    hideModalElement(modalElement);
+    form.requestSubmit();
+}
+
 function collapseEditableForm(form) {
     if (!(form instanceof HTMLElement) || !form.classList.contains('editable-field-form')) {
         return;
@@ -1546,6 +1746,126 @@ function restoreUiState(targetSelector, uiState) {
         if (typeof uiState.scrollY === 'number') {
             window.scrollTo({top: uiState.scrollY});
         }
+    });
+}
+
+function captureCheckoutLineTransition(form) {
+    if (!(form instanceof HTMLFormElement)) {
+        return null;
+    }
+
+    const line = form.closest('[data-check-line-id]');
+    if (!(line instanceof HTMLElement)) {
+        return null;
+    }
+
+    const targetSelector = form.getAttribute('data-update-target');
+    const target = targetSelector ? document.querySelector(targetSelector) : null;
+    const positions = {};
+    if (target instanceof HTMLElement) {
+        target.querySelectorAll('[data-check-line-id]').forEach((item) => {
+            if (!(item instanceof HTMLElement)) {
+                return;
+            }
+
+            const itemId = item.getAttribute('data-check-line-id');
+            if (!itemId) {
+                return;
+            }
+
+            positions[itemId] = item.getBoundingClientRect().top;
+        });
+    }
+
+    const checkedStatusInput = form.querySelector('input[name="status"]:checked');
+    const statusValue = checkedStatusInput instanceof HTMLInputElement ? checkedStatusInput.value : null;
+
+    return {
+        lineId: line.getAttribute('data-check-line-id'),
+        positions,
+        statusTone: statusValue === 'ok' ? 'success' : 'warning',
+    };
+}
+
+function animateCheckoutLineTransition(targetSelector, transition) {
+    if (!transition?.lineId) {
+        return;
+    }
+
+    window.requestAnimationFrame(() => {
+        const target = document.querySelector(targetSelector);
+        if (!(target instanceof HTMLElement)) {
+            return;
+        }
+
+        const statusToneClass = transition.statusTone === 'success'
+            ? 'is-just-validated-success'
+            : 'is-just-validated-warning';
+        const validationLine = target.querySelector(`[data-check-line-id="${transition.lineId}"]`);
+
+        target.querySelectorAll('[data-check-line-id]').forEach((item) => {
+            if (!(item instanceof HTMLElement)) {
+                return;
+            }
+
+            const itemId = item.getAttribute('data-check-line-id');
+            if (!itemId || typeof transition.positions?.[itemId] !== 'number') {
+                return;
+            }
+
+            const newTop = item.getBoundingClientRect().top;
+            const deltaY = transition.positions[itemId] - newTop;
+
+            if (Math.abs(deltaY) <= 3) {
+                return;
+            }
+
+            item.animate([
+                {transform: `translateY(${deltaY}px)`},
+                {transform: 'translateY(0)'},
+            ], {
+                duration: 1100,
+                easing: 'cubic-bezier(0.2, 0.9, 0.2, 1)',
+                fill: 'both',
+            });
+        });
+
+        if (validationLine instanceof HTMLElement) {
+            validationLine.classList.add('is-just-validated', statusToneClass);
+            validationLine.dataset.validationNotice = 'Valide et deplace plus bas';
+
+            const validatedStartTop = typeof transition.positions?.[transition.lineId] === 'number'
+                ? transition.positions[transition.lineId]
+                : validationLine.getBoundingClientRect().top;
+            const validatedDeltaY = validatedStartTop - validationLine.getBoundingClientRect().top;
+
+            validationLine.animate([
+                {
+                    transform: `translateY(${validatedDeltaY}px) scale(1.02)`,
+                    boxShadow: '0 22px 38px rgba(15, 23, 42, 0.16)',
+                },
+                {
+                    transform: `translateY(${validatedDeltaY * 0.42}px) scale(1.03)`,
+                    boxShadow: '0 26px 44px rgba(15, 23, 42, 0.18)',
+                    offset: 0.45,
+                },
+                {
+                    transform: 'translateY(0) scale(1)',
+                    boxShadow: '0 20px 42px rgba(15, 23, 42, 0.14)',
+                },
+            ], {
+                duration: 1350,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'both',
+            });
+        }
+
+        window.setTimeout(() => {
+            if (validationLine instanceof HTMLElement) {
+                validationLine.classList.remove('is-just-validated', 'is-just-validated-success', 'is-just-validated-warning');
+                delete validationLine.dataset.validationNotice;
+            }
+        }, 2200);
     });
 }
 

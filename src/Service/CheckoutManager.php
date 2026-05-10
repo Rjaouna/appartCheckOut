@@ -80,7 +80,8 @@ class CheckoutManager
         $line
             ->setStatus($status)
             ->setComment($comment)
-            ->setCheckedAt(new \DateTimeImmutable());
+            ->setCheckedAt(new \DateTimeImmutable())
+            ->setCheckedBy($actor);
 
         if ($photo !== null) {
             $line->setPhotoPath($this->storeAnomalyPhoto($photo));

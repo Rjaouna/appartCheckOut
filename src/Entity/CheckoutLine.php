@@ -38,6 +38,10 @@ class CheckoutLine
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $checkedAt = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $checkedBy = null;
+
     #[ORM\Column]
     private int $sequence = 0;
 
@@ -126,6 +130,18 @@ class CheckoutLine
     public function setCheckedAt(?\DateTimeImmutable $checkedAt): self
     {
         $this->checkedAt = $checkedAt;
+
+        return $this;
+    }
+
+    public function getCheckedBy(): ?User
+    {
+        return $this->checkedBy;
+    }
+
+    public function setCheckedBy(?User $checkedBy): self
+    {
+        $this->checkedBy = $checkedBy;
 
         return $this;
     }

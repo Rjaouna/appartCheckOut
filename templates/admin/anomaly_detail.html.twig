@@ -6,7 +6,7 @@
     <section class="page-head">
         <div>
             <span class="eyebrow">Détail anomalie</span>
-            <h1>{{ anomaly.roomEquipment.label }}</h1>
+            <h1>{{ anomaly.roomEquipment.displayLabel }}</h1>
             <p class="muted">{{ anomaly.apartment.name }} • {{ anomaly.room.name }}</p>
         </div>
         <div class="head-actions">
@@ -32,7 +32,7 @@
             <div class="info-list">
                 <div><span>Appartement</span><strong>{{ anomaly.apartment.name }}</strong></div>
                 <div><span>Pièce</span><strong>{{ anomaly.room.name }}</strong></div>
-                <div><span>Équipement</span><strong>{{ anomaly.roomEquipment.label }}</strong></div>
+                <div><span>Équipement</span><strong>{{ anomaly.roomEquipment.displayLabel }}</strong></div>
                 <div><span>Responsable</span><strong>{{ anomaly.createdBy.fullName }}</strong></div>
                 <div><span>Type</span><strong>{{ anomaly.type.label }}</strong></div>
                 <div><span>Statut</span><strong>{{ anomaly.status.label }}</strong></div>
@@ -53,9 +53,9 @@
                     class="anomaly-photo-button anomaly-photo-button-large"
                     type="button"
                     data-lightbox-src="{{ anomaly.photoPath }}"
-                    data-lightbox-alt="{{ anomaly.roomEquipment.label }}"
+                    data-lightbox-alt="{{ anomaly.roomEquipment.displayLabel }}"
                 >
-                    <img class="anomaly-photo-thumb anomaly-photo-thumb-large" src="{{ anomaly.photoPath }}" alt="{{ anomaly.roomEquipment.label }}">
+                    <img class="anomaly-photo-thumb anomaly-photo-thumb-large" src="{{ anomaly.photoPath }}" alt="{{ anomaly.roomEquipment.displayLabel }}">
                 </button>
             {% endif %}
         </div>

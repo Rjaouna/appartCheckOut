@@ -161,38 +161,30 @@
                                 <h3>Créer un check-out</h3>
                             </div>
                             <span class="status-badge">{{ hasOpenCheckout ? 'En cours ailleurs' : 'Disponible' }}</span>
-                        </div>
-
-                        {% if assignableEmployeeCount == 0 %}
-                            <div class="empty-state">
-                                Assigne d’abord au moins un employé terrain à cet appartement pour pouvoir créer un check-out.
-                            </div>
-                        {% else %}
-                            {% if hasOpenCheckout %}
-                                <p class="muted">Un check-out est déjà en cours de traitement, mais tu peux programmer un autre passage à une date différente.</p>
-                            {% endif %}
-                            <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form admin-detail-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
-                                <input type="hidden" name="section" value="{{ currentSection }}">
-                                <label><span>Employé</span>
-                                    <select name="assignedTo" required>
-                                        {% for employee in apartment.assignedEmployees %}
-                                            {% if 'ROLE_ADMIN' not in employee.roles %}
-                                                <option value="{{ employee.id }}">{{ employee.fullName }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                </label>
-                                <label><span>Date prévue</span><input type="datetime-local" name="scheduledAt"></label>
-                                <label><span>Priorité</span>
-                                    <select name="priority">
-                                        <option value="normal">Normale</option>
-                                        <option value="high">Haute</option>
-                                        <option value="urgent">Urgente</option>
-                                    </select>
-                                </label>
-                                <button class="primary-button" type="submit">Créer le check-out</button>
-                            </form>
+                        </div>                        {% if hasOpenCheckout %}
+                            <p class="muted">Un check-out est déjà en cours de traitement, mais tu peux programmer un autre passage à une date différente.</p>
                         {% endif %}
+                        <form method="post" action="{{ path('admin_checkout_create', {id: apartment.id}) }}" class="stack-form admin-detail-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                            <input type="hidden" name="section" value="{{ currentSection }}">
+                            <label><span>Employé</span>
+                                <select name="assignedTo" required>
+                                    {% for employee in employees %}
+                                        {% if 'ROLE_ADMIN' not in employee.roles %}
+                                            <option value="{{ employee.id }}" {{ apartment.assignedEmployees.contains(employee) ? 'selected' : '' }}>{{ employee.fullName }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label><span>Date prévue</span><input type="datetime-local" name="scheduledAt"></label>
+                            <label><span>Priorité</span>
+                                <select name="priority">
+                                    <option value="normal">Normale</option>
+                                    <option value="high">Haute</option>
+                                    <option value="urgent">Urgente</option>
+                                </select>
+                            </label>
+                            <button class="primary-button" type="submit">Créer le check-out</button>
+                        </form>
                     </article>
 
                     <article class="admin-detail-focus-card">
@@ -266,7 +258,7 @@
                                 {% if checkout.anomalies|length > 0 %}
                                     <div class="card-detail-list admin-history-anomalies">
                                         {% for anomaly in checkout.anomalies %}
-                                            <span>{{ anomaly.room.name }} : {{ anomaly.roomEquipment.label }}</span>
+                                            <span>{{ anomaly.room.name }} : {{ anomaly.roomEquipment.displayLabel }}</span>
                                         {% endfor %}
                                     </div>
                                 {% else %}
@@ -320,7 +312,7 @@
                         <div class="info-list admin-detail-info-group">
                             {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'buildingAccessCode', label: 'Code immeuble', value: apartment.buildingAccessCode ?: 'Non renseigné', rawValue: apartment.buildingAccessCode, compact: true } %}
                             {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'keyBoxCode', label: 'Code boîte à clés / code porte', value: apartment.keyBoxCode ?: 'Non renseigné', rawValue: apartment.keyBoxCode, compact: true } %}
-                            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'entryInstructions', label: 'Consignes d’entrée', value: apartment.entryInstructions ?: 'Aucune consigne', rawValue: apartment.entryInstructions, multiline: true } %}
+                            {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'entryInstructions', label: 'Consignes d’entrée', value: apartment.entryInstructions ?: 'Aucune consigne', rawValue: apartment.entryInstructions, multiline: true, richText: true } %}
                         </div>
                     </section>
                 </div>
@@ -361,7 +353,7 @@
                     <div class="info-list admin-detail-info-group">
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerName', label: 'Nom du propriétaire', value: apartment.ownerName ?: 'Non renseigné', rawValue: apartment.ownerName } %}
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerPhone', label: 'Téléphone', value: apartment.ownerPhone ?: 'Non renseigné', rawValue: apartment.ownerPhone } %}
-                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'internalNotes', label: 'Notes internes', value: apartment.internalNotes ?: 'Aucune note', rawValue: apartment.internalNotes, multiline: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'internalNotes', label: 'Notes internes', value: apartment.internalNotes ?: 'Aucune note', rawValue: apartment.internalNotes, multiline: true, richText: true } %}
                     </div>
                 </section>
             </section>
@@ -506,7 +498,7 @@
                         <p class="muted">Indique le nom du réseau, le mot de passe et une précision utile si besoin.</p>
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestWifiName', label: 'Nom du réseau', value: apartment.guestWifiName ?: 'Non renseigné', rawValue: apartment.guestWifiName ?: '', compact: true } %}
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestWifiPassword', label: 'Mot de passe Wi-Fi', value: apartment.guestWifiPassword ?: 'Non renseigné', rawValue: apartment.guestWifiPassword ?: '', compact: true } %}
-                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestWifiInstructions', label: 'Précision Wi-Fi', value: apartment.guestWifiInstructions ?: 'Aucune précision', rawValue: apartment.guestWifiInstructions ?: '', multiline: true, compact: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestWifiInstructions', label: 'Précision Wi-Fi', value: apartment.guestWifiInstructions ?: 'Aucune précision', rawValue: apartment.guestWifiInstructions ?: '', multiline: true, compact: true, richText: true } %}
                     </section>
 
                     <section class="admin-detail-focus-card {{ apartment.guestHouseRules ? '' : 'admin-detail-focus-card-pending' }}">
@@ -520,7 +512,7 @@
                             </span>
                         </div>
                         <p class="muted">Bruit, voisinage, poubelles, fumeur ou non, animaux, horaires importants.</p>
-                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestHouseRules', label: 'Règles à communiquer', value: apartment.guestHouseRules ?: 'Non renseigné', rawValue: apartment.guestHouseRules ?: '', multiline: true, compact: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestHouseRules', label: 'Règles à communiquer', value: apartment.guestHouseRules ?: 'Non renseigné', rawValue: apartment.guestHouseRules ?: '', multiline: true, compact: true, richText: true } %}
                     </section>
 
                     <section class="admin-detail-focus-card {{ apartment.guestDepartureInstructions ? '' : 'admin-detail-focus-card-pending' }}">
@@ -534,7 +526,7 @@
                             </span>
                         </div>
                         <p class="muted">Heure de départ, remise des clés, ménage demandé, fermeture du logement.</p>
-                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestDepartureInstructions', label: 'Consignes de départ', value: apartment.guestDepartureInstructions ?: 'Non renseigné', rawValue: apartment.guestDepartureInstructions ?: '', multiline: true, compact: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestDepartureInstructions', label: 'Consignes de départ', value: apartment.guestDepartureInstructions ?: 'Non renseigné', rawValue: apartment.guestDepartureInstructions ?: '', multiline: true, compact: true, richText: true } %}
                     </section>
 
                     <section class="admin-detail-focus-card {{ apartment.guestEmergencyInfo ? '' : 'admin-detail-focus-card-pending' }}">
@@ -548,7 +540,7 @@
                             </span>
                         </div>
                         <p class="muted">Qui appeler en cas de souci, coupure, fuite, perte de clés ou arrivée tardive.</p>
-                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestEmergencyInfo', label: 'Contacts et réflexes utiles', value: apartment.guestEmergencyInfo ?: 'Non renseigné', rawValue: apartment.guestEmergencyInfo ?: '', multiline: true, compact: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestEmergencyInfo', label: 'Contacts et réflexes utiles', value: apartment.guestEmergencyInfo ?: 'Non renseigné', rawValue: apartment.guestEmergencyInfo ?: '', multiline: true, compact: true, richText: true } %}
                     </section>
 
                     <section class="admin-detail-focus-card {{ apartment.guestEquipmentInfo ? '' : 'admin-detail-focus-card-pending' }}">
@@ -562,7 +554,7 @@
                             </span>
                         </div>
                         <p class="muted">Indique ce qui aide le locataire sur place : chauffage, clim, télé, eau chaude, machine à laver, parking.</p>
-                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestEquipmentInfo', label: 'Équipements et astuces', value: apartment.guestEquipmentInfo ?: 'Non renseigné', rawValue: apartment.guestEquipmentInfo ?: '', multiline: true, compact: true } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'guestEquipmentInfo', label: 'Équipements et astuces', value: apartment.guestEquipmentInfo ?: 'Non renseigné', rawValue: apartment.guestEquipmentInfo ?: '', multiline: true, compact: true, richText: true } %}
                     </section>
                 </div>
             </section>
@@ -831,32 +823,83 @@
                                         data-confirm-message="Veux-tu vraiment supprimer cet équipement de la pièce ?"
                                     >
                                         <input type="hidden" name="section" value="{{ currentSection }}">
-                                        <span>{{ equipment.label }}</span>
-                                        <button class="equipment-tag-remove" type="submit" aria-label="Supprimer {{ equipment.label }}" title="Supprimer {{ equipment.label }}">×</button>
+                                        <span>{{ equipment.displayLabel }}</span>
+                                        <button class="equipment-tag-remove" type="submit" aria-label="Supprimer {{ equipment.displayLabel }}" title="Supprimer {{ equipment.displayLabel }}">×</button>
                                     </form>
                                 {% else %}
                                     <span class="empty-inline">Aucun équipement ajouté.</span>
                                 {% endfor %}
                             </div>
-                            <form method="post" action="{{ path('admin_room_equipment_add', {id: room.id}) }}" class="admin-room-equipment-form" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                            {% set equipmentAddFormId = 'room-equipment-add-form-' ~ room.id %}
+                            {% set equipmentQtyModalId = 'room-equipment-quantity-modal-' ~ room.id %}
+                            <form id="{{ equipmentAddFormId }}" method="post" action="{{ path('admin_room_equipment_add', {id: room.id}) }}" class="admin-room-equipment-form" data-async-form data-update-target="{{ detailUpdateTarget }}">
                                 <input type="hidden" name="section" value="{{ currentSection }}">
+                                <input type="hidden" name="catalogEquipmentId" value="">
+                                <input type="hidden" name="selectedQuantity" value="" data-room-equipment-quantity-hidden>
                                 <div class="admin-room-equipment-form-grid">
-                                    <label class="admin-room-equipment-picker">
-                                        <select name="catalogEquipmentIds[]" multiple size="8">
+                                    <div class="admin-room-equipment-picker">
+                                        <span>Ajouter depuis la liste</span>
+                                        <div class="admin-room-equipment-catalog-grid">
+                                            {% set availableCatalogCount = 0 %}
                                             {% for item in catalog %}
                                                 {% if item.roomType.value == room.type.value and item.id not in existingCatalogIds %}
-                                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                                    {% set availableCatalogCount = availableCatalogCount + 1 %}
+                                                    <button
+                                                        type="button"
+                                                        class="admin-room-equipment-option"
+                                                        data-room-equipment-open-modal
+                                                        data-modal-target="#{{ equipmentQtyModalId }}"
+                                                        data-form-target="#{{ equipmentAddFormId }}"
+                                                        data-equipment-id="{{ item.id }}"
+                                                        data-equipment-label="{{ item.name }}"
+                                                    >
+                                                        {{ item.name }}
+                                                    </button>
                                                 {% endif %}
                                             {% endfor %}
-                                        </select>
-                                    </label>
-                                    <label class="admin-room-equipment-manual">
-                                        <span>Ou ajouter un équipement manuel</span>
-                                        <input type="text" name="manualLabel" placeholder="Ex. miroir d’appoint">
-                                    </label>
+                                            {% if availableCatalogCount == 0 %}
+                                                <p class="empty-inline">Tous les equipements du catalogue sont deja ajoutes ici.</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="admin-room-equipment-manual-card">
+                                        <label class="admin-room-equipment-manual">
+                                            <span>Ou ajouter un equipement manuel</span>
+                                            <input type="text" name="manualLabel" placeholder="Ex. miroir d appoint">
+                                        </label>
+                                        <label class="admin-room-equipment-quantity">
+                                            <span>Quantite</span>
+                                            <input type="number" name="quantity" min="1" value="1">
+                                        </label>
+                                        <button class="secondary-button" type="submit">Ajouter cet equipement</button>
+                                    </div>
                                 </div>
-                                <button class="secondary-button" type="submit">Ajouter la sélection</button>
                             </form>
+
+                            <div class="modal fade" id="{{ equipmentQtyModalId }}" tabindex="-1" aria-labelledby="{{ equipmentQtyModalId }}-label" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content apartment-name-modal-content room-equipment-modal-content">
+                                        <div class="modal-header apartment-name-modal-header">
+                                            <div>
+                                                <span class="eyebrow">Equipement</span>
+                                                <h4 class="modal-title" id="{{ equipmentQtyModalId }}-label">Choisir la quantite</h4>
+                                            </div>
+                                            <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                                        </div>
+                                        <div class="apartment-name-modal-form room-equipment-modal-form">
+                                            <p class="muted" data-room-equipment-modal-label>Quel nombre veux-tu ajouter ?</p>
+                                            <label>
+                                                <span>Quantite</span>
+                                                <input type="number" min="1" value="1" data-room-equipment-modal-input>
+                                            </label>
+                                            <div class="editable-field-actions">
+                                                <button class="secondary-button" type="button" data-modal-close>Annuler</button>
+                                                <button class="primary-button" type="button" data-room-equipment-confirm>Ajouter a la piece</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </article>
                     {% else %}
                         <p class="empty-state">Commence par ajouter les pièces principales de l’appartement.</p>
@@ -942,3 +985,6 @@
         {% endif %}
     </div>
 </section>
+
+
+

@@ -430,7 +430,15 @@ class EmployeeController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
         }
 
-        return $this->redirectToDashboardResponse('Check-out terminé.');
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_checkout_completion.html.twig', [
+                'apartmentName' => $checkout->getApartment()?->getName() ?? 'Appartement',
+            ]),
+            'redirect' => $this->generateUrl('employee_dashboard'),
+            'redirectDelayMs' => 2000,
+            'message' => 'Check-out terminé.',
+        ]);
     }
 
     private function roomWorkspaceResponse(Checkout $checkout, ?Room $room, string $message): JsonResponse
@@ -447,7 +455,11 @@ class EmployeeController extends AbstractController
         if ($group['totalCount'] > 0 && $group['checkedCount'] >= $group['totalCount']) {
             return new JsonResponse([
                 'success' => true,
+                'html' => $this->renderView('employee/_room_completion.html.twig', [
+                    'roomName' => $group['room']->getName(),
+                ]),
                 'redirect' => $this->generateUrl('employee_checkout_show', ['id' => $checkout->getId()]),
+                'redirectDelayMs' => 1900,
                 'message' => 'Pièce terminée. Retour à la liste des pièces.',
             ]);
         }
