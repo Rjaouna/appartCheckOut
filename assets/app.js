@@ -1,5 +1,6 @@
 import './stimulus_bootstrap.js';
 import './styles/app.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 document.documentElement.classList.remove('app-shell-pending');
 
