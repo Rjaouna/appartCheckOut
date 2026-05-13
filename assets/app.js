@@ -1,6 +1,7 @@
 import './stimulus_bootstrap.js';
 import './styles/app.css';
-import './vendor/bootstrap-icons/font/bootstrap-icons.css';
+import './styles/bootstrap-icons/bootstrap-icons.css';
+
 document.documentElement.classList.remove('app-shell-pending');
 
 let pendingConfirmationForm = null;
