@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Anomaly;
 use App\Entity\Apartment;
 use App\Entity\ApartmentAccessStep;
+use App\Entity\ApartmentManual;
 use App\Entity\ApartmentReservation;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
@@ -247,6 +248,104 @@ class AdminController extends AbstractController
     public function users(EntityManagerInterface $entityManager): Response
     {
         return $this->render('admin/users.html.twig', $this->buildUsersPageData($entityManager));
+    }
+
+    #[Route('/manuals', name: 'admin_manuals', methods: ['GET'])]
+    public function manuals(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        return $this->render('admin/manuals.html.twig', $this->buildManualsPageData($entityManager, $request));
+    }
+
+    #[Route('/manuals', name: 'admin_manual_create', methods: ['POST'])]
+    public function createManual(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $apartment = $entityManager->getRepository(Apartment::class)->find((int) $request->request->get('apartmentId'));
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 422);
+        }
+
+        $video = $request->files->get('video');
+        if (!$video instanceof UploadedFile) {
+            return new JsonResponse(['success' => false, 'message' => 'Ajoute une video avant de valider.'], 422);
+        }
+
+        try {
+            $this->assertAcceptedVideoUpload($video, 120 * 1024 * 1024, 'La video du manuel');
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        $manual = (new ApartmentManual())
+            ->setApartment($apartment)
+            ->setTitle($this->normalizeManualText((string) $request->request->get('title')))
+            ->setEquipmentLabel($this->normalizeManualText((string) $request->request->get('equipmentLabel')))
+            ->setShortMessage($this->normalizeNullableManualText($request->request->get('shortMessage')))
+            ->setImportantNotice($this->normalizeNullableManualText($request->request->get('importantNotice')))
+            ->setDisplayOrder(max(0, (int) $request->request->get('displayOrder', 0)))
+            ->setIsActive($request->request->getBoolean('isActive', true))
+            ->setVideoPath($this->storeApartmentManualVideo($video));
+
+        if ($manual->getTitle() === '' || $manual->getEquipmentLabel() === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l equipement concerne.'], 422);
+        }
+
+        $entityManager->persist($manual);
+        $entityManager->flush();
+
+        return $this->manualsContentResponse($entityManager, $request, 'Manuel ajoute.');
+    }
+
+    #[Route('/manuals/{id}', name: 'admin_manual_update', methods: ['POST'])]
+    public function updateManual(ApartmentManual $manual, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $apartment = $entityManager->getRepository(Apartment::class)->find((int) $request->request->get('apartmentId'));
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 422);
+        }
+
+        $manual
+            ->setApartment($apartment)
+            ->setTitle($this->normalizeManualText((string) $request->request->get('title')))
+            ->setEquipmentLabel($this->normalizeManualText((string) $request->request->get('equipmentLabel')))
+            ->setShortMessage($this->normalizeNullableManualText($request->request->get('shortMessage')))
+            ->setImportantNotice($this->normalizeNullableManualText($request->request->get('importantNotice')))
+            ->setDisplayOrder(max(0, (int) $request->request->get('displayOrder', 0)))
+            ->setIsActive($request->request->getBoolean('isActive', true));
+
+        if ($manual->getTitle() === '' || $manual->getEquipmentLabel() === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l equipement concerne.'], 422);
+        }
+
+        $newVideo = $request->files->get('video');
+        $previousVideoPath = $manual->getVideoPath();
+        if ($newVideo instanceof UploadedFile) {
+            try {
+                $this->assertAcceptedVideoUpload($newVideo, 120 * 1024 * 1024, 'La video du manuel');
+            } catch (\InvalidArgumentException $exception) {
+                return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+            }
+
+            $manual->setVideoPath($this->storeApartmentManualVideo($newVideo));
+        }
+
+        $entityManager->flush();
+
+        if ($newVideo instanceof UploadedFile && $previousVideoPath !== $manual->getVideoPath()) {
+            $this->deleteApartmentManualVideo($previousVideoPath);
+        }
+
+        return $this->manualsContentResponse($entityManager, $request, 'Manuel mis a jour.');
+    }
+
+    #[Route('/manuals/{id}/delete', name: 'admin_manual_delete', methods: ['POST'])]
+    public function deleteManual(ApartmentManual $manual, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $videoPath = $manual->getVideoPath();
+        $entityManager->remove($manual);
+        $entityManager->flush();
+        $this->deleteApartmentManualVideo($videoPath);
+
+        return $this->manualsContentResponse($entityManager, $request, 'Manuel supprime.');
     }
 
     #[Route('/users/{id}', name: 'admin_user_show', methods: ['GET'])]
@@ -1931,6 +2030,7 @@ class AdminController extends AbstractController
             )),
             'todayDate' => $today,
             'pendingServiceOffers' => $pendingServiceOffers,
+            'manualCount' => $entityManager->getRepository(ApartmentManual::class)->count([]),
             'employeeCount' => count(array_filter(
                 $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
                 static fn (User $user): bool => !in_array('ROLE_ADMIN', $user->getRoles(), true)
@@ -2005,6 +2105,57 @@ class AdminController extends AbstractController
 
         return [
             'users' => $users,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildManualsPageData(EntityManagerInterface $entityManager, Request $request): array
+    {
+        $selectedApartmentId = max(0, (int) $request->get('apartmentFilter', 0));
+        $selectedEquipment = trim((string) $request->get('equipmentFilter', ''));
+
+        $queryBuilder = $entityManager->createQueryBuilder()
+            ->select('manual', 'apartment')
+            ->from(ApartmentManual::class, 'manual')
+            ->join('manual.apartment', 'apartment')
+            ->orderBy('manual.displayOrder', 'ASC')
+            ->addOrderBy('manual.createdAt', 'DESC');
+
+        if ($selectedApartmentId > 0) {
+            $queryBuilder
+                ->andWhere('IDENTITY(manual.apartment) = :apartmentId')
+                ->setParameter('apartmentId', $selectedApartmentId);
+        }
+
+        if ($selectedEquipment !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(manual.equipmentLabel) = :equipmentLabel')
+                ->setParameter('equipmentLabel', mb_strtolower($selectedEquipment));
+        }
+
+        $manuals = $queryBuilder->getQuery()->getResult();
+
+        $equipmentRows = $entityManager->createQueryBuilder()
+            ->select('DISTINCT manual.equipmentLabel AS equipmentLabel')
+            ->from(ApartmentManual::class, 'manual')
+            ->where('manual.equipmentLabel != :emptyValue')
+            ->setParameter('emptyValue', '')
+            ->orderBy('manual.equipmentLabel', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        return [
+            'manuals' => $manuals,
+            'apartments' => $entityManager->getRepository(Apartment::class)->findBy(['status' => ApartmentStatus::Active], ['name' => 'ASC']),
+            'equipmentOptions' => array_values(array_filter(array_map(
+                static fn (array $row): string => (string) ($row['equipmentLabel'] ?? ''),
+                $equipmentRows
+            ))),
+            'selectedApartmentId' => $selectedApartmentId,
+            'selectedEquipment' => $selectedEquipment,
+            'manualEquipmentSuggestions' => $this->buildManualEquipmentSuggestions($entityManager),
         ];
     }
 
@@ -2341,6 +2492,24 @@ class AdminController extends AbstractController
         return mb_substr($label, 0, 160);
     }
 
+    private function normalizeManualText(string $value): string
+    {
+        $value = trim(preg_replace('/\s+/', ' ', $value) ?? '');
+
+        return mb_substr($value, 0, 160);
+    }
+
+    private function normalizeNullableManualText(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
+    }
+
     private function isApartmentRichTextField(string $field): bool
     {
         return in_array($field, self::APARTMENT_RICH_TEXT_FIELDS, true);
@@ -2520,6 +2689,50 @@ class AdminController extends AbstractController
         return 'https://www.waze.com/ul?q=' . $query;
     }
 
+    private function manualsContentResponse(EntityManagerInterface $entityManager, Request $request, string $message): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('admin/_manuals_content.html.twig', $this->buildManualsPageData($entityManager, $request)),
+            'message' => $message,
+        ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function buildManualEquipmentSuggestions(EntityManagerInterface $entityManager): array
+    {
+        $manualRows = $entityManager->createQueryBuilder()
+            ->select('DISTINCT manual.equipmentLabel AS equipmentLabel')
+            ->from(ApartmentManual::class, 'manual')
+            ->where('manual.equipmentLabel != :emptyValue')
+            ->setParameter('emptyValue', '')
+            ->getQuery()
+            ->getArrayResult();
+
+        $roomEquipmentRows = $entityManager->createQueryBuilder()
+            ->select('DISTINCT roomEquipment.label AS equipmentLabel')
+            ->from(RoomEquipment::class, 'roomEquipment')
+            ->where('roomEquipment.isActive = :isActive')
+            ->setParameter('isActive', true)
+            ->getQuery()
+            ->getArrayResult();
+
+        $labels = array_merge(
+            array_map(static fn (array $row): string => (string) ($row['equipmentLabel'] ?? ''), $manualRows),
+            array_map(static fn (array $row): string => (string) ($row['equipmentLabel'] ?? ''), $roomEquipmentRows)
+        );
+
+        $labels = array_values(array_unique(array_filter(array_map(
+            fn (string $label): string => $this->normalizeManualText($label),
+            $labels
+        ))));
+        natcasesort($labels);
+
+        return array_values($labels);
+    }
+
     private function generateApartmentReference(EntityManagerInterface $entityManager): string
     {
         do {
@@ -2561,6 +2774,22 @@ class AdminController extends AbstractController
         return '/uploads/apartment-access/' . $filename;
     }
 
+    private function storeApartmentManualVideo(UploadedFile $video): string
+    {
+        $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/manuals';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $safeName = pathinfo($video->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeName = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeName) ?: 'manual';
+        $filename = sprintf('%s-%s.%s', $safeName, bin2hex(random_bytes(4)), $video->guessExtension() ?: 'mp4');
+
+        $video->move($targetDir, $filename);
+
+        return '/uploads/manuals/' . $filename;
+    }
+
     private function assertAcceptedImageUpload(UploadedFile $file, int $maxBytes, string $label): void
     {
         if ($file->getSize() !== null && $file->getSize() > $maxBytes) {
@@ -2570,6 +2799,18 @@ class AdminController extends AbstractController
         $mimeType = (string) ($file->getMimeType() ?? '');
         if (!str_starts_with($mimeType, 'image/')) {
             throw new \InvalidArgumentException(sprintf('%s doit être une image valide.', $label));
+        }
+    }
+
+    private function assertAcceptedVideoUpload(UploadedFile $file, int $maxBytes, string $label): void
+    {
+        if ($file->getSize() !== null && $file->getSize() > $maxBytes) {
+            throw new \InvalidArgumentException(sprintf('%s depasse la taille autorisee.', $label));
+        }
+
+        $mimeType = (string) ($file->getMimeType() ?? '');
+        if (!in_array($mimeType, ['video/mp4', 'video/quicktime', 'video/webm'], true)) {
+            throw new \InvalidArgumentException(sprintf('%s doit etre une video MP4, MOV ou WebM.', $label));
         }
     }
 
@@ -2592,6 +2833,18 @@ class AdminController extends AbstractController
         }
 
         $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $imagePath;
+        if (is_file($fullPath)) {
+            @unlink($fullPath);
+        }
+    }
+
+    private function deleteApartmentManualVideo(?string $videoPath): void
+    {
+        if (!is_string($videoPath) || $videoPath === '' || !str_starts_with($videoPath, '/uploads/manuals/')) {
+            return;
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $videoPath;
         if (is_file($fullPath)) {
             @unlink($fullPath);
         }

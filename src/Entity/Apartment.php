@@ -149,6 +149,13 @@ class Apartment
     #[ORM\OrderBy(['arrivalDate' => 'ASC', 'id' => 'DESC'])]
     private Collection $reservations;
 
+    /**
+     * @var Collection<int, ApartmentManual>
+     */
+    #[ORM\OneToMany(mappedBy: 'apartment', targetEntity: ApartmentManual::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['displayOrder' => 'ASC', 'id' => 'ASC'])]
+    private Collection $manuals;
+
     public function __construct()
     {
         $this->assignedEmployees = new ArrayCollection();
@@ -156,6 +163,7 @@ class Apartment
         $this->checkouts = new ArrayCollection();
         $this->accessSteps = new ArrayCollection();
         $this->reservations = new ArrayCollection();
+        $this->manuals = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -737,6 +745,44 @@ class Apartment
     {
         if ($this->reservations->removeElement($reservation) && $reservation->getApartment() === $this) {
             $reservation->setApartment(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ApartmentManual>
+     */
+    public function getManuals(): Collection
+    {
+        return $this->manuals;
+    }
+
+    /**
+     * @return list<ApartmentManual>
+     */
+    public function getActiveManuals(): array
+    {
+        return array_values(array_filter(
+            $this->manuals->toArray(),
+            static fn (ApartmentManual $manual): bool => $manual->isActive()
+        ));
+    }
+
+    public function addManual(ApartmentManual $manual): self
+    {
+        if (!$this->manuals->contains($manual)) {
+            $this->manuals->add($manual);
+            $manual->setApartment($this);
+        }
+
+        return $this;
+    }
+
+    public function removeManual(ApartmentManual $manual): self
+    {
+        if ($this->manuals->removeElement($manual) && $manual->getApartment() === $this) {
+            $manual->setApartment(null);
         }
 
         return $this;

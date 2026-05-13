@@ -3842,6 +3842,342 @@ body.nav-compact .floating-main-menu-button {
     }
 }
 
+.action-menu-icon .bi,
+.tenant-icon-mark .bi,
+.tenant-service-icon .bi,
+.admin-dashboard-entry-icon .bi {
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.admin-manuals-layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    gap: 22px;
+}
+
+.admin-manuals-sidebar,
+.admin-manuals-list-panel {
+    display: grid;
+    gap: 18px;
+}
+
+.admin-manual-filter-form,
+.admin-manual-form {
+    gap: 14px;
+}
+
+.admin-manual-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
+}
+
+.admin-manual-card {
+    display: grid;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 28px;
+    border: 1px solid var(--border);
+    background:
+        radial-gradient(circle at top right, rgba(255, 56, 92, 0.08), transparent 28%),
+        linear-gradient(180deg, #fff 0%, #fcfbf9 100%);
+}
+
+.admin-manual-video-shell,
+.tenant-manual-video-shell {
+    overflow: hidden;
+    border-radius: 22px;
+    background: #111827;
+}
+
+.admin-manual-video,
+.tenant-manual-video {
+    width: 100%;
+    display: block;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    background: #111827;
+}
+
+.admin-manual-card-body,
+.tenant-manual-copy {
+    display: grid;
+    gap: 12px;
+}
+
+.admin-manual-card-top {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.admin-manual-card-top h3,
+.admin-manual-copy,
+.tenant-manual-copy h3,
+.tenant-manual-copy p {
+    margin: 0;
+}
+
+.admin-manual-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-manual-warning,
+.tenant-manual-warning,
+.tenant-warning-card {
+    display: grid;
+    gap: 8px;
+}
+
+.admin-manual-warning p,
+.tenant-manual-warning p,
+.tenant-warning-card p {
+    margin: 0;
+}
+
+.admin-manual-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tenant-app-shell {
+    display: grid;
+    gap: 22px;
+}
+
+.tenant-app-hero {
+    display: grid;
+    gap: 10px;
+    padding: 26px;
+    border-radius: 34px;
+    background:
+        radial-gradient(circle at top left, rgba(255, 56, 92, 0.14), transparent 30%),
+        linear-gradient(180deg, #fffdfb 0%, #fff 100%);
+    border: 1px solid rgba(255, 56, 92, 0.14);
+}
+
+.tenant-app-hero h1,
+.tenant-app-hero p {
+    margin: 0;
+}
+
+.tenant-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+}
+
+.tenant-icon-tile {
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+    padding: 18px 14px;
+    border: 1px solid rgba(227, 220, 209, 0.92);
+    border-radius: 26px;
+    background: linear-gradient(180deg, #fff 0%, #fff8fa 100%);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.tenant-icon-tile:hover,
+.tenant-icon-tile:focus-visible,
+.tenant-icon-tile.is-active {
+    transform: translateY(-2px);
+    border-color: rgba(255, 56, 92, 0.24);
+    box-shadow: 0 18px 34px rgba(255, 56, 92, 0.1);
+}
+
+.tenant-icon-mark {
+    width: 58px;
+    height: 58px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff6986 0%, #ff385c 100%);
+    color: #fff;
+}
+
+.tenant-icon-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+}
+
+.tenant-icon-panel {
+    display: grid;
+    gap: 18px;
+    padding: 22px;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, #fff 0%, #fcfbf9 100%);
+}
+
+.tenant-icon-panel.is-collapsed {
+    display: none;
+}
+
+.tenant-panel-topbar {
+    position: sticky;
+    top: 78px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 100%);
+    backdrop-filter: blur(10px);
+}
+
+.tenant-panel-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 56, 92, 0.1);
+    color: var(--accent);
+}
+
+.tenant-panel-mark .bi {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.tenant-panel-head {
+    display: grid;
+    gap: 8px;
+}
+
+.tenant-panel-head h2,
+.tenant-panel-head p,
+.tenant-contact-copy strong,
+.tenant-contact-copy span {
+    margin: 0;
+}
+
+.tenant-panel-head p,
+.tenant-contact-copy span,
+.tenant-info-card p,
+.tenant-service-card span {
+    color: var(--muted);
+}
+
+.tenant-panel-card-grid,
+.tenant-guidebook-grid,
+.tenant-contact-grid,
+.tenant-manual-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.tenant-info-card,
+.tenant-contact-card,
+.tenant-service-card,
+.tenant-step-card,
+.tenant-warning-card {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+    border-radius: 24px;
+    border: 1px solid rgba(227, 220, 209, 0.92);
+    background: #fff;
+}
+
+.tenant-info-card-wide {
+    grid-column: 1 / -1;
+}
+
+.tenant-step-list {
+    display: grid;
+    gap: 14px;
+}
+
+.tenant-step-card {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 260px);
+    align-items: center;
+}
+
+.tenant-step-card img {
+    width: 100%;
+    border-radius: 18px;
+    object-fit: cover;
+}
+
+.tenant-step-copy {
+    display: grid;
+    gap: 10px;
+}
+
+.tenant-action-stack {
+    display: grid;
+    gap: 12px;
+}
+
+.tenant-service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.tenant-service-card {
+    text-decoration: none;
+    color: inherit;
+    align-items: start;
+}
+
+.tenant-service-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(37, 211, 102, 0.14);
+    color: #128c4a;
+}
+
+.tenant-contact-card {
+    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.tenant-contact-card-soft {
+    grid-template-columns: 1fr;
+}
+
+.tenant-contact-copy {
+    display: grid;
+    gap: 4px;
+}
+
+.tenant-warning-card {
+    background: linear-gradient(180deg, #fff8f4 0%, #fff 100%);
+    border-color: rgba(198, 106, 0, 0.18);
+}
+
+@media (max-width: 960px) {
+    .admin-manuals-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .tenant-panel-card-grid,
+    .tenant-guidebook-grid,
+    .tenant-contact-grid,
+    .tenant-manual-grid,
+    .tenant-step-card {
+        grid-template-columns: 1fr;
+    }
+}
+
 .admin-dashboard-hero h1,
 .admin-dashboard-hero p,
 .admin-dashboard-entry-copy h2,

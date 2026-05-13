@@ -1,0 +1,220 @@
+<div class="admin-manuals-layout">
+    <section class="panel admin-manuals-sidebar">
+        <div class="admin-home-section-head compact">
+            <div>
+                <h2>Manuels d'utilisation</h2>
+                <p>Ajoutez des vidéos utiles pour chaque appartement.</p>
+            </div>
+            <button class="primary-button" type="button" data-edit-target="#admin-manual-create-form">Ajouter un manuel</button>
+        </div>
+
+        <form method="get" class="stack-form compact-form admin-manual-filter-form">
+            <label>
+                <span>Appartement</span>
+                <select name="apartmentFilter" onchange="this.form.submit()">
+                    <option value="0">Tous les appartements</option>
+                    {% for apartment in apartments %}
+                        <option value="{{ apartment.id }}" {{ selectedApartmentId == apartment.id ? 'selected' : '' }}>{{ apartment.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span>Équipement</span>
+                <select name="equipmentFilter" onchange="this.form.submit()">
+                    <option value="">Tous les équipements</option>
+                    {% for equipmentOption in equipmentOptions %}
+                        <option value="{{ equipmentOption }}" {{ selectedEquipment == equipmentOption ? 'selected' : '' }}>{{ equipmentOption }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </form>
+
+        <form
+            id="admin-manual-create-form"
+            method="post"
+            action="{{ path('admin_manual_create') }}"
+            enctype="multipart/form-data"
+            class="stack-form editable-field-form is-collapsed admin-manual-form"
+            data-async-form
+            data-update-target="#admin-manuals-content"
+            data-reset-form
+        >
+            <input type="hidden" name="apartmentFilter" value="{{ selectedApartmentId }}">
+            <input type="hidden" name="equipmentFilter" value="{{ selectedEquipment }}">
+
+            <label>
+                <span>Appartement</span>
+                <select name="apartmentId" required>
+                    <option value="">Choisir un appartement</option>
+                    {% for apartment in apartments %}
+                        <option value="{{ apartment.id }}" {{ selectedApartmentId == apartment.id ? 'selected' : '' }}>{{ apartment.name }} · {{ apartment.city }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span>Équipement</span>
+                <input type="text" name="equipmentLabel" list="manual-equipment-suggestions" placeholder="Ex. Cafetière" required>
+            </label>
+            <label>
+                <span>Titre</span>
+                <input type="text" name="title" placeholder="Ex. Utiliser la cafetière" required>
+            </label>
+            <label>
+                <span>Message court</span>
+                <textarea name="shortMessage" rows="3" placeholder="Expliquez en une phrase ce que le locataire doit savoir."></textarea>
+            </label>
+            <label>
+                <span>Consigne importante</span>
+                <textarea name="importantNotice" rows="3" placeholder="Ex. Ne jamais lancer sans eau."></textarea>
+            </label>
+            <label>
+                <span>Vidéo</span>
+                <input type="file" name="video" accept="video/mp4,video/quicktime,video/webm" required>
+            </label>
+            <div class="grid-two">
+                <label>
+                    <span>Ordre</span>
+                    <input type="number" name="displayOrder" min="0" value="0">
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="isActive" value="1" checked>
+                    <span>Visible côté locataire</span>
+                </label>
+            </div>
+            <div class="editable-field-actions">
+                <button class="primary-button" type="submit">Enregistrer le manuel</button>
+                <button class="secondary-button" type="button" data-edit-target="#admin-manual-create-form">Annuler</button>
+            </div>
+        </form>
+
+        <datalist id="manual-equipment-suggestions">
+            {% for label in manualEquipmentSuggestions %}
+                <option value="{{ label }}"></option>
+            {% endfor %}
+        </datalist>
+    </section>
+
+    <section class="panel admin-manuals-list-panel">
+        <div class="admin-home-section-head compact">
+            <div>
+                <h2>Bibliothèque</h2>
+                <p>{{ manuals|length }} manuel{{ manuals|length > 1 ? 's' : '' }} selon vos filtres.</p>
+            </div>
+            <span class="mini-badge">{{ manuals|length }}</span>
+        </div>
+
+        <div class="admin-manual-grid">
+            {% for manual in manuals %}
+                <article class="admin-manual-card {{ not manual.isActive ? 'is-muted' : '' }}">
+                    <div class="admin-manual-video-shell">
+                        <video controls preload="metadata" class="admin-manual-video">
+                            <source src="{{ manual.videoPath }}">
+                            Votre navigateur ne peut pas lire cette vidéo.
+                        </video>
+                    </div>
+
+                    <div class="admin-manual-card-body">
+                        <div class="admin-manual-card-top">
+                            <div>
+                                <span class="eyebrow">{{ manual.apartment.name }}</span>
+                                <h3>{{ manual.title }}</h3>
+                            </div>
+                            <span class="status-badge {{ manual.isActive ? 'is-success' : 'is-neutral' }}">{{ manual.isActive ? 'Visible' : 'Masqué' }}</span>
+                        </div>
+
+                        <div class="admin-manual-badges">
+                            <span class="public-tenant-badge">{{ manual.equipmentLabel }}</span>
+                            <span class="public-tenant-badge">Ordre {{ manual.displayOrder }}</span>
+                        </div>
+
+                        {% if manual.shortMessage %}
+                            <p class="admin-manual-copy">{{ manual.shortMessage }}</p>
+                        {% endif %}
+
+                        {% if manual.importantNotice %}
+                            <div class="detail-note-soft admin-manual-warning">
+                                <strong>Consigne importante</strong>
+                                <p>{{ manual.importantNotice }}</p>
+                            </div>
+                        {% endif %}
+
+                        <div class="admin-manual-card-actions">
+                            <button class="secondary-button" type="button" data-edit-target="#manual-edit-form-{{ manual.id }}">Modifier</button>
+                            <form
+                                method="post"
+                                action="{{ path('admin_manual_delete', {id: manual.id}) }}"
+                                data-async-form
+                                data-update-target="#admin-manuals-content"
+                                data-confirm-reset
+                                data-confirm-title="Supprimer ce manuel"
+                                data-confirm-message="Veux-tu vraiment supprimer ce manuel vidéo ?"
+                            >
+                                <input type="hidden" name="apartmentFilter" value="{{ selectedApartmentId }}">
+                                <input type="hidden" name="equipmentFilter" value="{{ selectedEquipment }}">
+                                <button class="secondary-button danger-button" type="submit">Supprimer</button>
+                            </form>
+                        </div>
+
+                        <form
+                            id="manual-edit-form-{{ manual.id }}"
+                            method="post"
+                            action="{{ path('admin_manual_update', {id: manual.id}) }}"
+                            enctype="multipart/form-data"
+                            class="stack-form editable-field-form is-collapsed admin-manual-form"
+                            data-async-form
+                            data-update-target="#admin-manuals-content"
+                        >
+                            <input type="hidden" name="apartmentFilter" value="{{ selectedApartmentId }}">
+                            <input type="hidden" name="equipmentFilter" value="{{ selectedEquipment }}">
+
+                            <label>
+                                <span>Appartement</span>
+                                <select name="apartmentId" required>
+                                    {% for apartment in apartments %}
+                                        <option value="{{ apartment.id }}" {{ manual.apartment.id == apartment.id ? 'selected' : '' }}>{{ apartment.name }} · {{ apartment.city }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>
+                                <span>Équipement</span>
+                                <input type="text" name="equipmentLabel" list="manual-equipment-suggestions" value="{{ manual.equipmentLabel }}" required>
+                            </label>
+                            <label>
+                                <span>Titre</span>
+                                <input type="text" name="title" value="{{ manual.title }}" required>
+                            </label>
+                            <label>
+                                <span>Message court</span>
+                                <textarea name="shortMessage" rows="3">{{ manual.shortMessage }}</textarea>
+                            </label>
+                            <label>
+                                <span>Consigne importante</span>
+                                <textarea name="importantNotice" rows="3">{{ manual.importantNotice }}</textarea>
+                            </label>
+                            <label>
+                                <span>Remplacer la vidéo</span>
+                                <input type="file" name="video" accept="video/mp4,video/quicktime,video/webm">
+                            </label>
+                            <div class="grid-two">
+                                <label>
+                                    <span>Ordre</span>
+                                    <input type="number" name="displayOrder" min="0" value="{{ manual.displayOrder }}">
+                                </label>
+                                <label class="checkbox-row">
+                                    <input type="checkbox" name="isActive" value="1" {{ manual.isActive ? 'checked' : '' }}>
+                                    <span>Visible côté locataire</span>
+                                </label>
+                            </div>
+                            <div class="editable-field-actions">
+                                <button class="primary-button" type="submit">Mettre à jour</button>
+                                <button class="secondary-button" type="button" data-edit-target="#manual-edit-form-{{ manual.id }}">Annuler</button>
+                            </div>
+                        </form>
+                    </div>
+                </article>
+            {% else %}
+                <p class="empty-state">Aucun manuel ne correspond aux filtres actuels.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>

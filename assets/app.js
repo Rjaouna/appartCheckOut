@@ -919,6 +919,12 @@ document.addEventListener('click', (event) => {
         if (target instanceof HTMLElement) {
             target.classList.add('is-collapsed');
             syncPanelTriggers(document);
+
+            const returnSelector = panelCloseTrigger.getAttribute('data-panel-return');
+            const returnTarget = returnSelector ? document.querySelector(returnSelector) : null;
+            if (returnTarget instanceof HTMLElement) {
+                returnTarget.scrollIntoView({behavior: 'smooth', block: 'start'});
+            }
         }
         return;
     }

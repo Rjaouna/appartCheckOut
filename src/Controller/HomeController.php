@@ -134,6 +134,7 @@ class HomeController extends AbstractController
             'assignedEmployees' => $assignedEmployees,
             'serviceContactEmployee' => $serviceContactEmployee,
             'serviceExtras' => $serviceContactEmployee instanceof User ? $this->buildTenantServiceExtras($apartment, $serviceContactEmployee) : [],
+            'manuals' => $apartment->getActiveManuals(),
             'whatsAppShareUrl' => $this->buildApartmentWhatsAppShareUrl($apartment),
         ]);
     }
