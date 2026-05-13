@@ -1,6 +1,6 @@
 {
     "app": {
-        "path": "\/assets\/app-CoQ8sYT.js",
+        "path": "\/assets\/app-MoZbwTl.js",
         "type": "js"
     },
     "\/assets\/stimulus_bootstrap.js": {
@@ -24,11 +24,7 @@
         "type": "js"
     },
     "\/assets\/styles\/app.css": {
-        "path": "\/assets\/styles\/app-wM1CFq6.css",
-        "type": "css"
-    },
-    "\/assets\/vendor\/bootstrap-icons\/font\/bootstrap-icons.css": {
-        "path": "\/assets\/vendor\/bootstrap-icons\/font\/bootstrap-icons-UNAnHWy.css",
+        "path": "\/assets\/styles\/app-R3JGfDh.css",
         "type": "css"
     },
     "@hotwired\/stimulus": {

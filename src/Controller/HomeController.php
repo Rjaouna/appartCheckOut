@@ -139,6 +139,15 @@ class HomeController extends AbstractController
         ]);
     }
 
+    #[Route('/locataire/quitter', name: 'tenant_lookup_exit', methods: ['GET'])]
+    public function exitTenantArea(Request $request): RedirectResponse
+    {
+        $session = $request->getSession();
+        $session->remove(self::TENANT_ACCESS_SESSION_KEY);
+
+        return $this->redirectToRoute('tenant_lookup');
+    }
+
     private function canAccessTenantApartment(Apartment $apartment, Request $request): bool
     {
         if ($apartment->getStatus() !== ApartmentStatus::Active || !$apartment->isTenantAccessEnabled()) {

@@ -259,6 +259,10 @@ class AdminController extends AbstractController
     #[Route('/manuals', name: 'admin_manual_create', methods: ['POST'])]
     public function createManual(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        if ($this->isRequestBodyTooLarge($request)) {
+            return new JsonResponse(['success' => false, 'message' => $this->buildManualUploadErrorMessage($request)], 422);
+        }
+
         $apartment = $entityManager->getRepository(Apartment::class)->find((int) $request->request->get('apartmentId'));
         if (!$apartment instanceof Apartment) {
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 422);
@@ -266,12 +270,15 @@ class AdminController extends AbstractController
 
         $video = $request->files->get('video');
         if (!$video instanceof UploadedFile) {
-            return new JsonResponse(['success' => false, 'message' => 'Ajoute une video avant de valider.'], 422);
+            return new JsonResponse(['success' => false, 'message' => $this->buildManualUploadErrorMessage($request)], 422);
         }
 
         try {
-            $this->assertAcceptedVideoUpload($video, 120 * 1024 * 1024, 'La video du manuel');
+            $this->assertAcceptedVideoUpload($video, 6 * 1024 * 1024, 'La video du manuel');
+            $videoPath = $this->storeApartmentManualVideo($video);
         } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        } catch (\RuntimeException $exception) {
             return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
         }
 
@@ -283,7 +290,7 @@ class AdminController extends AbstractController
             ->setImportantNotice($this->normalizeNullableManualText($request->request->get('importantNotice')))
             ->setDisplayOrder(max(0, (int) $request->request->get('displayOrder', 0)))
             ->setIsActive($request->request->getBoolean('isActive', true))
-            ->setVideoPath($this->storeApartmentManualVideo($video));
+            ->setVideoPath($videoPath);
 
         if ($manual->getTitle() === '' || $manual->getEquipmentLabel() === '') {
             return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l equipement concerne.'], 422);
@@ -298,6 +305,10 @@ class AdminController extends AbstractController
     #[Route('/manuals/{id}', name: 'admin_manual_update', methods: ['POST'])]
     public function updateManual(ApartmentManual $manual, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        if ($this->isRequestBodyTooLarge($request)) {
+            return new JsonResponse(['success' => false, 'message' => $this->buildManualUploadErrorMessage($request)], 422);
+        }
+
         $apartment = $entityManager->getRepository(Apartment::class)->find((int) $request->request->get('apartmentId'));
         if (!$apartment instanceof Apartment) {
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 422);
@@ -320,12 +331,13 @@ class AdminController extends AbstractController
         $previousVideoPath = $manual->getVideoPath();
         if ($newVideo instanceof UploadedFile) {
             try {
-                $this->assertAcceptedVideoUpload($newVideo, 120 * 1024 * 1024, 'La video du manuel');
+                $this->assertAcceptedVideoUpload($newVideo, 6 * 1024 * 1024, 'La video du manuel');
+                $manual->setVideoPath($this->storeApartmentManualVideo($newVideo));
             } catch (\InvalidArgumentException $exception) {
                 return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+            } catch (\RuntimeException $exception) {
+                return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
             }
-
-            $manual->setVideoPath($this->storeApartmentManualVideo($newVideo));
         }
 
         $entityManager->flush();
@@ -2777,21 +2789,76 @@ class AdminController extends AbstractController
     private function storeApartmentManualVideo(UploadedFile $video): string
     {
         $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/manuals';
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0777, true);
+        if (!is_dir($targetDir) && !@mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
+            throw new \RuntimeException('Le dossier des manuels video est introuvable ou non accessible en ecriture.');
+        }
+
+        if (!is_writable($targetDir)) {
+            throw new \RuntimeException('Le dossier des manuels video n est pas accessible en ecriture sur le serveur.');
         }
 
         $safeName = pathinfo($video->getClientOriginalName(), PATHINFO_FILENAME);
         $safeName = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeName) ?: 'manual';
         $filename = sprintf('%s-%s.%s', $safeName, bin2hex(random_bytes(4)), $video->guessExtension() ?: 'mp4');
 
-        $video->move($targetDir, $filename);
+        try {
+            $video->move($targetDir, $filename);
+        } catch (\Throwable $exception) {
+            throw new \RuntimeException('Impossible d enregistrer la video sur le serveur. Verifie les droits du dossier uploads/manuals.');
+        }
 
         return '/uploads/manuals/' . $filename;
     }
 
+    private function buildManualUploadErrorMessage(Request $request): string
+    {
+        $contentLength = (int) ($request->server->get('CONTENT_LENGTH') ?? 0);
+        $postMaxBytes = $this->convertIniSizeToBytes((string) ini_get('post_max_size'));
+
+        if ($contentLength > 0 && $postMaxBytes > 0 && $contentLength > $postMaxBytes) {
+            return sprintf(
+                'La video est trop lourde pour la configuration actuelle du serveur. Limites actuelles: upload_max_filesize=%s, post_max_size=%s.',
+                (string) ini_get('upload_max_filesize'),
+                (string) ini_get('post_max_size'),
+            );
+        }
+
+        return sprintf(
+            'Aucune video valide n a ete recue. Verifie le format MP4, MOV ou WebM et la taille du fichier. Limite actuelle d upload: %s.',
+            (string) ini_get('upload_max_filesize')
+        );
+    }
+
+    private function isRequestBodyTooLarge(Request $request): bool
+    {
+        $contentLength = (int) ($request->server->get('CONTENT_LENGTH') ?? 0);
+        $postMaxBytes = $this->convertIniSizeToBytes((string) ini_get('post_max_size'));
+
+        return $contentLength > 0 && $postMaxBytes > 0 && $contentLength > $postMaxBytes;
+    }
+
+    private function convertIniSizeToBytes(string $value): int
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($trimmed, -1));
+        $bytes = (int) $trimmed;
+
+        return match ($unit) {
+            'g' => $bytes * 1024 * 1024 * 1024,
+            'm' => $bytes * 1024 * 1024,
+            'k' => $bytes * 1024,
+            default => (int) $trimmed,
+        };
+    }
+
     private function assertAcceptedImageUpload(UploadedFile $file, int $maxBytes, string $label): void
     {
+        $this->assertValidUploadedFile($file, $label);
+
         if ($file->getSize() !== null && $file->getSize() > $maxBytes) {
             throw new \InvalidArgumentException(sprintf('%s dépasse la taille autorisée.', $label));
         }
@@ -2804,14 +2871,48 @@ class AdminController extends AbstractController
 
     private function assertAcceptedVideoUpload(UploadedFile $file, int $maxBytes, string $label): void
     {
+        $this->assertValidUploadedFile($file, $label);
+
         if ($file->getSize() !== null && $file->getSize() > $maxBytes) {
             throw new \InvalidArgumentException(sprintf('%s depasse la taille autorisee.', $label));
         }
 
         $mimeType = (string) ($file->getMimeType() ?? '');
-        if (!in_array($mimeType, ['video/mp4', 'video/quicktime', 'video/webm'], true)) {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $allowedMimeTypes = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'application/octet-stream'];
+        $allowedExtensions = ['mp4', 'mov', 'webm', 'm4v'];
+
+        if (!in_array($mimeType, $allowedMimeTypes, true) && !in_array($extension, $allowedExtensions, true)) {
             throw new \InvalidArgumentException(sprintf('%s doit etre une video MP4, MOV ou WebM.', $label));
         }
+    }
+
+    private function assertValidUploadedFile(UploadedFile $file, string $label): void
+    {
+        if ($file->isValid()) {
+            return;
+        }
+
+        throw new \InvalidArgumentException($this->buildUploadedFileErrorMessage($file, $label));
+    }
+
+    private function buildUploadedFileErrorMessage(UploadedFile $file, string $label): string
+    {
+        return match ($file->getError()) {
+            UPLOAD_ERR_INI_SIZE => sprintf(
+                'Le fichier envoye pour %s est trop lourd pour le serveur. Limites actuelles: upload_max_filesize=%s, post_max_size=%s.',
+                strtolower($label),
+                (string) ini_get('upload_max_filesize'),
+                (string) ini_get('post_max_size'),
+            ),
+            UPLOAD_ERR_FORM_SIZE => sprintf('%s depasse la taille autorisee par le formulaire.', $label),
+            UPLOAD_ERR_PARTIAL => sprintf('%s n a ete envoye que partiellement. Reessaie avec une connexion stable.', $label),
+            UPLOAD_ERR_NO_FILE => sprintf('Aucun fichier n a ete recu pour %s.', strtolower($label)),
+            UPLOAD_ERR_NO_TMP_DIR => 'Le dossier temporaire d upload est manquant sur le serveur.',
+            UPLOAD_ERR_CANT_WRITE => 'Le serveur n arrive pas a enregistrer le fichier temporaire.',
+            UPLOAD_ERR_EXTENSION => 'Une extension PHP a bloque l upload du fichier.',
+            default => sprintf('%s n a pas pu etre envoye. Reessaie avec un fichier valide.', $label),
+        };
     }
 
     private function deleteUserPhoto(?string $photoPath): void

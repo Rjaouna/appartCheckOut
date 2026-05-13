@@ -4008,12 +4008,6 @@ body.nav-compact .floating-main-menu-button {
     height: 22px;
 }
 
-.tenant-panel-menu-button {
-    width: 46px;
-    height: 46px;
-    border-radius: 16px;
-}
-
 .tenant-primary-tools {
     display: flex;
     flex-wrap: wrap;
@@ -4049,16 +4043,6 @@ body.nav-compact .floating-main-menu-button {
     transform: translateY(-1px);
     border-color: rgba(255, 56, 92, 0.28);
     color: var(--accent-strong);
-}
-
-.tenant-exit-link-bottom {
-    width: 100%;
-    margin-top: 4px;
-}
-
-.tenant-home-exit-link {
-    justify-self: stretch;
-    min-height: 50px;
 }
 
 .tenant-waze-button {
@@ -4237,8 +4221,6 @@ body.nav-compact .floating-main-menu-button {
 
 .tenant-panel-scroll {
     display: grid;
-    align-content: start;
-    grid-auto-rows: max-content;
     gap: 18px;
     padding: 22px;
     overflow: auto;
@@ -4246,7 +4228,6 @@ body.nav-compact .floating-main-menu-button {
 
 .tenant-panel-head {
     display: grid;
-    align-content: start;
     gap: 8px;
 }
 
@@ -4277,8 +4258,6 @@ body.nav-compact .floating-main-menu-button {
 .tenant-manual-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    grid-auto-rows: max-content;
     gap: 16px;
 }
 
@@ -4288,8 +4267,6 @@ body.nav-compact .floating-main-menu-button {
 .tenant-step-card,
 .tenant-warning-card {
     display: grid;
-    align-content: start;
-    align-self: start;
     gap: 10px;
     padding: 18px;
     border-radius: 24px;
@@ -4330,8 +4307,6 @@ body.nav-compact .floating-main-menu-button {
 .tenant-service-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    align-items: start;
-    grid-auto-rows: max-content;
     gap: 16px;
 }
 

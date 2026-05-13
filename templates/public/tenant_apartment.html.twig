@@ -7,342 +7,471 @@
     {% set leadEmployee = assignedEmployees|first %}
     {% set extraEmployees = assignedEmployees|length > 1 ? assignedEmployees|slice(1) : [] %}
     {% set hasGuidebook = apartment.hasGuestGuideContent %}
+    {% set exitTenantUrl = path('tenant_lookup_exit') %}
 
     <section class="tenant-app-shell">
         <article class="tenant-app-hero">
-            <span class="eyebrow">Bienvenue</span>
-            <h1>{{ apartment.name }}</h1>
-            <p>{{ apartment.fullAddress }}</p>
+            <div class="tenant-app-hero-bar">
+                <div class="tenant-app-hero-copy">
+                    <span class="eyebrow">Bienvenue</span>
+                    <h1>{{ apartment.name }}</h1>
+                    <p>{{ apartment.fullAddress }}</p>
+                </div>
+
+                <button
+                    class="tenant-burger-button"
+                    type="button"
+                    aria-label="Ouvrir le menu locataire"
+                    title="Ouvrir le menu"
+                    data-action-menu-trigger
+                    data-action-menu-title="Menu locataire"
+                    data-action-menu-source="#tenant-main-menu-source"
+                >
+                    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                        <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+
         </article>
 
-        <section id="tenant-sections-hub" class="tenant-icon-grid">
-            <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-access" data-panel-group="tenant-public">
+        <section class="tenant-feature-grid">
+            <button class="tenant-feature-card" type="button" data-panel-open="#tenant-panel-access" data-panel-group="tenant-public">
                 <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'home' } only %}</span>
-                <span class="tenant-icon-label">Infos appart</span>
-            </button>
-
-            {% if apartment.orderedAccessSteps is not empty %}
-                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-apartment-access" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'access' } only %}</span>
-                    <span class="tenant-icon-label">Accès appartement</span>
-                </button>
-            {% endif %}
-
-            {% if apartment.wazeLink %}
-                <a
-                    class="tenant-icon-tile"
-                    href="{{ apartment.wazeLink }}"
-                    target="_blank"
-                    rel="noreferrer"
-                    data-external-confirm
-                    data-confirm-title="Ouvrir Waze"
-                    data-confirm-message="Vous allez quitter votre espace pour ouvrir l'adresse dans Waze. Voulez-vous continuer ?"
-                >
-                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'waze' } only %}</span>
-                    <span class="tenant-icon-label">Waze</span>
-                </a>
-            {% endif %}
-
-            {% if apartment.guestWifiName or apartment.guestWifiPassword or apartment.guestWifiInstructions %}
-                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-wifi" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'wifi' } only %}</span>
-                    <span class="tenant-icon-label">Wi-Fi</span>
-                </button>
-            {% endif %}
-
-            <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-share" data-panel-group="tenant-public">
-                <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'share' } only %}</span>
-                <span class="tenant-icon-label">Envoyer l'adresse</span>
+                <div class="tenant-feature-copy">
+                    <strong>Infos appartement</strong>
+                    <span>Adresse, codes et consignes d'entree.</span>
+                </div>
             </button>
 
             {% if hasGuidebook %}
-                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-guidebook" data-panel-group="tenant-public">
+                <button class="tenant-feature-card" type="button" data-panel-open="#tenant-panel-guidebook" data-panel-group="tenant-public">
                     <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'guidebook' } only %}</span>
-                    <span class="tenant-icon-label">Livret d'accueil</span>
-                </button>
-            {% endif %}
-
-            {% if serviceContactEmployee and serviceExtras is not empty %}
-                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-services" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'services' } only %}</span>
-                    <span class="tenant-icon-label">Services</span>
+                    <div class="tenant-feature-copy">
+                        <strong>Livret d'accueil</strong>
+                        <span>Regles, depart, urgences et infos utiles.</span>
+                    </div>
                 </button>
             {% endif %}
 
             {% if manuals is not empty %}
-                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-manuals" data-panel-group="tenant-public">
+                <button class="tenant-feature-card" type="button" data-panel-open="#tenant-panel-manuals" data-panel-group="tenant-public">
                     <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'manuals' } only %}</span>
-                    <span class="tenant-icon-label">Manuels</span>
+                    <div class="tenant-feature-copy">
+                        <strong>Manuels</strong>
+                        <span>Videos d'utilisation des equipements.</span>
+                    </div>
                 </button>
             {% endif %}
-
-            <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-contact" data-panel-group="tenant-public">
-                <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'contact' } only %}</span>
-                <span class="tenant-icon-label">Contact</span>
-            </button>
-
-            <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-important" data-panel-group="tenant-public">
-                <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'important' } only %}</span>
-                <span class="tenant-icon-label">Important</span>
-            </button>
         </section>
 
-        <section id="tenant-panel-access" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-head">
-                <h2>Infos appartement</h2>
-                <p>Retrouvez ici l'adresse, les codes et les repères utiles du logement.</p>
-            </div>
+        <a class="tenant-exit-link tenant-home-exit-link" href="{{ exitTenantUrl }}">Quitter l'espace locataire</a>
 
-            <div class="tenant-panel-card-grid">
-                <article class="tenant-info-card tenant-info-card-wide">
-                    <span class="editable-field-label">Adresse</span>
-                    <strong>{{ apartment.fullAddress }}</strong>
-                </article>
-                <article class="tenant-info-card">
-                    <span class="editable-field-label">Code immeuble</span>
-                    <strong>{{ apartment.buildingAccessCode ?: '-' }}</strong>
-                </article>
-                <article class="tenant-info-card">
-                    <span class="editable-field-label">Code boîte à clés / porte</span>
-                    <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
-                </article>
-                <article class="tenant-info-card">
-                    <span class="editable-field-label">Boîte aux lettres</span>
-                    <strong>{{ apartment.mailboxNumber ?: '-' }}</strong>
-                </article>
-                <article class="tenant-info-card tenant-info-card-wide">
-                    <span class="editable-field-label">Consignes d'entrée</span>
-                    <div class="formatted-rich-text">
-                        {% if apartment.entryInstructions %}
-                            {{ apartment.entryInstructions|raw }}
-                        {% else %}
-                            <p>Aucune consigne pour le moment.</p>
-                        {% endif %}
-                    </div>
-                </article>
+        <div id="tenant-main-menu-source" class="workflow-actions-source" hidden>
+            <div class="tenant-menu-grid">
+                {% if apartment.guestWifiName or apartment.guestWifiPassword or apartment.guestWifiInstructions %}
+                    <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-wifi" data-panel-group="tenant-public">
+                        <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'wifi' } only %}</span>
+                        <span class="tenant-icon-label">Wi-Fi</span>
+                    </button>
+                {% endif %}
+
+                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-share" data-panel-group="tenant-public">
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'share' } only %}</span>
+                    <span class="tenant-icon-label">Envoyer l'adresse</span>
+                </button>
+
+                {% if serviceContactEmployee and serviceExtras is not empty %}
+                    <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-services" data-panel-group="tenant-public">
+                        <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'services' } only %}</span>
+                        <span class="tenant-icon-label">Services</span>
+                    </button>
+                {% endif %}
+
+                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-contact" data-panel-group="tenant-public">
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'contact' } only %}</span>
+                    <span class="tenant-icon-label">Contact</span>
+                </button>
+
+                <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-important" data-panel-group="tenant-public">
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'important' } only %}</span>
+                    <span class="tenant-icon-label">Important</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="tenant-panel-backdrop" class="tenant-panel-backdrop is-collapsed" data-panel-close-group="tenant-public" aria-hidden="true"></div>
+
+        <section id="tenant-panel-access" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
+            <div class="tenant-panel-topbar">
+                <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-access" aria-label="Retour a l'accueil locataire">Accueil</button>
+                <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                        <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="tenant-panel-scroll">
+                <div class="tenant-panel-head">
+                    <h2>Infos appartement</h2>
+                    <p>Retrouvez ici l'adresse, les codes et les reperes utiles du logement.</p>
+                </div>
+
+                <div class="tenant-action-stack">
+                    {% if apartment.wazeLink %}
+                        <a
+                            class="tenant-waze-button full-width"
+                            href="{{ apartment.wazeLink }}"
+                            target="_blank"
+                            rel="noreferrer"
+                            data-external-confirm
+                            data-confirm-title="Ouvrir Waze"
+                            data-confirm-message="Vous allez quitter votre espace pour ouvrir l'adresse dans Waze. Voulez-vous continuer ?"
+                        >
+                            <span class="tenant-waze-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'waze' } only %}</span>
+                            <span>Ouvrir Waze</span>
+                        </a>
+                    {% endif %}
+                    {% if apartment.orderedAccessSteps is not empty %}
+                        <button class="secondary-button full-width" type="button" data-panel-open="#tenant-panel-apartment-access" data-panel-group="tenant-public">
+                            Acces appartement
+                        </button>
+                    {% endif %}
+                </div>
+
+                <div class="tenant-panel-card-grid">
+                    <article class="tenant-info-card tenant-info-card-wide">
+                        <span class="editable-field-label">Adresse</span>
+                        <strong>{{ apartment.fullAddress }}</strong>
+                    </article>
+                    <article class="tenant-info-card">
+                        <span class="editable-field-label">Code immeuble</span>
+                        <strong>{{ apartment.buildingAccessCode ?: '-' }}</strong>
+                    </article>
+                    <article class="tenant-info-card">
+                        <span class="editable-field-label">Code boite a cles / porte</span>
+                        <strong>{{ apartment.keyBoxCode ?: '-' }}</strong>
+                    </article>
+                    <article class="tenant-info-card">
+                        <span class="editable-field-label">Boite aux lettres</span>
+                        <strong>{{ apartment.mailboxNumber ?: '-' }}</strong>
+                    </article>
+                    <article class="tenant-info-card tenant-info-card-wide">
+                        <span class="editable-field-label">Consignes d'entree</span>
+                        <div class="formatted-rich-text">
+                            {% if apartment.entryInstructions %}
+                                {{ apartment.entryInstructions|raw }}
+                            {% else %}
+                                <p>Aucune consigne pour le moment.</p>
+                            {% endif %}
+                        </div>
+                    </article>
+                </div>
             </div>
         </section>
 
         {% if apartment.orderedAccessSteps is not empty %}
             <section id="tenant-panel-apartment-access" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-head">
-                    <h2>Accès à l'appartement</h2>
-                    <p>Suivez les étapes une par une pour arriver facilement jusqu'au logement.</p>
+                <div class="tenant-panel-topbar">
+                    <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-apartment-access" aria-label="Retour a l'accueil locataire">Accueil</button>
+                    <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
                 </div>
+                <div class="tenant-panel-scroll">
+                    <div class="tenant-panel-head">
+                        <h2>Acces a l'appartement</h2>
+                        <p>Suivez les etapes une par une pour arriver facilement jusqu'au logement.</p>
+                    </div>
 
-                <div class="tenant-step-list">
-                    {% for step in apartment.orderedAccessSteps %}
-                        <article class="tenant-step-card">
-                            <div class="tenant-step-copy">
-                                <span class="eyebrow">Étape {{ loop.index }}</span>
-                                <div class="formatted-rich-text"><p>{{ step.instruction }}</p></div>
-                            </div>
-                            {% if step.imagePath %}
-                                <img src="{{ step.imagePath }}" alt="Étape {{ loop.index }}">
-                            {% endif %}
-                        </article>
-                    {% endfor %}
+                    <div class="tenant-step-list">
+                        {% for step in apartment.orderedAccessSteps %}
+                            <article class="tenant-step-card">
+                                <div class="tenant-step-copy">
+                                    <span class="eyebrow">Etape {{ loop.index }}</span>
+                                    <div class="formatted-rich-text"><p>{{ step.instruction }}</p></div>
+                                </div>
+                                {% if step.imagePath %}
+                                    <img src="{{ step.imagePath }}" alt="Etape {{ loop.index }}">
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
                 </div>
             </section>
         {% endif %}
 
         {% if apartment.guestWifiName or apartment.guestWifiPassword or apartment.guestWifiInstructions %}
             <section id="tenant-panel-wifi" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-head">
-                    <h2>Connexion Wi-Fi</h2>
-                    <p>Toutes les informations pour vous connecter rapidement.</p>
+                <div class="tenant-panel-topbar">
+                    <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-wifi" aria-label="Retour a l'accueil locataire">Accueil</button>
+                    <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
                 </div>
+                <div class="tenant-panel-scroll">
+                    <div class="tenant-panel-head">
+                        <h2>Connexion Wi-Fi</h2>
+                        <p>Toutes les informations pour vous connecter rapidement.</p>
+                    </div>
 
-                <div class="tenant-panel-card-grid">
-                    {% if apartment.guestWifiName %}
-                        <article class="tenant-info-card">
-                            <span class="editable-field-label">Réseau</span>
-                            <strong>{{ apartment.guestWifiName }}</strong>
-                        </article>
-                    {% endif %}
-                    {% if apartment.guestWifiPassword %}
-                        <article class="tenant-info-card">
-                            <span class="editable-field-label">Mot de passe</span>
-                            <strong>{{ apartment.guestWifiPassword }}</strong>
-                        </article>
-                    {% endif %}
-                    {% if apartment.guestWifiInstructions %}
-                        <article class="tenant-info-card tenant-info-card-wide">
-                            <span class="editable-field-label">Précision</span>
-                            <div class="formatted-rich-text">{{ apartment.guestWifiInstructions|raw }}</div>
-                        </article>
-                    {% endif %}
+                    <div class="tenant-panel-card-grid">
+                        {% if apartment.guestWifiName %}
+                            <article class="tenant-info-card">
+                                <span class="editable-field-label">Reseau</span>
+                                <strong>{{ apartment.guestWifiName }}</strong>
+                            </article>
+                        {% endif %}
+                        {% if apartment.guestWifiPassword %}
+                            <article class="tenant-info-card">
+                                <span class="editable-field-label">Mot de passe</span>
+                                <strong>{{ apartment.guestWifiPassword }}</strong>
+                            </article>
+                        {% endif %}
+                        {% if apartment.guestWifiInstructions %}
+                            <article class="tenant-info-card tenant-info-card-wide">
+                                <span class="editable-field-label">Precision</span>
+                                <div class="formatted-rich-text">{{ apartment.guestWifiInstructions|raw }}</div>
+                            </article>
+                        {% endif %}
+                    </div>
                 </div>
             </section>
         {% endif %}
 
         <section id="tenant-panel-share" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-head">
-                <h2>Adresse et navigation</h2>
-                <p>Partagez facilement l'adresse ou ouvrez la navigation.</p>
+            <div class="tenant-panel-topbar">
+                <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-share" aria-label="Retour a l'accueil locataire">Accueil</button>
+                <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                        <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                    </svg>
+                </button>
             </div>
+            <div class="tenant-panel-scroll">
+                <div class="tenant-panel-head">
+                    <h2>Adresse et navigation</h2>
+                    <p>Partagez facilement l'adresse ou ouvrez la navigation.</p>
+                </div>
 
-            <div class="tenant-action-stack">
-                <a class="primary-button full-width" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l'adresse sur WhatsApp</a>
-                {% if apartment.googleMapsLink %}
-                    <a class="secondary-button full-width" href="{{ apartment.googleMapsLink }}" target="_blank" rel="noreferrer">Ouvrir Google Maps</a>
-                {% endif %}
-                {% if apartment.wazeLink %}
-                    <a
-                        class="secondary-button full-width"
-                        href="{{ apartment.wazeLink }}"
-                        target="_blank"
-                        rel="noreferrer"
-                        data-external-confirm
-                        data-confirm-title="Ouvrir Waze"
-                        data-confirm-message="Vous allez quitter votre espace pour ouvrir l'adresse dans Waze. Voulez-vous continuer ?"
-                    >Ouvrir Waze</a>
-                {% endif %}
+                <div class="tenant-action-stack">
+                    <a class="primary-button full-width" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l'adresse sur WhatsApp</a>
+                    {% if apartment.googleMapsLink %}
+                        <a class="secondary-button full-width" href="{{ apartment.googleMapsLink }}" target="_blank" rel="noreferrer">Ouvrir Google Maps</a>
+                    {% endif %}
+                    {% if apartment.wazeLink %}
+                        <a
+                            class="secondary-button full-width"
+                            href="{{ apartment.wazeLink }}"
+                            target="_blank"
+                            rel="noreferrer"
+                            data-external-confirm
+                            data-confirm-title="Ouvrir Waze"
+                            data-confirm-message="Vous allez quitter votre espace pour ouvrir l'adresse dans Waze. Voulez-vous continuer ?"
+                        >Ouvrir Waze</a>
+                    {% endif %}
+                </div>
             </div>
         </section>
 
         {% if hasGuidebook %}
             <section id="tenant-panel-guidebook" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-head">
-                    <h2>Livret d'accueil</h2>
-                    <p>Les informations utiles de votre séjour, au même endroit.</p>
+                <div class="tenant-panel-topbar">
+                    <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-guidebook" aria-label="Retour a l'accueil locataire">Accueil</button>
+                    <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
                 </div>
+                <div class="tenant-panel-scroll">
+                    <div class="tenant-panel-head">
+                        <h2>Livret d'accueil</h2>
+                        <p>Les informations utiles de votre sejour, au meme endroit.</p>
+                    </div>
 
-                <div class="tenant-guidebook-grid">
-                    {% if apartment.guestHouseRules %}
-                        <article class="tenant-info-card">
-                            <h3>Règles du logement</h3>
-                            <div class="formatted-rich-text">{{ apartment.guestHouseRules|raw }}</div>
-                        </article>
-                    {% endif %}
-                    {% if apartment.guestDepartureInstructions %}
-                        <article class="tenant-info-card">
-                            <h3>Départ</h3>
-                            <div class="formatted-rich-text">{{ apartment.guestDepartureInstructions|raw }}</div>
-                        </article>
-                    {% endif %}
-                    {% if apartment.guestEmergencyInfo %}
-                        <article class="tenant-info-card">
-                            <h3>Urgences</h3>
-                            <div class="formatted-rich-text">{{ apartment.guestEmergencyInfo|raw }}</div>
-                        </article>
-                    {% endif %}
-                    {% if apartment.guestEquipmentInfo %}
-                        <article class="tenant-info-card">
-                            <h3>Équipements utiles</h3>
-                            <div class="formatted-rich-text">{{ apartment.guestEquipmentInfo|raw }}</div>
-                        </article>
-                    {% endif %}
+                    <div class="tenant-guidebook-grid">
+                        {% if apartment.guestHouseRules %}
+                            <article class="tenant-info-card">
+                                <h3>Regles du logement</h3>
+                                <div class="formatted-rich-text">{{ apartment.guestHouseRules|raw }}</div>
+                            </article>
+                        {% endif %}
+                        {% if apartment.guestDepartureInstructions %}
+                            <article class="tenant-info-card">
+                                <h3>Depart</h3>
+                                <div class="formatted-rich-text">{{ apartment.guestDepartureInstructions|raw }}</div>
+                            </article>
+                        {% endif %}
+                        {% if apartment.guestEmergencyInfo %}
+                            <article class="tenant-info-card">
+                                <h3>Urgences</h3>
+                                <div class="formatted-rich-text">{{ apartment.guestEmergencyInfo|raw }}</div>
+                            </article>
+                        {% endif %}
+                        {% if apartment.guestEquipmentInfo %}
+                            <article class="tenant-info-card">
+                                <h3>Equipements utiles</h3>
+                                <div class="formatted-rich-text">{{ apartment.guestEquipmentInfo|raw }}</div>
+                            </article>
+                        {% endif %}
+                    </div>
+
+                    <a class="tenant-exit-link tenant-exit-link-bottom" href="{{ exitTenantUrl }}">Quitter l'espace locataire</a>
                 </div>
             </section>
         {% endif %}
 
         {% if serviceContactEmployee and serviceExtras is not empty %}
             <section id="tenant-panel-services" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-head">
-                    <h2>Services disponibles</h2>
-                    <p>Envoyez votre demande en un clic sur WhatsApp.</p>
+                <div class="tenant-panel-topbar">
+                    <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-services" aria-label="Retour a l'accueil locataire">Accueil</button>
+                    <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
                 </div>
+                <div class="tenant-panel-scroll">
+                    <div class="tenant-panel-head">
+                        <h2>Services disponibles</h2>
+                        <p>Envoyez votre demande en un clic sur WhatsApp.</p>
+                    </div>
 
-                <div class="tenant-service-grid">
-                    {% for service in serviceExtras %}
-                        <a class="tenant-service-card" href="{{ service.whatsAppUrl }}" target="_blank" rel="noreferrer" title="{{ service.title }}">
-                            <span class="tenant-service-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'whatsapp' } only %}</span>
-                            <strong>{{ service.label }}</strong>
-                            <span>Demander ce service</span>
-                        </a>
-                    {% endfor %}
+                    <div class="tenant-service-grid">
+                        {% for service in serviceExtras %}
+                            <a class="tenant-service-card" href="{{ service.whatsAppUrl }}" target="_blank" rel="noreferrer" title="{{ service.title }}">
+                                <span class="tenant-service-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'whatsapp' } only %}</span>
+                                <strong>{{ service.label }}</strong>
+                                <span>Demander ce service</span>
+                            </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </section>
         {% endif %}
 
         {% if manuals is not empty %}
             <section id="tenant-panel-manuals" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-head">
-                    <h2>Manuels d'utilisation</h2>
-                    <p>Visionnez les explications vidéo utiles pour les équipements du logement.</p>
+                <div class="tenant-panel-topbar">
+                    <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-manuals" aria-label="Retour a l'accueil locataire">Accueil</button>
+                    <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
                 </div>
+                <div class="tenant-panel-scroll">
+                    <div class="tenant-panel-head">
+                        <h2>Manuels d'utilisation</h2>
+                        <p>Visionnez les explications video utiles pour les equipements du logement.</p>
+                    </div>
 
-                <div class="tenant-manual-grid">
-                    {% for manual in manuals %}
-                        <article class="tenant-manual-card">
-                            <div class="tenant-manual-video-shell">
-                                <video controls preload="metadata" class="tenant-manual-video">
-                                    <source src="{{ manual.videoPath }}">
-                                    Votre navigateur ne peut pas lire cette vidéo.
-                                </video>
-                            </div>
-                            <div class="tenant-manual-copy">
-                                <span class="public-tenant-badge">{{ manual.equipmentLabel }}</span>
-                                <h3>{{ manual.title }}</h3>
-                                {% if manual.shortMessage %}
-                                    <p>{{ manual.shortMessage }}</p>
-                                {% endif %}
-                                {% if manual.importantNotice %}
-                                    <div class="detail-note-soft tenant-manual-warning">
-                                        <strong>Consigne importante</strong>
-                                        <p>{{ manual.importantNotice }}</p>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </article>
-                    {% endfor %}
+                    <div class="tenant-manual-grid">
+                        {% for manual in manuals %}
+                            <article class="tenant-manual-card">
+                                <div class="tenant-manual-video-shell">
+                                    <video controls preload="metadata" class="tenant-manual-video">
+                                        <source src="{{ manual.videoPath }}">
+                                        Votre navigateur ne peut pas lire cette video.
+                                    </video>
+                                </div>
+                                <div class="tenant-manual-copy">
+                                    <span class="public-tenant-badge">{{ manual.equipmentLabel }}</span>
+                                    <h3>{{ manual.title }}</h3>
+                                    {% if manual.shortMessage %}
+                                        <p>{{ manual.shortMessage }}</p>
+                                    {% endif %}
+                                    {% if manual.importantNotice %}
+                                        <div class="detail-note-soft tenant-manual-warning">
+                                            <strong>Consigne importante</strong>
+                                            <p>{{ manual.importantNotice }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
                 </div>
             </section>
         {% endif %}
 
         <section id="tenant-panel-contact" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-head">
-                <h2>Votre contact</h2>
-                <p>Une question sur votre arrivée ou votre séjour ?</p>
+            <div class="tenant-panel-topbar">
+                <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-contact" aria-label="Retour a l'accueil locataire">Accueil</button>
+                <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                        <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                    </svg>
+                </button>
             </div>
-
-            {% if leadEmployee %}
-                <div class="tenant-contact-grid">
-                    <article class="tenant-contact-card">
-                        <div class="admin-user-avatar public-contact-avatar {{ leadEmployee.photoPath ? 'has-photo' : '' }}">
-                            {% if leadEmployee.photoPath %}
-                                <img src="{{ leadEmployee.photoPath }}" alt="{{ leadEmployee.fullName }}">
-                            {% else %}
-                                <span>{{ leadEmployee.fullName|slice(0, 1)|upper }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="tenant-contact-copy">
-                            <strong>{{ leadEmployee.fullName }}</strong>
-                            {% if leadEmployee.phoneNumber %}
-                                <a class="inline-detail-link admin-user-phone-link" href="tel:{{ leadEmployee.phoneNumber }}">{{ leadEmployee.phoneNumber }}</a>
-                            {% else %}
-                                <span class="muted">Numéro non renseigné</span>
-                            {% endif %}
-                        </div>
-                    </article>
-
-                    {% for employee in extraEmployees %}
-                        <article class="tenant-contact-card tenant-contact-card-soft">
-                            <strong>{{ employee.fullName }}</strong>
-                            {% if employee.phoneNumber %}
-                                <a class="inline-detail-link admin-user-phone-link" href="tel:{{ employee.phoneNumber }}">{{ employee.phoneNumber }}</a>
-                            {% else %}
-                                <span class="muted">Numéro non renseigné</span>
-                            {% endif %}
-                        </article>
-                    {% endfor %}
+            <div class="tenant-panel-scroll">
+                <div class="tenant-panel-head">
+                    <h2>Votre contact</h2>
+                    <p>Une question sur votre arrivee ou votre sejour ?</p>
                 </div>
-            {% else %}
-                <p class="empty-state">Aucun employé actif n’est encore assigné à cet appartement.</p>
-            {% endif %}
+
+                {% if leadEmployee %}
+                    <div class="tenant-contact-grid">
+                        <article class="tenant-contact-card">
+                            <div class="admin-user-avatar public-contact-avatar {{ leadEmployee.photoPath ? 'has-photo' : '' }}">
+                                {% if leadEmployee.photoPath %}
+                                    <img src="{{ leadEmployee.photoPath }}" alt="{{ leadEmployee.fullName }}">
+                                {% else %}
+                                    <span>{{ leadEmployee.fullName|slice(0, 1)|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="tenant-contact-copy">
+                                <strong>{{ leadEmployee.fullName }}</strong>
+                                {% if leadEmployee.phoneNumber %}
+                                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ leadEmployee.phoneNumber }}">{{ leadEmployee.phoneNumber }}</a>
+                                {% else %}
+                                    <span class="muted">Numero non renseigne</span>
+                                {% endif %}
+                            </div>
+                        </article>
+
+                        {% for employee in extraEmployees %}
+                            <article class="tenant-contact-card tenant-contact-card-soft">
+                                <strong>{{ employee.fullName }}</strong>
+                                {% if employee.phoneNumber %}
+                                    <a class="inline-detail-link admin-user-phone-link" href="tel:{{ employee.phoneNumber }}">{{ employee.phoneNumber }}</a>
+                                {% else %}
+                                    <span class="muted">Numero non renseigne</span>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-state">Aucun employe actif n'est encore assigne a cet appartement.</p>
+                {% endif %}
+            </div>
         </section>
 
         <section id="tenant-panel-important" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-head">
-                <h2>Informations importantes</h2>
-                <p>Quelques rappels utiles pour éviter les erreurs.</p>
+            <div class="tenant-panel-topbar">
+                <button class="tenant-panel-back-button" type="button" data-panel-close="#tenant-panel-important" aria-label="Retour a l'accueil locataire">Accueil</button>
+                <button class="tenant-burger-button tenant-panel-menu-button" type="button" aria-label="Ouvrir le menu locataire" title="Ouvrir le menu" data-action-menu-trigger data-action-menu-title="Menu locataire" data-action-menu-source="#tenant-main-menu-source">
+                    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                        <path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z" fill="currentColor"/>
+                    </svg>
+                </button>
             </div>
+            <div class="tenant-panel-scroll">
+                <div class="tenant-panel-head">
+                    <h2>Informations importantes</h2>
+                    <p>Quelques rappels utiles pour eviter les erreurs.</p>
+                </div>
 
-            <article class="tenant-warning-card">
-                <h3>Codes confidentiels</h3>
-                <p>Ne communiquez jamais ces codes à une autre personne. Si vous pensez qu’ils ont été partagés par erreur, contactez immédiatement l’équipe du logement.</p>
-            </article>
+                <article class="tenant-warning-card">
+                    <h3>Codes confidentiels</h3>
+                    <p>Ne communiquez jamais ces codes a une autre personne. Si vous pensez qu'ils ont ete partages par erreur, contactez immediatement l'equipe du logement.</p>
+                </article>
+            </div>
         </section>
     </section>
 {% endblock %}

@@ -4056,11 +4056,6 @@ body.nav-compact .floating-main-menu-button {
     margin-top: 4px;
 }
 
-.tenant-home-exit-link {
-    justify-self: stretch;
-    min-height: 50px;
-}
-
 .tenant-waze-button {
     display: inline-flex;
     align-items: center;
