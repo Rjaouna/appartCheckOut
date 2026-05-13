@@ -5,6 +5,7 @@ import './styles/bootstrap-icons/bootstrap-icons.css';
 document.documentElement.classList.remove('app-shell-pending');
 
 let pendingConfirmationForm = null;
+let pendingConfirmationLink = null;
 let activeDragButton = null;
 let dragOffsetY = 0;
 let dashboardPollTimer = null;
@@ -843,6 +844,22 @@ document.addEventListener('click', (event) => {
         return;
     }
 
+    if (confirmButton instanceof HTMLButtonElement && pendingConfirmationLink) {
+        confirmButton.blur();
+        const linkToOpen = pendingConfirmationLink;
+        pendingConfirmationLink = null;
+        hideModal('confirmActionModal');
+        window.open(linkToOpen.href, linkToOpen.target || '_blank', 'noopener,noreferrer');
+        return;
+    }
+
+    const externalConfirmTrigger = event.target instanceof Element ? event.target.closest('[data-external-confirm]') : null;
+    if (externalConfirmTrigger instanceof HTMLAnchorElement) {
+        event.preventDefault();
+        openExternalConfirmationModal(externalConfirmTrigger);
+        return;
+    }
+
     const toggleTrigger = event.target instanceof Element ? event.target.closest('[data-toggle-target]') : null;
     if (toggleTrigger instanceof HTMLButtonElement) {
         const targetSelector = toggleTrigger.getAttribute('data-toggle-target');
@@ -1275,8 +1292,30 @@ window.addEventListener('scroll', syncTopBarOnScroll, {passive: true});
 document.addEventListener('hidden.bs.modal', (event) => {
     if (event.target instanceof HTMLElement && event.target.id === 'confirmActionModal') {
         pendingConfirmationForm = null;
+        pendingConfirmationLink = null;
     }
 });
+
+function openExternalConfirmationModal(link) {
+    const modal = ensureConfirmModal();
+    const { modalElement, titleElement, bodyElement } = modal;
+
+    if (!(modalElement instanceof HTMLElement) || !(titleElement instanceof HTMLElement) || !(bodyElement instanceof HTMLElement)) {
+        window.open(link.href, link.target || '_blank', 'noopener,noreferrer');
+        return;
+    }
+
+    pendingConfirmationForm = null;
+    pendingConfirmationLink = {
+        href: link.href,
+        target: link.target || '_blank',
+    };
+
+    titleElement.textContent = link.dataset.confirmTitle || 'Ouvrir Waze';
+    bodyElement.textContent = link.dataset.confirmMessage || 'Tu vas quitter cet espace pour ouvrir cette adresse dans Waze. Veux-tu continuer ?';
+
+    showModalElement(modalElement);
+}
 
 function showToast(message, type = 'success') {
     const stack = document.getElementById('toast-stack');

@@ -1410,9 +1410,9 @@ textarea {
     justify-content: center;
     border: none;
     border-radius: 20px;
-    background: linear-gradient(135deg, #222222, #444444);
+    background: linear-gradient(135deg, var(--accent), #ff6f8d);
     color: #fff;
-    box-shadow: 0 18px 34px rgba(34, 34, 34, 0.18);
+    box-shadow: 0 18px 34px rgba(255, 56, 92, 0.24);
     opacity: 0;
     pointer-events: none;
     transform: translateY(12px);
@@ -4022,38 +4022,16 @@ body.nav-compact .floating-main-menu-button {
     display: none;
 }
 
-.tenant-panel-topbar {
-    position: sticky;
-    top: 78px;
-    z-index: 4;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 12px 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 100%);
-    backdrop-filter: blur(10px);
-}
-
-.tenant-panel-mark {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 56, 92, 0.1);
-    color: var(--accent);
-}
-
-.tenant-panel-mark .bi {
-    font-size: 1.2rem;
-    line-height: 1;
-}
-
 .tenant-panel-head {
     display: grid;
     gap: 8px;
+}
+
+.tenant-icon-mark svg,
+.tenant-service-icon svg {
+    width: 28px;
+    height: 28px;
+    display: block;
 }
 
 .tenant-panel-head h2,

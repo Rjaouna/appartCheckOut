@@ -17,73 +17,77 @@
 
         <section id="tenant-sections-hub" class="tenant-icon-grid">
             <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-access" data-panel-group="tenant-public">
-                <span class="tenant-icon-mark"><i class="bi bi-house-door"></i></span>
+                <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'home' } only %}</span>
                 <span class="tenant-icon-label">Infos appart</span>
             </button>
 
             {% if apartment.orderedAccessSteps is not empty %}
                 <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-apartment-access" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark"><i class="bi bi-signpost-2"></i></span>
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'access' } only %}</span>
                     <span class="tenant-icon-label">Accès appartement</span>
                 </button>
             {% endif %}
 
             {% if apartment.wazeLink %}
-                <a class="tenant-icon-tile" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">
-                    <span class="tenant-icon-mark"><i class="bi bi-geo-alt"></i></span>
+                <a
+                    class="tenant-icon-tile"
+                    href="{{ apartment.wazeLink }}"
+                    target="_blank"
+                    rel="noreferrer"
+                    data-external-confirm
+                    data-confirm-title="Ouvrir Waze"
+                    data-confirm-message="Vous allez quitter votre espace pour ouvrir l'adresse dans Waze. Voulez-vous continuer ?"
+                >
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'waze' } only %}</span>
                     <span class="tenant-icon-label">Waze</span>
                 </a>
             {% endif %}
 
             {% if apartment.guestWifiName or apartment.guestWifiPassword or apartment.guestWifiInstructions %}
                 <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-wifi" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark"><i class="bi bi-wifi"></i></span>
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'wifi' } only %}</span>
                     <span class="tenant-icon-label">Wi-Fi</span>
                 </button>
             {% endif %}
 
             <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-share" data-panel-group="tenant-public">
-                <span class="tenant-icon-mark"><i class="bi bi-send-check"></i></span>
+                <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'share' } only %}</span>
                 <span class="tenant-icon-label">Envoyer l'adresse</span>
             </button>
 
             {% if hasGuidebook %}
                 <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-guidebook" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark"><i class="bi bi-journal-richtext"></i></span>
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'guidebook' } only %}</span>
                     <span class="tenant-icon-label">Livret d'accueil</span>
                 </button>
             {% endif %}
 
             {% if serviceContactEmployee and serviceExtras is not empty %}
                 <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-services" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark"><i class="bi bi-bag-heart"></i></span>
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'services' } only %}</span>
                     <span class="tenant-icon-label">Services</span>
                 </button>
             {% endif %}
 
             {% if manuals is not empty %}
                 <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-manuals" data-panel-group="tenant-public">
-                    <span class="tenant-icon-mark"><i class="bi bi-play-btn"></i></span>
+                    <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'manuals' } only %}</span>
                     <span class="tenant-icon-label">Manuels</span>
                 </button>
             {% endif %}
 
             <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-contact" data-panel-group="tenant-public">
-                <span class="tenant-icon-mark"><i class="bi bi-person-lines-fill"></i></span>
+                <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'contact' } only %}</span>
                 <span class="tenant-icon-label">Contact</span>
             </button>
 
             <button class="tenant-icon-tile" type="button" data-panel-open="#tenant-panel-important" data-panel-group="tenant-public">
-                <span class="tenant-icon-mark"><i class="bi bi-exclamation-triangle"></i></span>
+                <span class="tenant-icon-mark">{% include 'public/_tenant_icon.html.twig' with { icon: 'important' } only %}</span>
                 <span class="tenant-icon-label">Important</span>
             </button>
         </section>
 
         <section id="tenant-panel-access" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-topbar">
-                <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-access" data-panel-return="#tenant-sections-hub">Retour</button>
-                <span class="tenant-panel-mark" aria-hidden="true"><i class="bi bi-house-door"></i></span>
-            </div>
             <div class="tenant-panel-head">
                 <h2>Infos appartement</h2>
                 <p>Retrouvez ici l'adresse, les codes et les repères utiles du logement.</p>
@@ -117,15 +121,10 @@
                     </div>
                 </article>
             </div>
-
         </section>
 
         {% if apartment.orderedAccessSteps is not empty %}
             <section id="tenant-panel-apartment-access" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-topbar">
-                    <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-apartment-access" data-panel-return="#tenant-sections-hub">Retour</button>
-                    <span class="tenant-panel-mark" aria-hidden="true"><i class="bi bi-signpost-2"></i></span>
-                </div>
                 <div class="tenant-panel-head">
                     <h2>Accès à l'appartement</h2>
                     <p>Suivez les étapes une par une pour arriver facilement jusqu'au logement.</p>
@@ -149,10 +148,6 @@
 
         {% if apartment.guestWifiName or apartment.guestWifiPassword or apartment.guestWifiInstructions %}
             <section id="tenant-panel-wifi" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-topbar">
-                    <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-wifi" data-panel-return="#tenant-sections-hub">Retour</button>
-                    <span class="eyebrow">Wi-Fi</span>
-                </div>
                 <div class="tenant-panel-head">
                     <h2>Connexion Wi-Fi</h2>
                     <p>Toutes les informations pour vous connecter rapidement.</p>
@@ -182,10 +177,6 @@
         {% endif %}
 
         <section id="tenant-panel-share" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-topbar">
-                <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-share" data-panel-return="#tenant-sections-hub">Retour</button>
-                <span class="eyebrow">Partager</span>
-            </div>
             <div class="tenant-panel-head">
                 <h2>Adresse et navigation</h2>
                 <p>Partagez facilement l'adresse ou ouvrez la navigation.</p>
@@ -197,17 +188,21 @@
                     <a class="secondary-button full-width" href="{{ apartment.googleMapsLink }}" target="_blank" rel="noreferrer">Ouvrir Google Maps</a>
                 {% endif %}
                 {% if apartment.wazeLink %}
-                    <a class="secondary-button full-width" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">Ouvrir Waze</a>
+                    <a
+                        class="secondary-button full-width"
+                        href="{{ apartment.wazeLink }}"
+                        target="_blank"
+                        rel="noreferrer"
+                        data-external-confirm
+                        data-confirm-title="Ouvrir Waze"
+                        data-confirm-message="Vous allez quitter votre espace pour ouvrir l'adresse dans Waze. Voulez-vous continuer ?"
+                    >Ouvrir Waze</a>
                 {% endif %}
             </div>
         </section>
 
         {% if hasGuidebook %}
             <section id="tenant-panel-guidebook" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-topbar">
-                    <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-guidebook" data-panel-return="#tenant-sections-hub">Retour</button>
-                    <span class="eyebrow">Livret</span>
-                </div>
                 <div class="tenant-panel-head">
                     <h2>Livret d'accueil</h2>
                     <p>Les informations utiles de votre séjour, au même endroit.</p>
@@ -244,10 +239,6 @@
 
         {% if serviceContactEmployee and serviceExtras is not empty %}
             <section id="tenant-panel-services" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-topbar">
-                    <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-services" data-panel-return="#tenant-sections-hub">Retour</button>
-                    <span class="eyebrow">Services</span>
-                </div>
                 <div class="tenant-panel-head">
                     <h2>Services disponibles</h2>
                     <p>Envoyez votre demande en un clic sur WhatsApp.</p>
@@ -256,7 +247,7 @@
                 <div class="tenant-service-grid">
                     {% for service in serviceExtras %}
                         <a class="tenant-service-card" href="{{ service.whatsAppUrl }}" target="_blank" rel="noreferrer" title="{{ service.title }}">
-                            <span class="tenant-service-icon"><i class="bi bi-whatsapp"></i></span>
+                            <span class="tenant-service-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'whatsapp' } only %}</span>
                             <strong>{{ service.label }}</strong>
                             <span>Demander ce service</span>
                         </a>
@@ -267,10 +258,6 @@
 
         {% if manuals is not empty %}
             <section id="tenant-panel-manuals" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-                <div class="tenant-panel-topbar">
-                    <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-manuals" data-panel-return="#tenant-sections-hub">Retour</button>
-                    <span class="eyebrow">Manuels</span>
-                </div>
                 <div class="tenant-panel-head">
                     <h2>Manuels d'utilisation</h2>
                     <p>Visionnez les explications vidéo utiles pour les équipements du logement.</p>
@@ -305,10 +292,6 @@
         {% endif %}
 
         <section id="tenant-panel-contact" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-topbar">
-                <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-contact" data-panel-return="#tenant-sections-hub">Retour</button>
-                <span class="eyebrow">Contact</span>
-            </div>
             <div class="tenant-panel-head">
                 <h2>Votre contact</h2>
                 <p>Une question sur votre arrivée ou votre séjour ?</p>
@@ -351,10 +334,6 @@
         </section>
 
         <section id="tenant-panel-important" class="tenant-icon-panel is-collapsed" data-panel-name data-panel-group="tenant-public">
-            <div class="tenant-panel-topbar">
-                <button class="secondary-button app-back-button" type="button" data-panel-close="#tenant-panel-important" data-panel-return="#tenant-sections-hub">Retour</button>
-                <span class="eyebrow">Important</span>
-            </div>
             <div class="tenant-panel-head">
                 <h2>Informations importantes</h2>
                 <p>Quelques rappels utiles pour éviter les erreurs.</p>
