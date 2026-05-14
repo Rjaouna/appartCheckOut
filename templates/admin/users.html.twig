@@ -4,6 +4,17 @@
 
 {% block body %}
     <section class="admin-home-shell">
+        <section class="admin-home-intro admin-home-intro-page">
+            <div>
+                <span class="employee-home-kicker">Administration</span>
+                <h1>Employés</h1>
+                <p>Gérez les profils terrain, les contacts et les accès de votre équipe.</p>
+            </div>
+            <div class="admin-intro-cta">
+                <a class="secondary-button app-back-button" href="{{ path('admin_dashboard') }}">Retour</a>
+            </div>
+        </section>
+
         <div id="admin-users-content">
             {% include 'admin/_users_content.html.twig' %}
         </div>

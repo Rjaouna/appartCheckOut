@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="fr" class="app-shell-pending">
     <head>
+        {% set appAppearance = app_appearance_settings() %}
+        {% set appIconColor = appAppearance.primaryColor|replace({'#': '%23'}) %}
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="app-csrf-token" content="{{ csrf_token('async_action') }}">
-        <meta name="theme-color" content="#ff385c">
+        <meta name="theme-color" content="{{ appAppearance.primaryColor }}">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="Check-out">
         <title>{% block title %}Gestion Check-out{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><path fill=%22%23ff385c%22 d=%22M32 8c-3.8 0-6.6 1.9-8.3 5.7L13 38.2c-1.4 3.1-1.2 6 .6 8.6 1.8 2.6 4.4 3.9 7.8 3.9h21.2c3.4 0 6-1.3 7.8-3.9 1.8-2.6 2-5.5.6-8.6L40.3 13.7C38.6 9.9 35.8 8 32 8Zm0 7.3c1.1 0 1.9.6 2.5 1.9l10.8 24.7c.6 1.3.5 2.4-.2 3.4-.7 1-1.7 1.5-3 1.5H21.9c-1.3 0-2.3-.5-3-1.5-.7-1-.8-2.1-.2-3.4l10.8-24.7c.6-1.3 1.4-1.9 2.5-1.9Z%22/></svg>">
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><path fill=%22{{ appIconColor }}%22 d=%22M32 8c-3.8 0-6.6 1.9-8.3 5.7L13 38.2c-1.4 3.1-1.2 6 .6 8.6 1.8 2.6 4.4 3.9 7.8 3.9h21.2c3.4 0 6-1.3 7.8-3.9 1.8-2.6 2-5.5.6-8.6L40.3 13.7C38.6 9.9 35.8 8 32 8Zm0 7.3c1.1 0 1.9.6 2.5 1.9l10.8 24.7c.6 1.3.5 2.4-.2 3.4-.7 1-1.7 1.5-3 1.5H21.9c-1.3 0-2.3-.5-3-1.5-.7-1-.8-2.1-.2-3.4l10.8-24.7c.6-1.3 1.4-1.9 2.5-1.9Z%22/></svg>">
         <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
         <link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
         <style>
@@ -28,6 +30,11 @@
         {% block javascripts %}
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
+        <style id="app-appearance-theme">
+            :root {
+                {{ app_appearance_css_variables() }}
+            }
+        </style>
         <script>
             window.addEventListener('load', function () {
                 document.documentElement.classList.remove('app-shell-pending');
@@ -159,6 +166,13 @@
                                 <span class="action-menu-tile-label">Manuels</span>
                                 <span class="action-menu-tile-caption">Vidéos et consignes par appartement</span>
                             </a>
+                            <a class="action-menu-tile" href="{{ path('admin_appearance') }}">
+                                <span class="action-menu-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18h1.2a1.7 1.7 0 0 0 1.2-2.9 1.5 1.5 0 0 1 1-2.6H17a4 4 0 0 0 4-4C21 6.8 17 3 12 3Zm-4 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm2 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z" fill="currentColor"/></svg>
+                                </span>
+                                <span class="action-menu-tile-label">Apparence</span>
+                                <span class="action-menu-tile-caption">Palette de couleurs et cohérence visuelle</span>
+                            </a>
                         {% endif %}
                         {% if is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_ADMIN') %}
                             <a class="action-menu-tile" href="{{ path('employee_dashboard') }}">
@@ -262,6 +276,7 @@
                                 <a href="{{ path('admin_anomalies') }}">Suivre les anomalies</a>
                                 <a href="{{ path('admin_dashboard') }}">Voir les check-outs</a>
                                 <a href="{{ path('admin_arrivals') }}">Gérer les arrivées</a>
+                                <a href="{{ path('admin_appearance') }}">Palette de couleurs</a>
                             {% else %}
                                 <a href="{{ path('employee_calendar') }}">Voir mon calendrier</a>
                                 <a href="{{ path('employee_apartments') }}">Ouvrir mes appartements</a>

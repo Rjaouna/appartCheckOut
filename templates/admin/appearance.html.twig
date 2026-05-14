@@ -1,0 +1,272 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Apparence{% endblock %}
+
+{% block body %}
+    {% set colorSections = [
+        {
+            kicker: 'Marque',
+            title: 'Couleurs principales',
+            fields: [
+                { name: 'primaryColor', label: 'Couleur primaire', help: 'Actions principales, accents, blocs roses et boutons de validation.' },
+                { name: 'secondaryColor', label: 'Couleur secondaire', help: 'Boutons neutres, icônes structurantes et contrastes forts.' }
+            ]
+        },
+        {
+            kicker: 'Interface',
+            title: 'Fonds, cartes et textes',
+            fields: [
+                { name: 'backgroundColor', label: 'Fond de page', help: 'Fond global de l’application.' },
+                { name: 'surfaceColor', label: 'Cartes et blocs', help: 'Cartes, modales, menus et panneaux.' },
+                { name: 'textColor', label: 'Texte principal', help: 'Titres, contenus et libellés importants.' },
+                { name: 'mutedColor', label: 'Texte secondaire', help: 'Descriptions, aides et informations secondaires.' },
+                { name: 'borderColor', label: 'Bordures', help: 'Contours des cartes, formulaires et menus.' }
+            ]
+        },
+        {
+            kicker: 'États',
+            title: 'Succès, alerte et danger',
+            fields: [
+                { name: 'successColor', label: 'Succès', help: 'Badges terminés, confirmations et états positifs.' },
+                { name: 'warningColor', label: 'Alerte', help: 'Éléments à surveiller ou en attente.' },
+                { name: 'dangerColor', label: 'Danger', help: 'Suppressions, erreurs et actions sensibles.' }
+            ]
+        }
+    ] %}
+
+    {% set appearanceThemes = [
+        {
+            name: 'Or signature',
+            tag: 'Premium',
+            description: 'Doré chaud, noir profond et crème lumineux pour une ambiance haut de gamme.',
+            colors: {
+                primaryColor: '#c89b3c',
+                secondaryColor: '#1f1a14',
+                backgroundColor: '#f7f1e5',
+                surfaceColor: '#fffaf0',
+                textColor: '#241b12',
+                mutedColor: '#75644a',
+                borderColor: '#e4d3ac',
+                successColor: '#2f7d52',
+                warningColor: '#b7791f',
+                dangerColor: '#a23b2e'
+            }
+        },
+        {
+            name: 'Riviera claire',
+            tag: 'Frais',
+            description: 'Corail, bleu profond et cyan pour une interface moderne, claire et mobile.',
+            colors: {
+                primaryColor: '#ff5a76',
+                secondaryColor: '#123047',
+                backgroundColor: '#f5fbff',
+                surfaceColor: '#ffffff',
+                textColor: '#152033',
+                mutedColor: '#64748b',
+                borderColor: '#dbe8ef',
+                successColor: '#1f8a5b',
+                warningColor: '#c97916',
+                dangerColor: '#c2413f'
+            }
+        },
+        {
+            name: 'Olive calme',
+            tag: 'Naturel',
+            description: 'Vert olive, sable et cuivre doux pour une charte sobre et rassurante.',
+            colors: {
+                primaryColor: '#6f8f3d',
+                secondaryColor: '#233127',
+                backgroundColor: '#f4f1e8',
+                surfaceColor: '#fffdf7',
+                textColor: '#1f281f',
+                mutedColor: '#6f7868',
+                borderColor: '#d9d1bd',
+                successColor: '#3f7f4f',
+                warningColor: '#b7791f',
+                dangerColor: '#a94438'
+            }
+        },
+        {
+            name: 'Graphite rose',
+            tag: 'Urbain',
+            description: 'Rose énergique, graphite et bleu ciel pour une interface nette et dynamique.',
+            colors: {
+                primaryColor: '#e8486f',
+                secondaryColor: '#1d2433',
+                backgroundColor: '#f6f4f1',
+                surfaceColor: '#ffffff',
+                textColor: '#202532',
+                mutedColor: '#6f7480',
+                borderColor: '#ded8d0',
+                successColor: '#2f855a',
+                warningColor: '#b7791f',
+                dangerColor: '#b83245'
+            }
+        },
+        {
+            name: 'Desert night',
+            tag: 'Chic',
+            description: 'Terracotta, nuit profonde et turquoise pour une identité chaude et élégante.',
+            colors: {
+                primaryColor: '#d97845',
+                secondaryColor: '#1b1f2a',
+                backgroundColor: '#f8f0e7',
+                surfaceColor: '#fffaf5',
+                textColor: '#201a17',
+                mutedColor: '#7a6a5f',
+                borderColor: '#e7d4c4',
+                successColor: '#2f7d52',
+                warningColor: '#b86b1d',
+                dangerColor: '#a93f32'
+            }
+        }
+    ] %}
+
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Interface</span>
+            <h1>Palette de couleurs</h1>
+            <p>Définis la charte complète de l’application sans modifier les fonctionnalités métier.</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button app-back-button" href="{{ path('admin_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    {% if settingsTableReady is defined and not settingsTableReady %}
+        <div class="alert info">
+            La palette utilise les couleurs par défaut pour le moment. Pour pouvoir enregistrer une palette personnalisée, exécute la migration Doctrine qui crée la table <code>app_appearance_settings</code>.
+        </div>
+    {% endif %}
+
+    <section class="panel appearance-settings-panel">
+        <div class="appearance-settings-copy">
+            <span class="employee-home-kicker">Charte active</span>
+            <h2>Couleurs globales</h2>
+            <p class="muted">Ces couleurs alimentent les boutons, menus, cartes, badges, fonds, textes, focus et états dans toute l’interface.</p>
+        </div>
+
+        <form method="post" class="stack-form appearance-settings-form" data-appearance-form>
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_appearance') }}">
+
+            <div class="appearance-color-section">
+                <div>
+                    <span class="employee-home-kicker">Thèmes prêts à l’emploi</span>
+                    <h3>Choisis une ambiance</h3>
+                    <p class="muted">Clique sur un thème pour remplir automatiquement les couleurs. Rien n’est enregistré tant que tu ne valides pas.</p>
+                </div>
+                <div class="appearance-theme-grid">
+                    {% for theme in appearanceThemes %}
+                        <button
+                            class="appearance-theme-card"
+                            type="button"
+                            data-appearance-theme="{{ theme.colors|json_encode|e('html_attr') }}"
+                        >
+                            <span class="appearance-theme-topline">
+                                <strong>{{ theme.name }}</strong>
+                                <span>{{ theme.tag }}</span>
+                            </span>
+                            <span class="appearance-theme-swatches" aria-hidden="true">
+                                {% for color in theme.colors|slice(0, 6) %}
+                                    <i style="background: {{ color }}"></i>
+                                {% endfor %}
+                            </span>
+                            <small>{{ theme.description }}</small>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% for section in colorSections %}
+                <div class="appearance-color-section">
+                    <div>
+                        <span class="employee-home-kicker">{{ section.kicker }}</span>
+                        <h3>{{ section.title }}</h3>
+                    </div>
+                    <div class="appearance-color-grid">
+                        {% for field in section.fields %}
+                            {% set fieldValue = attribute(settings, field.name) %}
+                            <label class="appearance-color-field">
+                                <span>{{ field.label }}</span>
+                                <div class="appearance-color-control">
+                                    <input
+                                        type="color"
+                                        name="{{ field.name }}"
+                                        value="{{ fieldValue }}"
+                                        data-appearance-color="{{ field.name }}"
+                                    >
+                                    <input
+                                        type="text"
+                                        value="{{ fieldValue }}"
+                                        maxlength="7"
+                                        spellcheck="false"
+                                        inputmode="text"
+                                        pattern="^#[0-9a-fA-F]{6}$"
+                                        aria-label="Code couleur {{ field.label }}"
+                                        data-appearance-color-code="{{ field.name }}"
+                                    >
+                                </div>
+                                <small class="muted">{{ field.help }}</small>
+                            </label>
+                        {% endfor %}
+                        {% if section.kicker == 'Marque' %}
+                            <div class="appearance-color-field appearance-color-field-derived">
+                                <span>Couleur tertiaire</span>
+                                <div class="appearance-color-control">
+                                    <input
+                                        type="color"
+                                        value="{{ settings.tertiaryColor }}"
+                                        disabled
+                                        data-appearance-derived-tertiary-color
+                                    >
+                                    <input
+                                        type="text"
+                                        value="{{ settings.tertiaryColor }}"
+                                        readonly
+                                        aria-label="Code couleur tertiaire calculé automatiquement"
+                                        data-appearance-derived-tertiary-code
+                                    >
+                                    <input
+                                        type="hidden"
+                                        name="tertiaryColor"
+                                        value="{{ settings.tertiaryColor }}"
+                                        data-appearance-derived-tertiary-input
+                                    >
+                                </div>
+                                <small class="muted">Calculée automatiquement depuis la couleur primaire, en version plus claire.</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div class="appearance-preview-card">
+                <div>
+                    <span class="employee-home-kicker">Aperçu</span>
+                    <h3>Exemple d’interface</h3>
+                    <p class="muted">Contrôle rapide des contrastes avant validation.</p>
+                </div>
+                <div class="appearance-preview-actions">
+                    <span class="primary-button button-like">Valider</span>
+                    <span class="secondary-button button-like">Retour</span>
+                    <span class="secondary-button danger-button button-like">Annuler</span>
+                </div>
+            </div>
+
+            <div class="form-actions-row">
+                <button class="primary-button" type="submit">Enregistrer la palette</button>
+                <button
+                    class="secondary-button"
+                    type="submit"
+                    name="resetPalette"
+                    value="1"
+                    data-confirm-reset
+                    data-confirm-title="Réinitialiser la palette"
+                    data-confirm-message="Les couleurs reviendront à la charte par défaut. Continuer ?"
+                >
+                    Réinitialiser
+                </button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

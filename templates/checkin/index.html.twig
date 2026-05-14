@@ -36,7 +36,11 @@
                     <div>
                         <h3>{{ reservation.guestName }}</h3>
                         <p>
-                            <strong>{{ apartment.name }}</strong>
+                            {% if isAdminView %}
+                                <a class="entity-shortcut-link" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartment.name }}</a>
+                            {% else %}
+                                <strong>{{ apartment.name }}</strong>
+                            {% endif %}
                             <span>·</span>
                             <span>{{ reservation.stayDateLabel }}</span>
                         </p>
@@ -53,7 +57,11 @@
                     </div>
                     <div class="checkin-mini-fact">
                         <span>Appartement</span>
-                        <strong>{{ apartment.name }}</strong>
+                        {% if isAdminView %}
+                            <a href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartment.name }}</a>
+                        {% else %}
+                            <strong>{{ apartment.name }}</strong>
+                        {% endif %}
                     </div>
                     <div class="checkin-mini-fact">
                         <span>Contact client</span>

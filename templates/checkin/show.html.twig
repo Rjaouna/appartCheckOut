@@ -11,7 +11,14 @@
         <div>
             <span class="eyebrow">Fiche de police</span>
             <h1>{{ guestName }}</h1>
-            <p>{{ apartmentName }} · {{ checkin.completedAt|date('d/m/Y H:i') }}</p>
+            <p>
+                {% if apartment %}
+                    <a class="entity-shortcut-link" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartmentName }}</a>
+                {% else %}
+                    {{ apartmentName }}
+                {% endif %}
+                · {{ checkin.completedAt|date('d/m/Y H:i') }}
+            </p>
         </div>
         <div class="head-actions">
             <button class="secondary-button" type="button" onclick="window.print()">Imprimer</button>
@@ -28,7 +35,13 @@
         <header class="checkin-police-head">
             <div>
                 <span class="eyebrow">Fiche d’entrée / check-in</span>
-                <h2>{{ apartmentName }}</h2>
+                <h2>
+                    {% if apartment %}
+                        <a class="entity-shortcut-link" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartmentName }}</a>
+                    {% else %}
+                        {{ apartmentName }}
+                    {% endif %}
+                </h2>
                 <p>{{ apartmentAddress }}</p>
             </div>
             <span class="status-badge {{ checkin.processed ? 'is-success' : 'is-warning' }}">
@@ -115,12 +128,21 @@
             {% endif %}
             <div>
                 <span>Fiche enregistrée par</span>
-                <strong>{{ checkin.completedBy ? checkin.completedBy.fullName : 'Non renseigné' }}</strong>
+                {% if checkin.completedBy %}
+                    <a class="entity-shortcut-link" href="{{ path('admin_user_show', {id: checkin.completedBy.id}) }}">{{ checkin.completedBy.fullName }}</a>
+                {% else %}
+                    <strong>Non renseigné</strong>
+                {% endif %}
             </div>
             {% if checkin.processed %}
                 <div>
                     <span>Traité par</span>
-                    <strong>{{ checkin.processedBy ? checkin.processedBy.fullName : 'Administration' }} · {{ checkin.processedAt|date('d/m/Y H:i') }}</strong>
+                    {% if checkin.processedBy %}
+                        <a class="entity-shortcut-link" href="{{ path('admin_user_show', {id: checkin.processedBy.id}) }}">{{ checkin.processedBy.fullName }}</a>
+                    {% else %}
+                        <strong>Administration</strong>
+                    {% endif %}
+                    <strong>· {{ checkin.processedAt|date('d/m/Y H:i') }}</strong>
                 </div>
             {% endif %}
         </footer>

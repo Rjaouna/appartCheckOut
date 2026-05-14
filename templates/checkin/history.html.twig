@@ -25,7 +25,14 @@
                 <div class="room-card-head checkin-card-head">
                     <div>
                         <h3>{{ guestName }}</h3>
-                        <p><strong>{{ apartmentName }}</strong> · Fiche du {{ checkin.completedAt|date('d/m/Y H:i') }}</p>
+                        <p>
+                            {% if apartment %}
+                                <a class="entity-shortcut-link" href="{{ path('admin_apartment_show', {id: apartment.id}) }}">{{ apartmentName }}</a>
+                            {% else %}
+                                <strong>{{ apartmentName }}</strong>
+                            {% endif %}
+                            · Fiche du {{ checkin.completedAt|date('d/m/Y H:i') }}
+                        </p>
                     </div>
                     <span class="status-badge {{ checkin.processed ? 'is-success' : 'is-warning' }}">
                         {{ checkin.processed ? 'Traité' : 'Non traité' }}
@@ -43,7 +50,11 @@
                     </div>
                     <div class="checkin-mini-fact">
                         <span>Agent</span>
-                        <strong>{{ checkin.hostAgentName }}</strong>
+                        {% if checkin.completedBy %}
+                            <a href="{{ path('admin_user_show', {id: checkin.completedBy.id}) }}">{{ checkin.hostAgentName }}</a>
+                        {% else %}
+                            <strong>{{ checkin.hostAgentName }}</strong>
+                        {% endif %}
                     </div>
                 </div>
 

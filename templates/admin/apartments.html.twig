@@ -5,22 +5,34 @@
 {% block body %}
     <section class="admin-home-intro admin-home-intro-page">
         <div>
+            <span class="employee-home-kicker">Administration</span>
             <h1>Appartements</h1>
+            <p>Gérez votre parc, les accès, les responsables et les informations utiles de chaque logement.</p>
+        </div>
+        <div class="admin-intro-cta">
+            <a class="secondary-button app-back-button" href="{{ path('admin_dashboard') }}">Retour</a>
         </div>
     </section>
 
     <section class="admin-apartments-layout">
-        <div class="panel admin-form-panel">
-            
-            <button
-                class="primary-button admin-create-toggle-button"
-                type="button"
-                data-toggle-target="#admin-apartment-create-form"
-                data-toggle-label-closed="Ajouter"
-                data-toggle-label-open="Masquer le formulaire"
-            >
-                Ajouter
-            </button>
+        <div class="panel admin-form-panel admin-apartment-create-panel">
+            <div class="admin-apartment-create-head">
+                <div>
+                    <span class="employee-home-kicker">Nouveau logement</span>
+                    <h2>Ajouter un appartement</h2>
+                    <p class="muted">Créez une fiche vide ou dupliquez un appartement existant.</p>
+                </div>
+                <button
+                    class="primary-button admin-create-toggle-button"
+                    type="button"
+                    data-toggle-target="#admin-apartment-create-form"
+                    data-toggle-label-closed="Ajouter"
+                    data-toggle-label-open="Masquer le formulaire"
+                >
+                    Ajouter
+                </button>
+            </div>
+
             <form id="admin-apartment-create-form" method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form admin-create-form is-collapsed">
                 <input type="hidden" name="_token" value="{{ csrf_token('admin_apartment_create') }}">
                 <label><span>Nom *</span><input name="name" required data-apartment-template-name></label>
@@ -34,7 +46,7 @@
                     À partir d’un modèle
                 </button>
                 <div id="admin-apartment-template-fields" class="admin-apartment-template-fields is-collapsed" hidden>
-                    <p class="muted">Renseigne d’abord le nom de l’appartement, puis choisis le logement existant à dupliquer.</p>
+                    <p class="muted">Renseignez d’abord le nom de l’appartement, puis choisissez le logement existant à dupliquer.</p>
                     <label>
                         <span>Appartement modèle</span>
                         <select name="templateApartmentId" data-apartment-template-select disabled>
@@ -117,4 +129,3 @@
         {% include 'admin/_apartments_list.html.twig' %}
     </section>
 {% endblock %}
-

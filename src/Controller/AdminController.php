@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Anomaly;
+use App\Entity\AppAppearanceSettings;
 use App\Entity\Apartment;
 use App\Entity\ApartmentAccessStep;
 use App\Entity\ApartmentManual;
@@ -56,6 +57,85 @@ class AdminController extends AbstractController
     public function arrivals(EntityManagerInterface $entityManager): Response
     {
         return $this->render('admin/arrivals.html.twig', $this->buildArrivalsPageData($entityManager));
+    }
+
+    #[Route('/appearance', name: 'admin_appearance', methods: ['GET', 'POST'])]
+    public function appearance(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $settingsTableReady = $this->appearanceSettingsStorageReady($entityManager);
+        $settings = $settingsTableReady
+            ? $this->getAppearanceSettings($entityManager)
+            : AppAppearanceSettings::default();
+
+        if ($request->isMethod('POST')) {
+            if (!$settingsTableReady) {
+                $this->addFlash('error', 'La table de configuration de l’apparence n’est pas encore installée. Lance la migration Doctrine avant d’enregistrer la palette.');
+
+                return $this->redirectToRoute('admin_appearance');
+            }
+
+            if (!$this->isCsrfTokenValid('admin_appearance', (string) $request->request->get('_token'))) {
+                $this->addFlash('error', 'Jeton de sécurité invalide. Réessaie la mise à jour.');
+
+                return $this->redirectToRoute('admin_appearance');
+            }
+
+            try {
+                if ($request->request->has('resetPalette')) {
+                    $settings
+                        ->setPrimaryColor(AppAppearanceSettings::DEFAULT_PRIMARY_COLOR)
+                        ->setSecondaryColor(AppAppearanceSettings::DEFAULT_SECONDARY_COLOR)
+                        ->setTertiaryColor(AppAppearanceSettings::DEFAULT_TERTIARY_COLOR)
+                        ->setBackgroundColor(AppAppearanceSettings::DEFAULT_BACKGROUND_COLOR)
+                        ->setSurfaceColor(AppAppearanceSettings::DEFAULT_SURFACE_COLOR)
+                        ->setTextColor(AppAppearanceSettings::DEFAULT_TEXT_COLOR)
+                        ->setMutedColor(AppAppearanceSettings::DEFAULT_MUTED_COLOR)
+                        ->setBorderColor(AppAppearanceSettings::DEFAULT_BORDER_COLOR)
+                        ->setSuccessColor(AppAppearanceSettings::DEFAULT_SUCCESS_COLOR)
+                        ->setWarningColor(AppAppearanceSettings::DEFAULT_WARNING_COLOR)
+                        ->setDangerColor(AppAppearanceSettings::DEFAULT_DANGER_COLOR);
+                } else {
+                    $primaryColor = $this->extractAppearanceColor($request, 'primaryColor', 'primaire');
+                    $settings
+                        ->setPrimaryColor($primaryColor)
+                        ->setSecondaryColor($this->extractAppearanceColor($request, 'secondaryColor', 'secondaire'))
+                        ->setTertiaryColor(AppAppearanceSettings::deriveTertiaryColor($primaryColor))
+                        ->setBackgroundColor($this->extractAppearanceColor($request, 'backgroundColor', 'de fond'))
+                        ->setSurfaceColor($this->extractAppearanceColor($request, 'surfaceColor', 'des cartes'))
+                        ->setTextColor($this->extractAppearanceColor($request, 'textColor', 'du texte'))
+                        ->setMutedColor($this->extractAppearanceColor($request, 'mutedColor', 'du texte secondaire'))
+                        ->setBorderColor($this->extractAppearanceColor($request, 'borderColor', 'des bordures'))
+                        ->setSuccessColor($this->extractAppearanceColor($request, 'successColor', 'de succès'))
+                        ->setWarningColor($this->extractAppearanceColor($request, 'warningColor', 'd’alerte'))
+                        ->setDangerColor($this->extractAppearanceColor($request, 'dangerColor', 'de suppression'));
+                }
+            } catch (\InvalidArgumentException $exception) {
+                $this->addFlash('error', $exception->getMessage());
+
+                return $this->redirectToRoute('admin_appearance');
+            }
+
+            try {
+                $entityManager->persist($settings);
+                $entityManager->flush();
+            } catch (\Throwable) {
+                $this->addFlash('error', 'Impossible d’enregistrer la palette. Vérifie que les migrations Doctrine ont bien été exécutées.');
+
+                return $this->redirectToRoute('admin_appearance');
+            }
+
+            $this->addFlash('success', $request->request->has('resetPalette')
+                ? 'Palette réinitialisée.'
+                : 'Palette mise à jour. Toute l’interface utilise maintenant ces couleurs.'
+            );
+
+            return $this->redirectToRoute('admin_appearance');
+        }
+
+        return $this->render('admin/appearance.html.twig', [
+            'settings' => $settings,
+            'settingsTableReady' => $settingsTableReady,
+        ]);
     }
 
     #[Route('/anomalies', name: 'admin_anomalies', methods: ['GET'])]
@@ -2964,6 +3044,69 @@ class AdminController extends AbstractController
         $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $photoPath;
         if (is_file($fullPath)) {
             @unlink($fullPath);
+        }
+    }
+
+    private function getAppearanceSettings(EntityManagerInterface $entityManager): AppAppearanceSettings
+    {
+        try {
+            $settings = $entityManager
+                ->getRepository(AppAppearanceSettings::class)
+                ->findOneBy([], ['id' => 'ASC']);
+        } catch (\Throwable) {
+            return AppAppearanceSettings::default();
+        }
+
+        if ($settings instanceof AppAppearanceSettings) {
+            return $settings;
+        }
+
+        $settings = AppAppearanceSettings::default();
+        $entityManager->persist($settings);
+
+        return $settings;
+    }
+
+    private function extractAppearanceColor(Request $request, string $field, string $label): string
+    {
+        $value = trim((string) $request->request->get($field));
+        if (preg_match('/^#[0-9a-fA-F]{6}$/', $value) !== 1) {
+            throw new \InvalidArgumentException(sprintf('La couleur %s doit être au format hexadécimal, par exemple #ff385c.', $label));
+        }
+
+        return strtolower($value);
+    }
+
+    private function appearanceSettingsStorageReady(EntityManagerInterface $entityManager): bool
+    {
+        try {
+            $schemaManager = $entityManager->getConnection()->createSchemaManager();
+            if (!$schemaManager->tablesExist(['app_appearance_settings'])) {
+                return false;
+            }
+
+            $table = $schemaManager->introspectTable('app_appearance_settings');
+            foreach ([
+                'primary_color',
+                'secondary_color',
+                'tertiary_color',
+                'background_color',
+                'surface_color',
+                'text_color',
+                'muted_color',
+                'border_color',
+                'success_color',
+                'warning_color',
+                'danger_color',
+            ] as $columnName) {
+                if (!$table->hasColumn($columnName)) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (\Throwable) {
+            return false;
         }
     }
 }
