@@ -112,6 +112,16 @@
         </div>
 
         {% if app.user %}
+            <div
+                id="pending-action-reminder-root"
+                data-pending-notifications
+                data-pending-notifications-endpoint="{{ path('app_pending_notifications') }}"
+                data-pending-notifications-delay="10000"
+                aria-live="polite"
+            ></div>
+        {% endif %}
+
+        {% if app.user %}
             {% set blockedTenantAccessApartments = is_granted('ROLE_ADMIN') ? admin_blocked_tenant_access_apartments() : [] %}
             <div id="global-main-menu" class="workflow-actions-source" hidden>
                 <div class="action-menu-layout">
