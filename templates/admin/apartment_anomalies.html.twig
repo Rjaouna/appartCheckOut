@@ -24,9 +24,9 @@
             {% endfor %}
         </section>
 
-        <section class="workspace-main">
+        <section class="workspace-main apartment-anomalies-workspace">
             {% for group in anomalyGroups %}
-                <article class="panel" id="room-{{ group.room.id }}">
+                <article class="panel apartment-anomaly-room-panel" id="room-{{ group.room.id }}">
                     <div class="panel-head">
                         <div>
                             <h2>{{ group.room.name }}</h2>
@@ -35,7 +35,7 @@
                         <span class="status-badge is-warning">{{ group.count }} anomalie{{ group.count > 1 ? 's' : '' }}</span>
                     </div>
 
-                    <div class="list-stack">
+                    <div class="list-stack apartment-anomaly-list-stack">
                         {% for item in group.anomalies %}
                             <div id="anomaly-workflow-{{ item.anomaly.id }}">
                                 {% include 'admin/_anomaly_workflow_card.html.twig' with {anomaly: item.anomaly, repeatCount: item.repeatCount} %}

@@ -1,162 +1,204 @@
-<article class="check-line is-issue">
-    <div class="check-line-top">
-        <div>
-            <strong>{{ anomaly.roomEquipment.displayLabel }}</strong>
-            <p>{{ anomaly.type.label }} • {{ anomaly.createdBy.fullName }} • {{ anomaly.createdAt|date('d/m/Y H:i') }}</p>
-        </div>
-        <div class="anomaly-toolbar">
-            {% if anomaly.createdBy %}
-                <span class="status-badge is-neutral">{{ anomaly.createdBy.fullName }}</span>
-            {% endif %}
-            <span class="status-badge {{ anomaly.status.value == 'closed' ? 'is-success' : 'is-warning' }}">{{ anomaly.status.label }}</span>
-            <form
-                method="post"
-                action="{{ path('admin_anomaly_delete', {id: anomaly.id}) }}"
-                data-async-form
-                data-confirm-reset
-                data-confirm-title="Supprimer l’anomalie"
-                data-confirm-message="Cette anomalie sera supprimée définitivement de la liste. Veux-tu confirmer la suppression ?"
-            >
-                <input type="hidden" name="_token" value="{{ csrf_token('delete_anomaly_' ~ anomaly.id) }}">
-                <button
-                    class="icon-action-button icon-action-button-danger"
-                    type="submit"
-                    title="Supprimer l’anomalie"
-                    aria-label="Supprimer l’anomalie"
-                >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v8H7V9Zm4 0h2v8h-2V9Zm4 0h2v8h-2V9ZM6 21a2 2 0 0 1-2-2V7h16v12a2 2 0 0 1-2 2H6Z" fill="currentColor"/>
-                    </svg>
-                </button>
-            </form>
-            <button
-                class="icon-action-button"
-                type="button"
-                title="Gérer le suivi"
-                aria-label="Gérer le suivi"
-                data-workflow-trigger
-                data-workflow-title="Suivi du dossier"
-                data-workflow-source="#workflow-actions-{{ anomaly.id }}"
-            >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/>
-                </svg>
-            </button>
-        </div>
-    </div>
+<div class="admin-anomaly-modern-stack">
+    <article class="admin-anomaly-modern-card">
+        <header class="admin-anomaly-modern-head">
+ 
 
-    <p>{{ anomaly.comment }}</p>
+            <div class="admin-anomaly-title-block">
+                <h3>{{ anomaly.roomEquipment.displayLabel }}</h3>
+                <div class="admin-anomaly-meta-row">
+                    <span class="admin-anomaly-type-pill">{{ anomaly.type.label }}</span>
+                    <span class="admin-anomaly-meta-separator" aria-hidden="true"></span>
+                    <span>{{ anomaly.createdBy ? anomaly.createdBy.fullName : 'Responsable non renseigné' }}</span>
+                    <span class="admin-anomaly-date">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M7 2v2H5a2 2 0 0 0-2 2v14h18V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7Zm12 8H5v8h14v-8Z" fill="currentColor"/>
+                        </svg>
+                        {{ anomaly.createdAt|date('d/m/Y à H:i') }}
+                    </span>
+                </div>
+            </div>
+        </header>
 
-    {% if (repeatCount|default(1)) >= 2 %}
-        <div class="danger-repeat-block">
-            <strong>Danger : anomalie récurrente</strong>
-            <p>Cet équipement a déjà été signalé {{ repeatCount }} fois dans cet appartement. Un traitement durable est à prévoir.</p>
-        </div>
-    {% endif %}
+        <div class="admin-anomaly-modern-body">
+            <div class="admin-anomaly-status-card">
+                <span class="admin-anomaly-status-dot" aria-hidden="true"></span>
+                <div>
+                    <strong>{{ anomaly.status.label }}</strong>
+                    <p>Statut actuel</p>
+                </div>
+            </div>
 
-    {% if anomaly.photoPath %}
-        <button
-            class="anomaly-photo-button"
-            type="button"
-            data-lightbox-src="{{ anomaly.photoPath }}"
-            data-lightbox-alt="{{ anomaly.roomEquipment.displayLabel }}"
-        >
-            <img class="anomaly-photo-thumb" src="{{ anomaly.photoPath }}" alt="{{ anomaly.roomEquipment.displayLabel }}">
-        </button>
-    {% endif %}
-
-    <div class="workflow-summary-row">
-        <span class="workflow-current">Suivi en cours : {{ anomaly.status.label }}</span>
-        <a class="inline-detail-link" href="{{ path('admin_anomaly_detail', {id: anomaly.id}) }}">Voir le détail</a>
-    </div>
-
-    <div id="workflow-actions-{{ anomaly.id }}" class="workflow-actions-source" hidden>
-        <div class="workflow-modal-grid">
-            {% for choice in anomaly.status.nextChoices() %}
-                <form method="post" action="{{ path('admin_anomaly_workflow_update', {id: anomaly.id}) }}" data-async-form data-update-target="#anomaly-workflow-{{ anomaly.id }}">
-                    <input type="hidden" name="status" value="{{ choice.value }}">
-                    <button class="workflow-action workflow-action-modal
-                        {% if choice.value in ['complaint_filed', 'repair_in_progress'] %} workflow-action-blue{% endif %}
-                        {% if choice.value == 'reimbursement_paid' %} workflow-action-green{% endif %}
-                        {% if choice.value == 'reimbursement_refused' %} workflow-action-orange{% endif %}
-                        {% if choice.value == 'resolved' %} workflow-action-teal{% endif %}
-                        {% if choice.value == 'closed' %} workflow-action-dark{% endif %}"
-                        type="submit"
-                    >
-                        <span class="workflow-icon">
-                            {% if choice.value == 'complaint_filed' %}
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v12H9l-5 4V4h2Zm3 4v2h6V8H9Zm0 4v2h4v-2H9Z" fill="currentColor"/></svg>
-                            {% elseif choice.value == 'reimbursement_paid' %}
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3V6Zm3 3v6h12V9H6Zm4 1h4v1h-1v3h-2v-3h-1v-1Z" fill="currentColor"/></svg>
-                            {% elseif choice.value == 'reimbursement_refused' %}
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
-                            {% elseif choice.value == 'repair_in_progress' %}
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/></svg>
-                            {% elseif choice.value == 'resolved' %}
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12 3.4 13.4 9 19l12-12-1.4-1.4L9 16.2Z" fill="currentColor"/></svg>
-                            {% elseif choice.value == 'closed' %}
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12l2 4v12H4V8l2-4Zm2 6v6h8v-6H8Zm1-4-1 2h8l-1-2H9Z" fill="currentColor"/></svg>
-                            {% endif %}
-                        </span>
-                        <span>{{ choice.label }}</span>
-                    </button>
-                </form>
-            {% endfor %}
-            {% if anomaly.status.value != 'new' %}
+            <div class="admin-anomaly-modern-actions">
                 <form
                     method="post"
-                    action="{{ path('admin_anomaly_workflow_reset', {id: anomaly.id}) }}"
+                    action="{{ path('admin_anomaly_delete', {id: anomaly.id}) }}"
                     data-async-form
-                    data-update-target="#anomaly-workflow-{{ anomaly.id }}"
                     data-confirm-reset
-                    data-confirm-title="Recommencer le suivi"
-                    data-confirm-message="Tu vas remettre cette anomalie à l’état initial. Veux-tu vraiment recommencer le suivi ?"
+                    data-confirm-title="Supprimer l’anomalie"
+                    data-confirm-message="Cette anomalie sera supprimée définitivement de la liste. Veux-tu confirmer la suppression ?"
                 >
-                    <button class="workflow-action workflow-action-modal workflow-action-reset" type="submit">
-                        <span class="workflow-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" fill="currentColor"/></svg>
-                        </span>
-                        <span>Recommencer le suivi</span>
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_anomaly_' ~ anomaly.id) }}">
+                    <button
+                        class="admin-anomaly-square-action admin-anomaly-square-action-danger"
+                        type="submit"
+                        title="Supprimer l’anomalie"
+                        aria-label="Supprimer l’anomalie"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v8H7V9Zm4 0h2v8h-2V9Zm4 0h2v8h-2V9ZM6 21a2 2 0 0 1-2-2V7h16v12a2 2 0 0 1-2 2H6Z" fill="currentColor"/>
+                        </svg>
                     </button>
                 </form>
-            {% endif %}
-        </div>
-    </div>
 
-    <section class="history-block">
-        <div class="panel-head history-head">
-            <h3>Historique de suivi</h3>
-            <span class="mini-badge">{{ anomaly.statusHistories|length }}</span>
+                <button
+                    class="admin-anomaly-square-action admin-anomaly-square-action-dark"
+                    type="button"
+                    title="Gérer le suivi"
+                    aria-label="Gérer le suivi"
+                    data-workflow-trigger
+                    data-workflow-title="Suivi du dossier"
+                    data-workflow-source="#workflow-actions-{{ anomaly.id }}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
         </div>
-        <div class="history-list">
+
+        {% if anomaly.comment %}
+            <p class="admin-anomaly-modern-comment">{{ anomaly.comment }}</p>
+        {% endif %}
+
+        {% if (repeatCount|default(1)) >= 2 %}
+            <div class="danger-repeat-block admin-anomaly-repeat-block">
+                <strong>Danger : anomalie récurrente</strong>
+                <p>Cet équipement a déjà été signalé {{ repeatCount }} fois dans cet appartement. Un traitement durable est à prévoir.</p>
+            </div>
+        {% endif %}
+
+        {% if anomaly.photoPath %}
+            <button
+                class="anomaly-photo-button admin-anomaly-modern-photo"
+                type="button"
+                data-lightbox-src="{{ anomaly.photoPath }}"
+                data-lightbox-alt="{{ anomaly.roomEquipment.displayLabel }}"
+            >
+                <img class="anomaly-photo-thumb" src="{{ anomaly.photoPath }}" alt="{{ anomaly.roomEquipment.displayLabel }}">
+            </button>
+        {% endif %}
+
+        <footer class="admin-anomaly-follow-row">
+            <span class="admin-anomaly-follow-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 5a7 7 0 1 0 6.3 4H16V7h6v6h-2V10.8A9 9 0 1 1 12 3v2Zm-1 3h2v5h4v2h-6V8Z" fill="currentColor"/>
+                </svg>
+            </span>
+            <span>Suivi en cours : <strong>{{ anomaly.status.label }}</strong></span>
+            <a class="admin-anomaly-detail-link" href="{{ path('admin_anomaly_detail', {id: anomaly.id}) }}">
+                Voir le détail
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m9 5 7 7-7 7-1.4-1.4 5.6-5.6-5.6-5.6L9 5Z" fill="currentColor"/>
+                </svg>
+            </a>
+        </footer>
+
+        <div id="workflow-actions-{{ anomaly.id }}" class="workflow-actions-source" hidden>
+            <div class="workflow-modal-grid">
+                {% for choice in anomaly.status.nextChoices() %}
+                    <form method="post" action="{{ path('admin_anomaly_workflow_update', {id: anomaly.id}) }}" data-async-form data-update-target="#anomaly-workflow-{{ anomaly.id }}">
+                        <input type="hidden" name="status" value="{{ choice.value }}">
+                        <button class="workflow-action workflow-action-modal
+                            {% if choice.value in ['complaint_filed', 'repair_in_progress'] %} workflow-action-blue{% endif %}
+                            {% if choice.value == 'reimbursement_paid' %} workflow-action-green{% endif %}
+                            {% if choice.value == 'reimbursement_refused' %} workflow-action-orange{% endif %}
+                            {% if choice.value == 'resolved' %} workflow-action-teal{% endif %}
+                            {% if choice.value == 'closed' %} workflow-action-dark{% endif %}"
+                            type="submit"
+                        >
+                            <span class="workflow-icon">
+                                {% if choice.value == 'complaint_filed' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v12H9l-5 4V4h2Zm3 4v2h6V8H9Zm0 4v2h4v-2H9Z" fill="currentColor"/></svg>
+                                {% elseif choice.value == 'reimbursement_paid' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3V6Zm3 3v6h12V9H6Zm4 1h4v1h-1v3h-2v-3h-1v-1Z" fill="currentColor"/></svg>
+                                {% elseif choice.value == 'reimbursement_refused' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
+                                {% elseif choice.value == 'repair_in_progress' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 7.3a6 6 0 0 1-7.7 7.7L7.8 21H3v-4.8l5.9-5.9a6 6 0 0 1 7.7-7.7l-3 3 .7 3.1 3.1.7 3-3Z" fill="currentColor"/></svg>
+                                {% elseif choice.value == 'resolved' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12 3.4 13.4 9 19l12-12-1.4-1.4L9 16.2Z" fill="currentColor"/></svg>
+                                {% elseif choice.value == 'closed' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12l2 4v12H4V8l2-4Zm2 6v6h8v-6H8Zm1-4-1 2h8l-1-2H9Z" fill="currentColor"/></svg>
+                                {% endif %}
+                            </span>
+                            <span>{{ choice.label }}</span>
+                        </button>
+                    </form>
+                {% endfor %}
+                {% if anomaly.status.value != 'new' %}
+                    <form
+                        method="post"
+                        action="{{ path('admin_anomaly_workflow_reset', {id: anomaly.id}) }}"
+                        data-async-form
+                        data-update-target="#anomaly-workflow-{{ anomaly.id }}"
+                        data-confirm-reset
+                        data-confirm-title="Recommencer le suivi"
+                        data-confirm-message="Tu vas remettre cette anomalie à l’état initial. Veux-tu vraiment recommencer le suivi ?"
+                    >
+                        <button class="workflow-action workflow-action-modal workflow-action-reset" type="submit">
+                            <span class="workflow-icon">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" fill="currentColor"/></svg>
+                            </span>
+                            <span>Recommencer le suivi</span>
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+
+    <section class="admin-anomaly-history-card">
+        <div class="admin-anomaly-history-head">
+            <h3>Historique de suivi</h3>
+            <span class="admin-anomaly-history-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M5 6h2v2H5V6Zm4 0h10v2H9V6Zm-4 5h2v2H5v-2Zm4 0h10v2H9v-2Zm-4 5h2v2H5v-2Zm4 0h10v2H9v-2Z" fill="currentColor"/>
+                </svg>
+            </span>
+        </div>
+
+        <div class="admin-anomaly-history-timeline">
             {% for history in anomaly.statusHistories %}
-                <article class="history-item">
-                    <div class="history-item-top">
-                        <strong>
+                <article class="admin-anomaly-history-item">
+                    <span class="admin-anomaly-history-dot" aria-hidden="true"></span>
+                    <div class="admin-anomaly-history-box">
+                        <div class="admin-anomaly-history-top">
+                            <strong>
+                                {% if history.fromStatus and history.toStatus.value == 'new' %}
+                                    Suivi recommencé
+                                {% elseif history.toStatus.value == 'closed' %}
+                                    Clôture du dossier
+                                {% else %}
+                                    {{ history.toStatus.label }}
+                                {% endif %}
+                            </strong>
+                            <span>{{ history.changedAt|date('d/m/Y à H:i') }}</span>
+                        </div>
+                        <p>
                             {% if history.fromStatus and history.toStatus.value == 'new' %}
-                                Suivi recommencé
-                            {% elseif history.toStatus.value == 'closed' %}
-                                Clôture du dossier
+                                {{ history.fromStatus.label }} → Réouverture du suivi
+                            {% elseif history.fromStatus %}
+                                {{ history.fromStatus.label }} → {{ history.toStatus.label }}
                             {% else %}
-                                {{ history.toStatus.label }}
+                                Création de l’anomalie
                             {% endif %}
-                        </strong>
-                        <span>{{ history.changedAt|date('d/m/Y H:i') }}</span>
+                        </p>
+                        <small>Par {{ history.changedBy ? history.changedBy.fullName : 'Système' }}</small>
                     </div>
-                    <p>
-                        {% if history.fromStatus and history.toStatus.value == 'new' %}
-                            {{ history.fromStatus.label }} → Réouverture du suivi
-                        {% elseif history.fromStatus %}
-                            {{ history.fromStatus.label }} → {{ history.toStatus.label }}
-                        {% else %}
-                            Création de l’anomalie
-                        {% endif %}
-                    </p>
-                    <small>Par {{ history.changedBy ? history.changedBy.fullName : 'Système' }}</small>
                 </article>
             {% else %}
                 <p class="empty-state">Aucun historique disponible.</p>
             {% endfor %}
         </div>
     </section>
-</article>
+</div>

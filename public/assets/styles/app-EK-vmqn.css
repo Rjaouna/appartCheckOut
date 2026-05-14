@@ -1947,36 +1947,32 @@ body.nav-compact .floating-main-menu-button {
 
 .workflow-modal-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
 }
 
 .workflow-modal-grid form {
     width: 100%;
-    margin: 0;
 }
 
 .workflow-action-modal {
     width: 100%;
     justify-content: flex-start;
-    min-height: 76px;
+    min-height: 62px;
+    padding: 14px 18px;
 }
 
 .workflow-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    flex: 0 0 44px;
-    border-radius: 15px;
-    background: var(--workflow-soft, var(--primary-soft));
-    color: var(--workflow-color, var(--accent-dark));
+    width: 28px;
+    height: 28px;
 }
 
 .workflow-icon svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
 }
 
 .anomaly-photo-button {
@@ -2528,113 +2524,47 @@ body.nav-compact .floating-main-menu-button {
 }
 
 .workflow-action {
-    --workflow-color: var(--accent);
-    --workflow-rgb: var(--accent-rgb);
-    --workflow-soft: var(--primary-soft);
-    --workflow-border: rgba(var(--accent-rgb), 0.22);
-    position: relative;
     display: inline-flex;
     width: 100%;
     align-items: center;
-    justify-content: flex-start;
-    gap: 14px;
-    min-height: 76px;
-    border: 1px solid var(--workflow-border);
-    border-radius: 20px;
-    padding: 14px 18px 14px 20px;
-    background:
-        linear-gradient(135deg, rgba(var(--surface-rgb), 0.98) 0%, rgba(var(--surface-soft-rgb), 0.95) 100%);
-    color: var(--text);
-    font-weight: 900;
-    line-height: 1.2;
-    text-align: left;
+    justify-content: center;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 16px;
+    color: var(--on-primary);
     cursor: pointer;
-    overflow: hidden;
-    box-shadow: 0 14px 30px rgba(var(--text-rgb), 0.065);
-    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-}
-
-.workflow-action::before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 5px;
-    background: var(--workflow-color);
-}
-
-.workflow-action:hover {
-    transform: translateY(-2px);
-    border-color: rgba(var(--workflow-rgb), 0.38);
-    box-shadow: 0 18px 36px rgba(var(--text-rgb), 0.10);
-}
-
-.workflow-action:focus-visible {
-    outline: 3px solid rgba(var(--workflow-rgb), 0.22);
-    outline-offset: 3px;
-}
-
-.workflow-action span:last-child {
-    min-width: 0;
 }
 
 .workflow-action-blue {
-    --workflow-color: var(--tertiary-color);
-    --workflow-rgb: var(--tertiary-rgb);
-    --workflow-soft: rgba(var(--tertiary-rgb), 0.14);
-    --workflow-border: rgba(var(--tertiary-rgb), 0.24);
+    background: linear-gradient(135deg, var(--tertiary-color), var(--tertiary-color));
+    color: var(--on-tertiary);
 }
 
 .workflow-action-green {
-    --workflow-color: var(--success);
-    --workflow-rgb: var(--success-rgb);
-    --workflow-soft: rgba(var(--success-rgb), 0.13);
-    --workflow-border: rgba(var(--success-rgb), 0.24);
+    background: linear-gradient(135deg, var(--success), var(--success));
+    color: var(--on-success);
 }
 
 .workflow-action-orange {
-    --workflow-color: var(--warning);
-    --workflow-rgb: var(--warning-rgb);
-    --workflow-soft: rgba(var(--warning-rgb), 0.13);
-    --workflow-border: rgba(var(--warning-rgb), 0.26);
+    background: linear-gradient(135deg, var(--warning), var(--warning));
+    color: var(--on-warning);
 }
 
 .workflow-action-teal {
-    --workflow-color: var(--success);
-    --workflow-rgb: var(--success-rgb);
-    --workflow-soft: rgba(var(--success-rgb), 0.13);
-    --workflow-border: rgba(var(--success-rgb), 0.24);
+    background: linear-gradient(135deg, var(--success), var(--success));
+    color: var(--on-success);
 }
 
 .workflow-action-dark {
-    --workflow-color: var(--secondary-color);
-    --workflow-rgb: var(--secondary-rgb);
-    --workflow-soft: rgba(var(--secondary-rgb), 0.10);
-    --workflow-border: rgba(var(--secondary-rgb), 0.20);
+    background: linear-gradient(135deg, var(--secondary-color), var(--secondary-color));
+    color: var(--on-secondary);
 }
 
 .workflow-action-reset {
-    --workflow-color: var(--muted);
-    --workflow-rgb: var(--muted-rgb);
-    --workflow-soft: rgba(var(--muted-rgb), 0.10);
-    --workflow-border: rgba(var(--muted-rgb), 0.24);
-    background: rgba(var(--surface-rgb), 0.82);
+    background: var(--surface);
     color: var(--text);
+    border: 1px solid var(--border);
     box-shadow: none;
-}
-
-#workflowActionModalContent {
-    width: min(760px, 100%);
-    margin: 0 auto;
-}
-
-#workflowActionModal .action-menu-modal-header {
-    justify-content: center;
-    text-align: center;
-}
-
-#workflowActionModal .action-menu-modal-header .btn-close {
-    position: absolute;
-    right: 22px;
 }
 
 .admin-state-panel {
@@ -9291,33 +9221,9 @@ a.apartment-manager-link:focus-visible {
         border-radius: 28px;
     }
 
-    .action-menu-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    #workflowActionModalContent,
-    .workflow-modal-grid,
-    .workflow-modal-grid form,
-    .workflow-action {
-        width: 100%;
-    }
-
+    .action-menu-grid,
     .workflow-modal-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .workflow-action {
-        min-height: 68px;
-        padding: 12px 14px 12px 16px;
-        border-radius: 18px;
-    }
-
-    .workflow-icon {
-        width: 40px;
-        height: 40px;
-        flex-basis: 40px;
-        border-radius: 14px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .status-circle-value {

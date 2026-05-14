@@ -111,7 +111,8 @@
             {% endfor %}
         </div>
 
-        {% if app.user %}
+        {% set currentRoute = app.request.attributes.get('_route') %}
+        {% if app.user and currentRoute in ['admin_dashboard', 'employee_dashboard'] %}
             <div
                 id="pending-action-reminder-root"
                 data-pending-notifications
