@@ -65,6 +65,7 @@
             {% endif %}
         </section>
 
+        <p class="tenant-home-helper">Toutes les informations utiles sont rangees par rubrique. Utilisez le menu pour retrouver le Wi-Fi, les services, le contact ou les consignes importantes.</p>
         <a class="tenant-exit-link tenant-home-exit-link" href="{{ exitTenantUrl }}">Quitter l'espace locataire</a>
 
         <div id="tenant-main-menu-source" class="workflow-actions-source" hidden>
@@ -113,8 +114,9 @@
             </div>
             <div class="tenant-panel-scroll">
                 <div class="tenant-panel-head">
+                    <span class="tenant-panel-kicker">Essentiel</span>
                     <h2>Infos appartement</h2>
-                    <p>Retrouvez ici l'adresse, les codes et les reperes utiles du logement.</p>
+                    <p>Adresse, navigation, codes et consignes d'entree sont regroupes ici pour vous installer sans chercher.</p>
                 </div>
 
                 <div class="tenant-action-stack">
@@ -129,12 +131,12 @@
                             data-confirm-message="Vous allez quitter votre espace pour ouvrir l'adresse dans Waze. Voulez-vous continuer ?"
                         >
                             <span class="tenant-waze-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'waze' } only %}</span>
-                            <span>Ouvrir Waze</span>
+                            <span>Ouvrir l'itineraire Waze</span>
                         </a>
                     {% endif %}
                     {% if apartment.orderedAccessSteps is not empty %}
                         <button class="secondary-button full-width" type="button" data-panel-open="#tenant-panel-apartment-access" data-panel-group="tenant-public">
-                            Acces appartement
+                            Voir les etapes d'acces
                         </button>
                     {% endif %}
                 </div>
@@ -182,8 +184,9 @@
                 </div>
                 <div class="tenant-panel-scroll">
                     <div class="tenant-panel-head">
+                        <span class="tenant-panel-kicker">Arrivee</span>
                         <h2>Acces a l'appartement</h2>
-                        <p>Suivez les etapes une par une pour arriver facilement jusqu'au logement.</p>
+                        <p>Suivez les etapes dans l'ordre. Les photos vous aident a vous reperer rapidement sur place.</p>
                     </div>
 
                     <div class="tenant-step-list">
@@ -215,8 +218,9 @@
                 </div>
                 <div class="tenant-panel-scroll">
                     <div class="tenant-panel-head">
+                        <span class="tenant-panel-kicker">Connexion</span>
                         <h2>Connexion Wi-Fi</h2>
-                        <p>Toutes les informations pour vous connecter rapidement.</p>
+                        <p>Retrouvez le nom du reseau, le mot de passe et les precisions utiles pour vous connecter.</p>
                     </div>
 
                     <div class="tenant-panel-card-grid">
@@ -254,9 +258,15 @@
             </div>
             <div class="tenant-panel-scroll">
                 <div class="tenant-panel-head">
+                    <span class="tenant-panel-kicker">Partager</span>
                     <h2>Adresse et navigation</h2>
-                    <p>Partagez facilement l'adresse ou ouvrez la navigation.</p>
+                    <p>Envoyez l'adresse a un proche ou ouvrez une application de navigation en un clic.</p>
                 </div>
+
+                <article class="tenant-info-card tenant-info-card-wide tenant-address-card">
+                    <span class="editable-field-label">Adresse du logement</span>
+                    <strong>{{ apartment.fullAddress }}</strong>
+                </article>
 
                 <div class="tenant-action-stack">
                     <a class="primary-button full-width" href="{{ whatsAppShareUrl }}" target="_blank" rel="noreferrer">Partager l'adresse sur WhatsApp</a>
@@ -290,8 +300,9 @@
                 </div>
                 <div class="tenant-panel-scroll">
                     <div class="tenant-panel-head">
+                        <span class="tenant-panel-kicker">Sejour</span>
                         <h2>Livret d'accueil</h2>
-                        <p>Les informations utiles de votre sejour, au meme endroit.</p>
+                        <p>Regles du logement, depart, urgences et equipements: les informations utiles de votre sejour.</p>
                     </div>
 
                     <div class="tenant-guidebook-grid">
@@ -338,16 +349,32 @@
                 </div>
                 <div class="tenant-panel-scroll">
                     <div class="tenant-panel-head">
+                        <span class="tenant-panel-kicker">Extras</span>
                         <h2>Services disponibles</h2>
-                        <p>Envoyez votre demande en un clic sur WhatsApp.</p>
+                        <p>Besoin d'un coup de main pendant votre sejour ? Choisissez un service et envoyez votre demande directement sur WhatsApp.</p>
                     </div>
+
+                    <article class="tenant-service-hero">
+                        <span class="tenant-service-hero-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'services' } only %}</span>
+                        <div>
+                            <strong>{{ serviceContactEmployee.fullName }}</strong>
+                            <p>Votre contact peut vous aider a organiser un service simple et rapide.</p>
+                        </div>
+                    </article>
 
                     <div class="tenant-service-grid">
                         {% for service in serviceExtras %}
                             <a class="tenant-service-card" href="{{ service.whatsAppUrl }}" target="_blank" rel="noreferrer" title="{{ service.title }}">
-                                <span class="tenant-service-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'whatsapp' } only %}</span>
-                                <strong>{{ service.label }}</strong>
-                                <span>Demander ce service</span>
+                                <span class="tenant-service-icon">{% include 'public/_tenant_icon.html.twig' with { icon: 'services' } only %}</span>
+                                <span class="tenant-service-copy">
+                                    <strong>{{ service.label }}</strong>
+                                    <span>Faire une demande a {{ serviceContactEmployee.fullName }}</span>
+                                </span>
+                                <span class="tenant-service-whatsapp">
+                                    {% include 'public/_tenant_icon.html.twig' with { icon: 'whatsapp' } only %}
+                                    WhatsApp
+                                </span>
+                                <span class="tenant-service-arrow" aria-hidden="true">&rarr;</span>
                             </a>
                         {% endfor %}
                     </div>
@@ -367,8 +394,9 @@
                 </div>
                 <div class="tenant-panel-scroll">
                     <div class="tenant-panel-head">
+                        <span class="tenant-panel-kicker">Aide video</span>
                         <h2>Manuels d'utilisation</h2>
-                        <p>Visionnez les explications video utiles pour les equipements du logement.</p>
+                        <p>Visionnez les explications courtes pour utiliser les equipements du logement sans hesitation.</p>
                     </div>
 
                     <div class="tenant-manual-grid">
@@ -411,8 +439,9 @@
             </div>
             <div class="tenant-panel-scroll">
                 <div class="tenant-panel-head">
+                    <span class="tenant-panel-kicker">Besoin d'aide ?</span>
                     <h2>Votre contact</h2>
-                    <p>Une question sur votre arrivee ou votre sejour ?</p>
+                    <p>Pour une question urgente ou une demande pendant le sejour, contactez la personne en charge du logement.</p>
                 </div>
 
                 {% if leadEmployee %}
@@ -463,8 +492,9 @@
             </div>
             <div class="tenant-panel-scroll">
                 <div class="tenant-panel-head">
+                    <span class="tenant-panel-kicker">Important</span>
                     <h2>Informations importantes</h2>
-                    <p>Quelques rappels utiles pour eviter les erreurs.</p>
+                    <p>Quelques rappels importants pour proteger l'acces au logement et contacter rapidement l'equipe si besoin.</p>
                 </div>
 
                 <article class="tenant-warning-card">

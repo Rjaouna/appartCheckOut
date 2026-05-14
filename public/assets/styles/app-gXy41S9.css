@@ -4517,24 +4517,9 @@ body.nav-compact .floating-main-menu-button {
     box-shadow: 0 12px 24px rgba(37, 211, 102, 0.24);
 }
 
-.tenant-service-whatsapp,
-.tenant-service-whatsapp span,
 .tenant-service-whatsapp svg {
-    color: #fff;
-}
-
-.tenant-service-card .tenant-service-whatsapp {
-    color: #fff !important;
-}
-
-.tenant-service-whatsapp svg,
-.tenant-service-whatsapp svg * {
-    stroke: currentColor;
-}
-
-.tenant-service-whatsapp svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
 }
 
 .tenant-service-arrow {

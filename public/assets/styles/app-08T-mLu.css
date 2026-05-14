@@ -4523,18 +4523,14 @@ body.nav-compact .floating-main-menu-button {
     color: #fff;
 }
 
-.tenant-service-card .tenant-service-whatsapp {
-    color: #fff !important;
-}
-
 .tenant-service-whatsapp svg,
 .tenant-service-whatsapp svg * {
     stroke: currentColor;
 }
 
 .tenant-service-whatsapp svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
 }
 
 .tenant-service-arrow {

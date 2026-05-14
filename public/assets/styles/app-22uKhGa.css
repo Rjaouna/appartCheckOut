@@ -3947,9 +3947,7 @@ body.nav-compact .floating-main-menu-button {
 
 .tenant-app-shell {
     display: grid;
-    gap: 18px;
-    width: min(100%, 1180px);
-    margin: 0 auto;
+    gap: 22px;
 }
 
 .tenant-app-hero {
@@ -4063,13 +4061,6 @@ body.nav-compact .floating-main-menu-button {
     min-height: 50px;
 }
 
-.tenant-home-helper {
-    max-width: 760px;
-    margin: -4px 0 0;
-    color: var(--muted);
-    line-height: 1.6;
-}
-
 .tenant-waze-button {
     display: inline-flex;
     align-items: center;
@@ -4100,7 +4091,7 @@ body.nav-compact .floating-main-menu-button {
 
 .tenant-feature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
 }
 
@@ -4109,15 +4100,11 @@ body.nav-compact .floating-main-menu-button {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 14px;
     align-items: center;
-    min-height: 118px;
-    padding: 20px;
+    padding: 18px;
     border: 1px solid rgba(227, 220, 209, 0.92);
     border-radius: 26px;
-    background:
-        radial-gradient(circle at top right, rgba(255, 56, 92, 0.1), transparent 34%),
-        linear-gradient(180deg, #fff 0%, #fff8fa 100%);
+    background: linear-gradient(180deg, #fff 0%, #fff8fa 100%);
     text-align: left;
-    box-shadow: 0 14px 30px rgba(17, 24, 39, 0.06);
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
@@ -4252,24 +4239,15 @@ body.nav-compact .floating-main-menu-button {
     display: grid;
     align-content: start;
     grid-auto-rows: max-content;
-    justify-self: center;
-    width: min(100%, 1120px);
-    gap: 20px;
-    padding: clamp(18px, 3vw, 30px);
+    gap: 18px;
+    padding: 22px;
     overflow: auto;
 }
 
 .tenant-panel-head {
     display: grid;
     align-content: start;
-    gap: 9px;
-    padding: 22px;
-    border: 1px solid rgba(227, 220, 209, 0.82);
-    border-radius: 28px;
-    background:
-        radial-gradient(circle at top right, rgba(255, 56, 92, 0.12), transparent 34%),
-        linear-gradient(180deg, #fff 0%, #fffaf7 100%);
-    box-shadow: 0 16px 34px rgba(17, 24, 39, 0.06);
+    gap: 8px;
 }
 
 .tenant-icon-mark svg,
@@ -4286,22 +4264,6 @@ body.nav-compact .floating-main-menu-button {
     margin: 0;
 }
 
-.tenant-panel-head h2 {
-    font-size: clamp(1.55rem, 2vw, 2.15rem);
-    line-height: 1.08;
-    letter-spacing: -0.03em;
-}
-
-.tenant-panel-kicker {
-    width: fit-content;
-    padding: 7px 12px;
-    border-radius: 999px;
-    background: rgba(255, 56, 92, 0.1);
-    color: var(--accent);
-    font-size: 0.78rem;
-    font-weight: 800;
-}
-
 .tenant-panel-head p,
 .tenant-contact-copy span,
 .tenant-info-card p,
@@ -4314,7 +4276,7 @@ body.nav-compact .floating-main-menu-button {
 .tenant-contact-grid,
 .tenant-manual-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
     grid-auto-rows: max-content;
     gap: 16px;
@@ -4329,61 +4291,28 @@ body.nav-compact .floating-main-menu-button {
     align-content: start;
     align-self: start;
     gap: 10px;
-    padding: 22px;
+    padding: 18px;
     border-radius: 24px;
     border: 1px solid rgba(227, 220, 209, 0.92);
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #fff 100%);
-    box-shadow: 0 14px 30px rgba(17, 24, 39, 0.055);
+    background: #fff;
 }
 
 .tenant-info-card-wide {
     grid-column: 1 / -1;
 }
 
-.tenant-info-card h3,
-.tenant-warning-card h3 {
-    margin: 0;
-    font-size: 1.08rem;
-}
-
-.tenant-info-card strong {
-    font-size: clamp(1.08rem, 1.4vw, 1.35rem);
-    line-height: 1.25;
-    overflow-wrap: anywhere;
-}
-
-.tenant-info-card .editable-field-label {
-    color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.tenant-address-card {
-    border-color: rgba(47, 156, 255, 0.22);
-    background:
-        radial-gradient(circle at top right, rgba(47, 156, 255, 0.14), transparent 32%),
-        #fff;
-}
-
 .tenant-step-list {
     display: grid;
-    gap: 16px;
+    gap: 14px;
 }
 
 .tenant-step-card {
     grid-template-columns: minmax(0, 1fr) minmax(180px, 260px);
     align-items: center;
-    padding: 0;
-    overflow: hidden;
 }
 
 .tenant-step-card img {
     width: 100%;
-    height: 100%;
-    min-height: 190px;
     border-radius: 18px;
     object-fit: cover;
 }
@@ -4391,19 +4320,11 @@ body.nav-compact .floating-main-menu-button {
 .tenant-step-copy {
     display: grid;
     gap: 10px;
-    padding: 22px;
 }
 
 .tenant-action-stack {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 12px;
-}
-
-.tenant-action-stack .primary-button,
-.tenant-action-stack .secondary-button,
-.tenant-action-stack .tenant-waze-button {
-    min-height: 52px;
 }
 
 .tenant-service-grid {
@@ -4517,24 +4438,9 @@ body.nav-compact .floating-main-menu-button {
     box-shadow: 0 12px 24px rgba(37, 211, 102, 0.24);
 }
 
-.tenant-service-whatsapp,
-.tenant-service-whatsapp span,
 .tenant-service-whatsapp svg {
-    color: #fff;
-}
-
-.tenant-service-card .tenant-service-whatsapp {
-    color: #fff !important;
-}
-
-.tenant-service-whatsapp svg,
-.tenant-service-whatsapp svg * {
-    stroke: currentColor;
-}
-
-.tenant-service-whatsapp svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
 }
 
 .tenant-service-arrow {
@@ -4553,69 +4459,23 @@ body.nav-compact .floating-main-menu-button {
     transition: transform 0.2s ease;
 }
 
-.tenant-manual-card {
-    display: grid;
-    overflow: hidden;
-    border: 1px solid rgba(227, 220, 209, 0.92);
-    border-radius: 28px;
-    background: #fff;
-    box-shadow: 0 16px 34px rgba(17, 24, 39, 0.07);
-}
-
-.tenant-manual-copy {
-    padding: 18px;
-}
-
-.tenant-manual-copy h3 {
-    font-size: 1.1rem;
-    line-height: 1.2;
-}
-
-.tenant-manual-warning {
-    border-radius: 18px;
-    background: rgba(255, 246, 237, 0.9);
-}
-
 .tenant-contact-card {
     align-items: center;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 16px;
-    min-height: 118px;
-    background:
-        radial-gradient(circle at top right, rgba(255, 56, 92, 0.08), transparent 34%),
-        #fff;
 }
 
 .tenant-contact-card-soft {
     grid-template-columns: 1fr;
-    min-height: auto;
 }
 
 .tenant-contact-copy {
     display: grid;
-    gap: 8px;
-}
-
-.tenant-contact-copy strong {
-    font-size: 1.12rem;
-}
-
-.tenant-contact-copy .inline-detail-link {
-    width: fit-content;
-    padding: 9px 13px;
-    border-radius: 999px;
-    background: rgba(255, 56, 92, 0.1);
-    color: var(--accent);
-    font-weight: 800;
-    text-decoration: none;
+    gap: 4px;
 }
 
 .tenant-warning-card {
-    background:
-        radial-gradient(circle at top right, rgba(198, 106, 0, 0.12), transparent 32%),
-        linear-gradient(180deg, #fff8f4 0%, #fff 100%);
+    background: linear-gradient(180deg, #fff8f4 0%, #fff 100%);
     border-color: rgba(198, 106, 0, 0.18);
-    font-size: 1.02rem;
 }
 
 body.tenant-panel-open {
@@ -4659,45 +4519,11 @@ body.tenant-panel-open {
 
     .tenant-panel-scroll {
         padding: 18px 16px 28px;
-        gap: 16px;
-    }
-
-    .tenant-panel-head {
-        padding: 18px;
-        border-radius: 24px;
     }
 
     .tenant-feature-card {
         grid-template-columns: 1fr;
         justify-items: start;
-    }
-
-    .tenant-action-stack,
-    .tenant-service-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .tenant-service-hero,
-    .tenant-service-card,
-    .tenant-contact-card {
-        grid-template-columns: 1fr;
-    }
-
-    .tenant-service-card {
-        min-height: 0;
-    }
-
-    .tenant-step-copy,
-    .tenant-manual-copy,
-    .tenant-info-card,
-    .tenant-contact-card,
-    .tenant-warning-card {
-        padding: 18px;
-    }
-
-    .tenant-step-card img {
-        min-height: 160px;
-        border-radius: 0;
     }
 }
 
