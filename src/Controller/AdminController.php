@@ -1412,6 +1412,7 @@ class AdminController extends AbstractController
             'checkoutResumeRoute' => 'admin_checkout_resume',
             'checkoutCompleteRoute' => 'admin_checkout_complete',
             'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
+            'checkoutRoomBulkOkRoute' => 'admin_checkout_room_bulk_ok',
         ]);
     }
 
@@ -1431,6 +1432,49 @@ class AdminController extends AbstractController
             'checkStatuses' => EquipmentCheckStatus::cases(),
             'checkoutShowRoute' => 'admin_checkout_show',
             'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
+        ]);
+    }
+
+    #[Route('/checkouts/{checkout}/rooms/{room}/bulk-ok', name: 'admin_checkout_room_bulk_ok', methods: ['POST'])]
+    public function markCheckoutRoomOk(Checkout $checkout, Room $room, CheckoutManager $checkoutManager, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+
+        if ($this->findCheckoutRoomGroup($checkout, $room) === null) {
+            return new JsonResponse(['success' => false, 'message' => 'Pièce introuvable pour ce check-out.'], 404);
+        }
+
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $validatedCount = $checkoutManager->markUncheckedRoomLinesOk($checkout, $room, $actor);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        $message = $validatedCount > 0
+            ? sprintf('%d équipement%s validé%s en OK.', $validatedCount, $validatedCount > 1 ? 's' : '', $validatedCount > 1 ? 's' : '')
+            : 'Aucun équipement en attente dans cette pièce.';
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_checkout_workspace.html.twig', [
+                'checkout' => $checkout,
+                'roomGroups' => $this->buildCheckoutRoomGroups($checkout),
+                'dashboardRoute' => 'admin_dashboard',
+                'checkoutShowRoute' => 'admin_checkout_show',
+                'checkoutRoomRoute' => 'admin_checkout_room_show',
+                'checkoutPauseRoute' => 'admin_checkout_pause',
+                'checkoutResumeRoute' => 'admin_checkout_resume',
+                'checkoutCompleteRoute' => 'admin_checkout_complete',
+                'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
+                'checkoutRoomBulkOkRoute' => 'admin_checkout_room_bulk_ok',
+            ]),
+            'message' => $message,
         ]);
     }
 

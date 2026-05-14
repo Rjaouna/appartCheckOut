@@ -406,6 +406,41 @@ class EmployeeController extends AbstractController
         ]);
     }
 
+    #[Route('/checkouts/{checkout}/rooms/{room}/bulk-ok', name: 'employee_checkout_room_bulk_ok', methods: ['POST'])]
+    public function markRoomOk(Checkout $checkout, Room $room, CheckoutManager $checkoutManager, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToCheckout($checkout);
+
+        if ($this->findRoomGroup($checkout, $room) === null) {
+            return new JsonResponse(['success' => false, 'message' => 'Pièce introuvable pour ce check-out.'], 404);
+        }
+
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $validatedCount = $checkoutManager->markUncheckedRoomLinesOk($checkout, $room, $actor);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        $message = $validatedCount > 0
+            ? sprintf('%d équipement%s validé%s en OK.', $validatedCount, $validatedCount > 1 ? 's' : '', $validatedCount > 1 ? 's' : '')
+            : 'Aucun équipement en attente dans cette pièce.';
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_checkout_workspace.html.twig', [
+                'checkout' => $checkout,
+                'roomGroups' => $this->buildRoomGroups($checkout),
+            ]),
+            'message' => $message,
+        ]);
+    }
+
     #[Route('/checkouts/lines/{id}', name: 'employee_checkout_line_update', methods: ['POST'])]
     public function updateLine(CheckoutLine $line, Request $request, CheckoutManager $checkoutManager, EntityManagerInterface $entityManager): JsonResponse
     {

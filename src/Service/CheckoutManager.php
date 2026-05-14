@@ -6,6 +6,7 @@ use App\Entity\Anomaly;
 use App\Entity\Apartment;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
+use App\Entity\Room;
 use App\Entity\User;
 use App\Enum\AnomalyStatus;
 use App\Enum\AnomalyType;
@@ -88,6 +89,37 @@ class CheckoutManager
         }
 
         $this->syncAnomalyForLine($line, $actor);
+    }
+
+    public function markUncheckedRoomLinesOk(Checkout $checkout, Room $room, User $actor): int
+    {
+        if (in_array($checkout->getStatus(), [CheckoutStatus::Completed, CheckoutStatus::Cancelled], true)) {
+            throw new \InvalidArgumentException('Ce check-out ne peut plus être modifié.');
+        }
+
+        if ($checkout->getStatus() === CheckoutStatus::Todo) {
+            $checkout
+                ->setStatus(CheckoutStatus::InProgress)
+                ->setStartedAt(new \DateTimeImmutable());
+        }
+
+        $validatedCount = 0;
+        $checkedAt = new \DateTimeImmutable();
+        foreach ($checkout->getLines() as $line) {
+            if ($line->getRoom()?->getId() !== $room->getId() || $line->getStatus() !== null) {
+                continue;
+            }
+
+            $line
+                ->setStatus(EquipmentCheckStatus::Ok)
+                ->setComment(null)
+                ->setPhotoPath(null)
+                ->setCheckedAt($checkedAt)
+                ->setCheckedBy($actor);
+            ++$validatedCount;
+        }
+
+        return $validatedCount;
     }
 
     public function pause(Checkout $checkout, string $reason): void

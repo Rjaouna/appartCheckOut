@@ -1,6 +1,7 @@
 {% set checkoutPauseRoute = checkoutPauseRoute|default('employee_checkout_pause') %}
 {% set checkoutResumeRoute = checkoutResumeRoute|default('employee_checkout_resume') %}
 {% set checkoutRoomRoute = checkoutRoomRoute|default('employee_checkout_room_show') %}
+{% set checkoutRoomBulkOkRoute = checkoutRoomBulkOkRoute|default('employee_checkout_room_bulk_ok') %}
 {% set checkoutCompleteRoute = checkoutCompleteRoute|default('employee_checkout_complete') %}
 
 <div id="checkout-workspace-root" class="workspace-main workspace-main-full">
@@ -88,28 +89,52 @@
         <div class="panel-head">
             <div>
                 <h2>Pièces de l’appartement</h2>
-                <p class="muted">Choisis une pièce pour commencer ou reprendre le contrôle.</p>
+                <p class="muted">Choisis une pièce pour commencer ou reprendre le contrôle. Sur mobile, glisse une pièce vers la gauche pour valider les équipements non contrôlés en OK.</p>
             </div>
         </div>
 
         <div class="room-selector-grid">
             {% for group in roomGroups %}
-                <a class="room-selector-card {{ group.completionPercent == 100 ? 'is-completed' : '' }} {{ group.anomalyCount > 0 ? 'has-anomaly' : '' }}" href="{{ path(checkoutRoomRoute, {checkout: checkout.id, room: group.room.id}) }}">
-                    <div class="room-selector-top">
-                        {% include 'employee/_room_icon.html.twig' with {room: group.room} %}
-                        {% if group.anomalyCount > 0 %}
-                            <span class="mini-badge is-warning">{{ group.anomalyCount }}</span>
-                        {% else %}
-                            <span class="mini-badge is-success">OK</span>
+                {% set pendingCount = group.totalCount - group.checkedCount %}
+                <div class="room-swipe-card {{ pendingCount > 0 ? 'has-pending-room-validation' : '' }}" data-room-swipe-card>
+                    {% if pendingCount > 0 %}
+                        <form
+                            method="post"
+                            action="{{ path(checkoutRoomBulkOkRoute, {checkout: checkout.id, room: group.room.id}) }}"
+                            class="room-swipe-action-form"
+                            data-async-form
+                            data-update-target="#checkout-workspace"
+                            data-confirm-reset
+                            data-confirm-title="Valider toute la pièce"
+                            data-confirm-message="Les {{ pendingCount }} équipement{{ pendingCount > 1 ? 's' : '' }} non contrôlé{{ pendingCount > 1 ? 's' : '' }} de cette pièce seront validé{{ pendingCount > 1 ? 's' : '' }} en OK. Les équipements déjà contrôlés ne seront pas modifiés."
+                        >
+                            <button class="room-swipe-action" type="submit">
+                                <span>Tout OK</span>
+                                <small>{{ pendingCount }}</small>
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a class="room-selector-card room-swipe-foreground {{ group.completionPercent == 100 ? 'is-completed' : '' }} {{ group.anomalyCount > 0 ? 'has-anomaly' : '' }}" href="{{ path(checkoutRoomRoute, {checkout: checkout.id, room: group.room.id}) }}">
+                        <div class="room-selector-top">
+                            {% include 'employee/_room_icon.html.twig' with {room: group.room} %}
+                            {% if group.anomalyCount > 0 %}
+                                <span class="mini-badge is-warning">{{ group.anomalyCount }}</span>
+                            {% else %}
+                                <span class="mini-badge is-success">OK</span>
+                            {% endif %}
+                        </div>
+                        <strong>{{ group.room.name }}</strong>
+                        <p>{{ group.room.type.label }}</p>
+                        <div class="room-selector-meta">
+                            <span class="progress-badge">{{ group.completionPercent }}%</span>
+                            <small>{{ group.checkedCount }}/{{ group.totalCount }} contrôles</small>
+                        </div>
+                        {% if pendingCount > 0 %}
+                            <span class="room-swipe-hint">Glisser à gauche pour tout valider en OK</span>
                         {% endif %}
-                    </div>
-                    <strong>{{ group.room.name }}</strong>
-                    <p>{{ group.room.type.label }}</p>
-                    <div class="room-selector-meta">
-                        <span class="progress-badge">{{ group.completionPercent }}%</span>
-                        <small>{{ group.checkedCount }}/{{ group.totalCount }} contrôles</small>
-                    </div>
-                </a>
+                    </a>
+                </div>
             {% endfor %}
         </div>
 
