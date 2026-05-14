@@ -7,6 +7,7 @@ use App\Entity\ApartmentReservation;
 use App\Entity\ReservationCheckin;
 use App\Entity\User;
 use App\Enum\ApartmentStatus;
+use App\Enum\CheckoutStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -106,6 +107,7 @@ class CheckinController extends AbstractController
             'activeListRoute' => 'admin_checkins',
             'activeListLabel' => 'Check-ins en cours',
             'backRoute' => 'admin_dashboard',
+            'allowReservationDelete' => false,
         ]);
     }
 
@@ -120,11 +122,12 @@ class CheckinController extends AbstractController
             'activeListRoute' => 'admin_arrivals',
             'activeListLabel' => 'Arrivées actives',
             'backRoute' => 'admin_arrivals',
+            'allowReservationDelete' => true,
         ]);
     }
 
     /**
-     * @param array<string, string> $viewOptions
+     * @param array<string, string|bool> $viewOptions
      */
     private function renderCheckinHistory(EntityManagerInterface $entityManager, array $viewOptions): Response
     {
@@ -178,6 +181,57 @@ class CheckinController extends AbstractController
         $this->addFlash('success', 'Fiche check-in marquée comme traitée.');
 
         return $this->redirectToRoute('admin_checkin_show', ['id' => $checkin->getId()]);
+    }
+
+    #[Route('/admin/arrivals/history/{id}/delete', name: 'admin_arrival_history_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function deleteArrivalHistory(
+        ReservationCheckin $checkin,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if (!$this->isCsrfTokenValid('delete_arrival_history_' . $checkin->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton de sécurité invalide. Réessaie la suppression.');
+
+            return $this->redirectToRoute('admin_arrivals_history');
+        }
+
+        $reservation = $checkin->getReservation();
+        $apartment = $reservation?->getApartment();
+
+        if ($reservation instanceof ApartmentReservation) {
+            $this->cancelCheckoutLinkedToReservation($reservation);
+
+            if ($apartment instanceof Apartment) {
+                $apartment->removeReservation($reservation);
+            }
+
+            $reservation->setCheckin(null);
+            $entityManager->remove($reservation);
+        }
+
+        $entityManager->remove($checkin);
+        $entityManager->flush();
+
+        $this->addFlash('success', $reservation instanceof ApartmentReservation
+            ? 'Arrivée supprimée. Les dates de réservation sont à nouveau disponibles.'
+            : 'Fiche check-in supprimée. Aucune réservation liée n’était encore attachée.'
+        );
+
+        return $this->redirectToRoute('admin_arrivals_history');
+    }
+
+    private function cancelCheckoutLinkedToReservation(ApartmentReservation $reservation): void
+    {
+        $checkout = $reservation->getLinkedCheckout();
+        if (!$checkout || in_array($checkout->getStatus(), [CheckoutStatus::Completed, CheckoutStatus::Cancelled], true)) {
+            return;
+        }
+
+        $checkout
+            ->setStatus(CheckoutStatus::Cancelled)
+            ->setPausedAt(null)
+            ->setPauseReason(null)
+            ->setBlockReason(null);
     }
 
     private function renderCheckinForm(ApartmentReservation $reservation, string $submitRoute, string $indexRoute): Response
