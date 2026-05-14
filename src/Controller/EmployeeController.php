@@ -15,6 +15,7 @@ use App\Enum\ApartmentStatus;
 use App\Enum\CheckoutStatus;
 use App\Enum\EquipmentCheckStatus;
 use App\Service\AnomalyWorkflowManager;
+use App\Service\ApartmentReservationMessenger;
 use App\Service\CheckoutManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +24,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/employee')]
 class EmployeeController extends AbstractController
@@ -164,9 +166,41 @@ class EmployeeController extends AbstractController
     #[Route('/arrivals', name: 'employee_arrivals', methods: ['GET'])]
     public function arrivals(EntityManagerInterface $entityManager): Response
     {
-        return $this->render('employee/arrivals.html.twig', [
-            'arrivals' => $this->findAssignedArrivals($entityManager),
-            'todayDate' => new \DateTimeImmutable('today'),
+        return $this->render('employee/arrivals.html.twig', $this->buildEmployeeArrivalsData($entityManager));
+    }
+
+    #[Route('/arrivals/{id}/send-access', name: 'employee_reservation_send_access', methods: ['POST'])]
+    public function sendArrivalAccess(
+        ApartmentReservation $reservation,
+        EntityManagerInterface $entityManager,
+        ApartmentReservationMessenger $reservationMessenger
+    ): JsonResponse {
+        $this->denyAccessUnlessGrantedToReservation($reservation);
+
+        if ($reservation->hasCompletedCheckin()) {
+            return new JsonResponse(['success' => false, 'message' => 'Le check-in de cette arrivée est déjà finalisé.'], 422);
+        }
+
+        try {
+            $whatsAppUrl = $reservationMessenger->buildWhatsAppUrl(
+                $reservation,
+                $this->generateUrl('app_home', [], UrlGeneratorInterface::ABSOLUTE_URL)
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        $reservation
+            ->setAccessMessageSentAt(new \DateTimeImmutable())
+            ->incrementAccessMessageSentCount();
+
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_arrivals_content.html.twig', $this->buildEmployeeArrivalsData($entityManager)),
+            'redirect' => $whatsAppUrl,
+            'message' => $reservation->getAccessMessageSentCount() > 1 ? 'Message WhatsApp renvoyé.' : 'Message WhatsApp prêt à être envoyé.',
         ]);
     }
 
@@ -534,6 +568,16 @@ class EmployeeController extends AbstractController
         }
     }
 
+    private function denyAccessUnlessGrantedToReservation(ApartmentReservation $reservation): void
+    {
+        $apartment = $reservation->getApartment();
+        if (!$apartment instanceof Apartment) {
+            throw $this->createNotFoundException('Appartement introuvable.');
+        }
+
+        $this->denyAccessUnlessGrantedToApartment($apartment);
+    }
+
     private function denyAccessUnlessGrantedToAnomalyWorkflow(Anomaly $anomaly): void
     {
         $user = $this->getUser();
@@ -809,6 +853,17 @@ class EmployeeController extends AbstractController
             ->addOrderBy('reservation.id', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @return array{arrivals: list<ApartmentReservation>, todayDate: \DateTimeImmutable}
+     */
+    private function buildEmployeeArrivalsData(EntityManagerInterface $entityManager): array
+    {
+        return [
+            'arrivals' => $this->findAssignedArrivals($entityManager),
+            'todayDate' => new \DateTimeImmutable('today'),
+        ];
     }
 
     /**

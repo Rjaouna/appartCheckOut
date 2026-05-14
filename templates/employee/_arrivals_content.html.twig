@@ -1,0 +1,122 @@
+<div id="employee-arrivals-root">
+    <section class="page-head employee-page-head">
+        <div>
+            <h1>Mes arrivées locataires</h1>
+            <p>{{ arrivals|length }} arrivée{{ arrivals|length > 1 ? 's' : '' }} à suivre, avec les actions utiles pour le terrain.</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button app-back-button full-width" href="{{ path('employee_dashboard') }}">Retour</a>
+        </div>
+    </section>
+
+    <section class="employee-arrival-stack">
+        {% for reservation in arrivals %}
+            {% set apartment = reservation.apartment %}
+            {% set isToday = reservation.isArrivalToday(todayDate) %}
+            {% set isFuture = reservation.isArrivalInFuture(todayDate) %}
+            {% set isActiveStay = reservation.arrivalDate and reservation.departureDate and reservation.arrivalDate <= todayDate and reservation.departureDate >= todayDate %}
+            {% set canSendAccess = reservation.guestWhatsappNumber is not empty %}
+            {% set whatsappNumber = reservation.guestWhatsappNumber|replace({'+': '', ' ': '', '-': '', '.': '', '(': '', ')': ''}) %}
+            {% set accessCode = apartment.keyBoxCode ?: apartment.buildingAccessCode %}
+
+            <article class="employee-arrival-pro-card {{ isToday ? 'is-today' : '' }} {{ isFuture ? 'is-future' : '' }}">
+                <div class="employee-arrival-pro-top">
+                    <div>
+                        <span class="employee-home-kicker">{{ isToday ? 'Arrivée aujourd’hui' : (isFuture ? 'Arrivée à venir' : 'Séjour en cours') }}</span>
+                        <h2>{{ reservation.guestName }}</h2>
+                        <p>{{ apartment.name }} · {{ reservation.stayDateLabel }}</p>
+                    </div>
+                    <span class="status-badge {{ reservation.hasSentAccessMessage ? 'is-success' : (isToday ? 'is-warning' : 'is-soft') }}">
+                        {% if reservation.hasSentAccessMessage %}
+                            Accès envoyés
+                        {% elseif isToday %}
+                            À envoyer
+                        {% elseif isFuture %}
+                            À préparer
+                        {% else %}
+                            À vérifier
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="employee-arrival-info-grid">
+                    <div class="employee-arrival-info-card employee-arrival-info-card-wide">
+                        <span>Adresse</span>
+                        {% if apartment.wazeLink %}
+                            <a href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">{{ apartment.fullAddress }}</a>
+                        {% else %}
+                            <strong>{{ apartment.fullAddress }}</strong>
+                        {% endif %}
+                    </div>
+                    <div class="employee-arrival-info-card">
+                        <span>Arrivée</span>
+                        <strong>{{ reservation.arrivalDate ? reservation.arrivalDate|date('d/m/Y') : '-' }}</strong>
+                    </div>
+                    <div class="employee-arrival-info-card">
+                        <span>Départ</span>
+                        <strong>{{ reservation.departureDate ? reservation.departureDate|date('d/m/Y') : '-' }}</strong>
+                    </div>
+                    <div class="employee-arrival-info-card">
+                        <span>Accès logement</span>
+                        <strong>{{ accessCode ?: 'Non renseigné' }}</strong>
+                    </div>
+                    <div class="employee-arrival-info-card">
+                        <span>Message client</span>
+                        <strong>
+                            {% if reservation.hasSentAccessMessage %}
+                                Envoyé {{ reservation.accessMessageSentAt ? reservation.accessMessageSentAt|date('d/m à H:i') : '' }}
+                            {% elseif canSendAccess %}
+                                Prêt à envoyer
+                            {% else %}
+                                Numéro manquant
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="employee-arrival-action-grid">
+                    {% if apartment.wazeLink %}
+                        <a class="employee-arrival-action employee-arrival-action-waze" href="{{ apartment.wazeLink }}" target="_blank" rel="noreferrer">
+                            <span>Y aller avec Waze</span>
+                        </a>
+                    {% endif %}
+
+                    {% if canSendAccess %}
+                        <form
+                            method="post"
+                            action="{{ path('employee_reservation_send_access', {id: reservation.id}) }}"
+                            data-async-form
+                            data-update-target="#employee-arrivals-root"
+                            data-swap-mode="outer"
+                            {% if isFuture %}
+                                data-confirm-reset
+                                data-confirm-title="Envoyer avant l’arrivée"
+                                data-confirm-message="L’arrivée n’est pas prévue aujourd’hui. Veux-tu envoyer les informations maintenant ?"
+                            {% endif %}
+                        >
+                            <button class="{{ reservation.hasSentAccessMessage ? 'secondary-button' : 'primary-button' }} full-width" type="submit">
+                                {{ reservation.hasSentAccessMessage ? 'Renvoyer les accès' : 'Envoyer les accès' }}
+                            </button>
+                        </form>
+
+                        <a class="secondary-button full-width" href="https://wa.me/{{ whatsappNumber }}" target="_blank" rel="noreferrer">
+                            Contacter le locataire
+                        </a>
+                    {% else %}
+                        <button class="secondary-button full-width" type="button" disabled>Numéro WhatsApp manquant</button>
+                    {% endif %}
+
+                    {% if isActiveStay %}
+                        <a class="primary-button full-width" href="{{ path('employee_checkin_form', {id: reservation.id}) }}">Faire le check-in</a>
+                    {% else %}
+                        <button class="secondary-button full-width" type="button" disabled>
+                            Check-in disponible le {{ reservation.arrivalDate ? reservation.arrivalDate|date('d/m/Y') : 'jour d’arrivée' }}
+                        </button>
+                    {% endif %}
+                </div>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucun locataire à suivre pour le moment.</p>
+        {% endfor %}
+    </section>
+</div>
