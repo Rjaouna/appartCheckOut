@@ -183,7 +183,7 @@ function openConfirmationModal(form) {
     }
 
     pendingConfirmationForm = form;
-    titleElement.textContent = form.dataset.confirmTitle || "Confirmer l’action";
+    titleElement.textContent = form.dataset.confirmTitle || "Confirmer l'action";
     bodyElement.textContent = form.dataset.confirmMessage || 'Veux-tu vraiment continuer ?';
 
     showModalElement(modalElement);
@@ -930,7 +930,7 @@ function addCheckinGuestRow(trigger) {
     const incompleteRow = existingRows.find((existingRow) => !isCheckinGuestRowComplete(existingRow));
     if (incompleteRow instanceof HTMLTableRowElement) {
         unlockCheckinGuestRow(incompleteRow);
-        showToast('Remplis le nom, le prénom et le passeport ou CIN avant d’ajouter une nouvelle entrée.', 'error');
+        showToast('Remplis le nom, le prenom et le passeport ou CIN avant d ajouter une nouvelle entree.', 'error');
         return;
     }
 
@@ -959,7 +959,7 @@ function deleteCheckinGuestRow(trigger) {
     }
 
     if (rows.querySelectorAll('tr').length <= 1) {
-        showToast('Garde au moins une entrée voyageur.', 'error');
+        showToast('Garde au moins une entree voyageur.', 'error');
         return;
     }
 
@@ -1507,7 +1507,7 @@ document.addEventListener('submit', (event) => {
     const templateModeOpen = !templateFields.classList.contains('is-collapsed') && !templateFields.hidden;
     if (templateModeOpen && !templateSelect.disabled && templateSelect.value === '') {
         event.preventDefault();
-        showToast('Choisis un appartement modèle à dupliquer.', 'error');
+        showToast('Choisis un appartement modele a dupliquer.', 'error');
     }
 });
 
@@ -1996,7 +1996,7 @@ function openRoomEquipmentQuantityModal(trigger) {
 
     const label = modalElement.querySelector('[data-room-equipment-modal-label]');
     if (label instanceof HTMLElement) {
-        label.textContent = `Combien de ${trigger.dataset.equipmentLabel || 'cet équipement'} veux-tu ajouter ?`;
+        label.textContent = `Combien de ${trigger.dataset.equipmentLabel || 'cet equipement'} veux-tu ajouter ?`;
     }
 
     const quantityInput = modalElement.querySelector('[data-room-equipment-modal-input]');
@@ -2376,7 +2376,7 @@ function ensureConfirmModal() {
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="confirmActionModalLabel">Confirmer l’action</h5>
+                            <h5 class="modal-title" id="confirmActionModalLabel">Confirmer l'action</h5>
                             <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
                         </div>
                         <div class="modal-body" id="confirmActionModalBody">Veux-tu vraiment continuer ?</div>

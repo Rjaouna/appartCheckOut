@@ -114,7 +114,7 @@ class CheckoutManager
     {
         $hasUnchecked = $checkout->getLines()->exists(static fn (int $key, CheckoutLine $line) => $line->getStatus() === null);
         if ($hasUnchecked) {
-            throw new \InvalidArgumentException('Toutes les lignes doivent etre validees avant de terminer le check-out.');
+            throw new \InvalidArgumentException('Toutes les lignes doivent être validées avant de terminer le check-out.');
         }
 
         $checkout

@@ -20,7 +20,7 @@
                         </span>
                         <span class="admin-detail-entry-metric">{{ activeCheckouts|length > 0 ? activeCheckouts|length : 'Nouveau' }}</span>
                     </div>
-                    <strong>Check Out</strong>
+                    <strong>Check-out</strong>
                     <p>Créer, programmer, suivre ou annuler un check-out sur cet appartement.</p>
                 </a>
 
@@ -222,7 +222,7 @@
                                             data-update-target="{{ detailUpdateTarget }}"
                                             data-confirm-reset
                                             data-confirm-title="Annuler le check-out"
-                                            data-confirm-message="Veux-tu vraiment annuler ce check-out "
+                                            data-confirm-message="Veux-tu vraiment annuler ce check-out ?"
                                         >
                                             <input type="hidden" name="section" value="{{ currentSection }}">
                                             <button class="secondary-button danger-button" type="submit">Annuler le check-out</button>
@@ -245,7 +245,7 @@
                             data-target="#admin-checkout-history-list"
                             aria-expanded="false"
                         >
-                            Historique des Check Out
+                            Historique des check-outs
                         </button>
                     </div>
                     <div id="admin-checkout-history-list" class="mini-list admin-history-list is-collapsed" hidden>
@@ -366,7 +366,7 @@
                         <h2>Accès appartement</h2>
                         <p>Prépare les étapes d’arrivée que le locataire verra dans son espace, avec texte et photo si besoin.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à  la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
 
                 <section class="admin-detail-focus-card">
@@ -390,7 +390,7 @@
                                         data-update-target="{{ detailUpdateTarget }}"
                                         data-confirm-reset
                                         data-confirm-title="Supprimer cette étape"
-                                        data-confirm-message="Veux-tu vraiment supprimer cette étape d’accès "
+                                        data-confirm-message="Veux-tu vraiment supprimer cette étape d’accès ?"
                                     >
                                         <input type="hidden" name="section" value="{{ currentSection }}">
                                         <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Supprimer l’étape {{ loop.index }}" title="Supprimer l’étape">
@@ -569,7 +569,7 @@
                     </div>
                     <div class="admin-detail-panel-actions">
                         <button class="primary-button" type="button" data-apartment-reservation-modal-trigger>Réserver ce logement</button>
-                        <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à  la fiche</a>
+                        <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                     </div>
                 </div>
 
@@ -653,7 +653,7 @@
                                                 <strong class="admin-arrival-manager-inline">
                                                     <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: leadManager.id}) }}">{{ leadManager.fullName }}</a>
                                                     {% if leadManager.phoneNumber %}
-                                                        <a class="inline-phone-link" href="tel:{{ leadManager.phoneNumber }}" aria-label="Appeler {{ leadManager.fullName }}">âœ†</a>
+                                                        <a class="inline-phone-link" href="tel:{{ leadManager.phoneNumber }}" aria-label="Appeler {{ leadManager.fullName }}">✆</a>
                                                     {% endif %}
                                                 </strong>
                                                 {% if extraManagers|length > 0 %}
@@ -678,7 +678,7 @@
                                                 <span class="admin-arrival-manager-inline">
                                                     <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
                                                     {% if employee.phoneNumber %}
-                                                        <a class="inline-phone-link" href="tel:{{ employee.phoneNumber }}" aria-label="Appeler {{ employee.fullName }}">âœ†</a>
+                                                        <a class="inline-phone-link" href="tel:{{ employee.phoneNumber }}" aria-label="Appeler {{ employee.fullName }}">✆</a>
                                                     {% endif %}
                                                 </span>
                                             {% endfor %}
@@ -704,7 +704,7 @@
                                     {% if shouldDiscourageSend %}
                                         data-confirm-reset
                                         data-confirm-title="Envoyer avant l’arrivée"
-                                        data-confirm-message="L’arrivée n’est pas prévue aujourd’hui. Veux-tu envoyer les informations quand même "
+                                        data-confirm-message="L’arrivée n’est pas prévue aujourd’hui. Veux-tu envoyer les informations quand même ?"
                                     {% endif %}
                                 >
                                     <input type="hidden" name="context" value="apartment">
@@ -797,7 +797,7 @@
                                         data-update-target="{{ detailUpdateTarget }}"
                                         data-confirm-reset
                                         data-confirm-title="Supprimer la pièce"
-                                        data-confirm-message="Veux-tu vraiment supprimer cette pièce vide "
+                                        data-confirm-message="Veux-tu vraiment supprimer cette pièce vide ?"
                                     >
                                         <input type="hidden" name="section" value="{{ currentSection }}">
                                         <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Supprimer la pièce {{ room.name }}" title="Supprimer la pièce">
@@ -821,7 +821,7 @@
                                         data-update-target="{{ detailUpdateTarget }}"
                                         data-confirm-reset
                                         data-confirm-title="Supprimer l’équipement"
-                                        data-confirm-message="Veux-tu vraiment supprimer cet équipement de la pièce "
+                                        data-confirm-message="Veux-tu vraiment supprimer cet équipement de la pièce ?"
                                     >
                                         <input type="hidden" name="section" value="{{ currentSection }}">
                                         <span>{{ equipment.displayLabel }}</span>
@@ -859,20 +859,20 @@
                                                 {% endif %}
                                             {% endfor %}
                                             {% if availableCatalogCount == 0 %}
-                                                <p class="empty-inline">Tous les equipements du catalogue sont deja ajoutes ici.</p>
+                                                <p class="empty-inline">Tous les équipements du catalogue sont déjà ajoutés ici.</p>
                                             {% endif %}
                                         </div>
                                     </div>
                                     <div class="admin-room-equipment-manual-card">
                                         <label class="admin-room-equipment-manual">
-                                            <span>Ou ajouter un equipement manuel</span>
-                                            <input type="text" name="manualLabel" placeholder="Ex. miroir d appoint">
+                                            <span>Ou ajouter un équipement manuel</span>
+                                            <input type="text" name="manualLabel" placeholder="Ex. miroir d’appoint">
                                         </label>
                                         <label class="admin-room-equipment-quantity">
-                                            <span>Quantite</span>
+                                            <span>Quantité</span>
                                             <input type="number" name="quantity" min="1" value="1">
                                         </label>
-                                        <button class="secondary-button" type="submit">Ajouter cet equipement</button>
+                                        <button class="secondary-button" type="submit">Ajouter cet équipement</button>
                                     </div>
                                 </div>
                             </form>
@@ -882,20 +882,20 @@
                                     <div class="modal-content apartment-name-modal-content room-equipment-modal-content">
                                         <div class="modal-header apartment-name-modal-header">
                                             <div>
-                                                <span class="eyebrow">Equipement</span>
-                                                <h4 class="modal-title" id="{{ equipmentQtyModalId }}-label">Choisir la quantite</h4>
+                                                <span class="eyebrow">Équipement</span>
+                                                <h4 class="modal-title" id="{{ equipmentQtyModalId }}-label">Choisir la quantité</h4>
                                             </div>
                                             <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
                                         </div>
                                         <div class="apartment-name-modal-form room-equipment-modal-form">
-                                            <p class="muted" data-room-equipment-modal-label>Quel nombre veux-tu ajouter </p>
+                                            <p class="muted" data-room-equipment-modal-label>Quelle quantité veux-tu ajouter ?</p>
                                             <label>
-                                                <span>Quantite</span>
+                                                <span>Quantité</span>
                                                 <input type="number" min="1" value="1" data-room-equipment-modal-input>
                                             </label>
                                             <div class="editable-field-actions">
                                                 <button class="secondary-button" type="button" data-modal-close>Annuler</button>
-                                                <button class="primary-button" type="button" data-room-equipment-confirm>Ajouter a la piece</button>
+                                                <button class="primary-button" type="button" data-room-equipment-confirm>Ajouter à la pièce</button>
                                             </div>
                                         </div>
                                     </div>
@@ -917,7 +917,7 @@
                     </div>
                     <div class="admin-detail-panel-actions">
                         <a class="secondary-button" href="{{ path('admin_apartment_anomalies', {id: apartment.id}) }}">Ouvrir la vue anomalies</a>
-                        <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à  la fiche</a>
+                        <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                     </div>
                 </div>
 
@@ -942,7 +942,7 @@
                         <h2>Statut et archivage</h2>
                         <p>Utilise cette zone seulement pour changer le statut global de l’appartement ou le retirer du circuit.</p>
                     </div>
-                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à  la fiche</a>
+                    <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
                 <div class="panel-head">
                     <h3>Statut actuel</h3>
@@ -971,7 +971,7 @@
                             data-async-form
                             data-confirm-reset
                             data-confirm-title="Supprimer l’appartement"
-                            data-confirm-message="Veux-tu vraiment supprimer cet appartement Cette action est définitive."
+                            data-confirm-message="Veux-tu vraiment supprimer cet appartement ? Cette action est définitive."
                         >
                             <input type="hidden" name="section" value="{{ currentSection }}">
                             <button class="secondary-button danger-button" type="submit">Supprimer</button>

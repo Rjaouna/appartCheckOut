@@ -19,20 +19,20 @@ class AppFixtures extends Fixture
      * @var array<string, array<int, string>>
      */
     private array $catalogMap = [
-        'kitchen' => ['Frigo', 'Congelateur', 'Four', 'Micro-ondes', 'Plaque induction', 'Plaque gaz', 'Hotte', 'Lave-vaisselle', 'Evier', 'Robinetterie', 'Cafetiere', 'Machine Nespresso', 'Bouilloire', 'Grille-pain', 'Mixeur', 'Poubelle', 'Sacs poubelle', 'Assiettes plates', 'Assiettes creuses', 'Bols', 'Verres a eau', 'Verres a vin', 'Tasses', 'Mugs', 'Couverts complets', 'Couteaux de cuisine', 'Casseroles', 'Poeles', 'Plats four', 'Passoire', 'Saladier', 'Ouvre-bouteille', 'Ouvre-boite', 'Torchons', 'Table', 'Chaises', 'Vaisselle'],
+        'kitchen' => ['Frigo', 'Congélateur', 'Four', 'Micro-ondes', 'Plaque induction', 'Plaque gaz', 'Hotte', 'Lave-vaisselle', 'Évier', 'Robinetterie', 'Cafetière', 'Machine Nespresso', 'Bouilloire', 'Grille-pain', 'Mixeur', 'Poubelle', 'Sacs poubelle', 'Assiettes plates', 'Assiettes creuses', 'Bols', 'Verres à eau', 'Verres à vin', 'Tasses', 'Mugs', 'Couverts complets', 'Couteaux de cuisine', 'Casseroles', 'Poêles', 'Plats four', 'Passoire', 'Saladier', 'Ouvre-bouteille', 'Ouvre-boîte', 'Torchons', 'Table', 'Chaises', 'Vaisselle'],
         'living_room' => ['Canape', 'Fauteuil', 'Table basse', 'Meuble TV', 'Television', 'Telecommande TV', 'Telecommande climatisation', 'Box internet', 'Routeur wifi', 'Rideaux', 'Voilages', 'Lampadaire', 'Lampe d appoint', 'Climatisation', 'Chauffage', 'Tapis', 'Coussins'],
-        'bedroom' => ['Lit simple', 'Lit double', 'Tete de lit', 'Matelas', 'Protege matelas', 'Draps', 'Housse de couette', 'Couette', 'Couvertures', 'Oreillers', 'Taies d oreiller', 'Table de chevet', 'Lampe de chevet', 'Armoire', 'Penderie', 'Cintres', 'Commode', 'Miroir', 'Rideaux occultants', 'Volets', 'Climatiseur', 'Radiateur'],
-        'bathroom' => ['Lavabo', 'Miroir', 'Eclairage miroir', 'Douche', 'Paroi de douche', 'Pommeau de douche', 'Robinetterie', 'Tapis de bain', 'Serviettes', 'Porte-serviettes', 'Seche-cheveux', 'Distributeur de savon', 'Poubelle', 'WC', 'Chasse d eau', 'Brosse WC', 'Papier toilette'],
+        'bedroom' => ['Lit simple', 'Lit double', 'Tête de lit', 'Matelas', 'Protège-matelas', 'Draps', 'Housse de couette', 'Couette', 'Couvertures', 'Oreillers', 'Taies d’oreiller', 'Table de chevet', 'Lampe de chevet', 'Armoire', 'Penderie', 'Cintres', 'Commode', 'Miroir', 'Rideaux occultants', 'Volets', 'Climatiseur', 'Radiateur'],
+        'bathroom' => ['Lavabo', 'Miroir', 'Éclairage miroir', 'Douche', 'Paroi de douche', 'Pommeau de douche', 'Robinetterie', 'Tapis de bain', 'Serviettes', 'Porte-serviettes', 'Sèche-cheveux', 'Distributeur de savon', 'Poubelle', 'WC', 'Chasse d’eau', 'Brosse WC', 'Papier toilette'],
         'shower_room' => ['Douche', 'Paroi de douche', 'Pommeau de douche', 'Robinetterie', 'Serviettes', 'Distributeur de savon', 'Poubelle', 'Miroir'],
-        'toilet' => ['Cuvette WC', 'Chasse d eau', 'Porte-papier', 'Brosse WC', 'Poubelle', 'Papier toilette'],
-        'terrace' => ['Table exterieure', 'Chaises exterieures', 'Fauteuil exterieur', 'Coussins exterieurs', 'Rambarde', 'Eclairage exterieur', 'Store', 'Cendrier', 'Sechoir'],
-        'balcony' => ['Table exterieure', 'Chaises exterieures', 'Rambarde', 'Eclairage exterieur', 'Cendrier'],
-        'laundry' => ['Lave-linge', 'Seche-linge', 'Panier linge', 'Etageres', 'Aspirateur', 'Balai', 'Serpillere', 'Seau', 'Produits menagers', 'Planche a repasser', 'Fer a repasser'],
-        'entrance' => ['Porte entree', 'Interphone', 'Tapis entree', 'Porte manteaux', 'Meuble rangement', 'Boite a cles interne'],
-        'hallway' => ['Eclairage couloir', 'Miroir', 'Console', 'Tapis couloir'],
-        'storage' => ['Etageres', 'Kit menage', 'Stock linge', 'Boite outils'],
+        'toilet' => ['Cuvette WC', 'Chasse d’eau', 'Porte-papier', 'Brosse WC', 'Poubelle', 'Papier toilette'],
+        'terrace' => ['Table extérieure', 'Chaises extérieures', 'Fauteuil extérieur', 'Coussins extérieurs', 'Rambarde', 'Éclairage extérieur', 'Store', 'Cendrier', 'Séchoir'],
+        'balcony' => ['Table extérieure', 'Chaises extérieures', 'Rambarde', 'Éclairage extérieur', 'Cendrier'],
+        'laundry' => ['Lave-linge', 'Sèche-linge', 'Panier linge', 'Étagères', 'Aspirateur', 'Balai', 'Serpillère', 'Seau', 'Produits ménagers', 'Planche à repasser', 'Fer à repasser'],
+        'entrance' => ['Porte entrée', 'Interphone', 'Tapis entrée', 'Porte-manteaux', 'Meuble rangement', 'Boîte à clés interne'],
+        'hallway' => ['Éclairage couloir', 'Miroir', 'Console', 'Tapis couloir'],
+        'storage' => ['Étagères', 'Kit ménage', 'Stock linge', 'Boîte à outils'],
         'dining_room' => ['Table a manger', 'Chaises salle a manger', 'Buffet', 'Suspension'],
-        'other' => ['Equipement complementaire', 'Prise electrique', 'Eclairage', 'Decor'],
+        'other' => ['Équipement complémentaire', 'Prise électrique', 'Éclairage', 'Décor'],
     ];
 
     public function __construct(
@@ -77,8 +77,8 @@ class AppFixtures extends Fixture
             ->setGoogleMapsLink('https://maps.google.com/?q=24%20avenue%20Gabrielle%20Techer%20Marrakech')
             ->setBuildingAccessCode('4346')
             ->setKeyBoxCode('4627')
-            ->setEntryInstructions('Acces principal par l entree immeuble. Code porte et boite disponibles dans la fiche.')
-            ->setConditionStatus('Bon etat')
+            ->setEntryInstructions('Accès principal par l’entrée de l’immeuble. Code porte et boîte disponibles dans la fiche.')
+            ->setConditionStatus('Bon état')
             ->setBedroomCount(2)
             ->setSleepsCount(0)
             ->setOwnerName('Nathalie Le Andre')
@@ -97,8 +97,8 @@ class AppFixtures extends Fixture
         $rooms = [
             [
                 'type' => RoomType::Entrance,
-                'name' => 'Entree',
-                'equipments' => ['Porte entree', 'Interphone', 'Tapis entree'],
+                'name' => 'Entrée',
+                'equipments' => ['Porte entrée', 'Interphone', 'Tapis entrée'],
             ],
             [
                 'type' => RoomType::LivingRoom,

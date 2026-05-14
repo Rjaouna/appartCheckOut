@@ -10,12 +10,12 @@ class ApartmentReservationMessenger
     {
         $rawValue = trim((string) $value);
         if ($rawValue === '') {
-            throw new \InvalidArgumentException('Le numero WhatsApp est obligatoire.');
+            throw new \InvalidArgumentException('Le numéro WhatsApp est obligatoire.');
         }
 
         $digits = preg_replace('/\D+/', '', $rawValue) ?? '';
         if ($digits === '') {
-            throw new \InvalidArgumentException('Le numero WhatsApp est obligatoire.');
+            throw new \InvalidArgumentException('Le numéro WhatsApp est obligatoire.');
         }
 
         if (str_starts_with($rawValue, '+')) {
@@ -23,11 +23,11 @@ class ApartmentReservationMessenger
         } elseif (str_starts_with($rawValue, '00')) {
             $normalized = '+' . substr($digits, 2);
         } else {
-            throw new \InvalidArgumentException('Saisissez le numero au format international, par exemple +33 6 00 00 00 00.');
+            throw new \InvalidArgumentException('Saisissez le numéro au format international, par exemple +33 6 00 00 00 00.');
         }
 
         if (preg_match('/^\+[1-9]\d{7,14}$/', $normalized) !== 1) {
-            throw new \InvalidArgumentException('Saisissez le numero au format international, par exemple +33 6 00 00 00 00.');
+            throw new \InvalidArgumentException('Saisissez le numéro au format international, par exemple +33 6 00 00 00 00.');
         }
 
         return $normalized;
@@ -42,16 +42,16 @@ class ApartmentReservationMessenger
 
         $accessLines = [];
         if ($apartment->getKeyBoxCode()) {
-            $accessLines[] = 'Code acces / boitier : ' . $apartment->getKeyBoxCode();
+            $accessLines[] = 'Code d’accès / boîtier : ' . $apartment->getKeyBoxCode();
         }
 
         $message = trim(sprintf(
-            "Bonjour %s,\n\nVoici les informations pour votre arrivee a %s.\n\nAdresse : %s\nLien du site : %s\n%s\n\nMerci de garder ces informations confidentielles.",
+            "Bonjour %s,\n\nVoici les informations pour votre arrivée à %s.\n\nAdresse : %s\nLien du site : %s\n%s\n\nMerci de garder ces informations confidentielles.",
             $reservation->getGuestName(),
             $apartment->getName(),
             $apartment->getFullAddress(),
             $siteUrl,
-            $accessLines !== [] ? implode("\n", $accessLines) : 'Code d acces : a confirmer'
+            $accessLines !== [] ? implode("\n", $accessLines) : 'Code d’accès : à confirmer'
         ));
 
         return 'https://wa.me/' . ltrim($reservation->getGuestWhatsappNumber(), '+') . '?text=' . rawurlencode($message);

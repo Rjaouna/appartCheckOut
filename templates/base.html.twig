@@ -145,6 +145,13 @@
                                 <span class="action-menu-tile-label">Arrivées</span>
                                 <span class="action-menu-tile-caption">Réservations et envois WhatsApp</span>
                             </a>
+                            <a class="action-menu-tile" href="{{ path('admin_checkins') }}">
+                                <span class="action-menu-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Zm2 4h6V5H9v2Zm-1 4h8V9H8v2Zm0 4h8v-2H8v2Zm0 4h5v-2H8v2Z" fill="currentColor"/></svg>
+                                </span>
+                                <span class="action-menu-tile-label">Check-in</span>
+                                <span class="action-menu-tile-caption">Fiches entrée et historique police</span>
+                            </a>
                             <a class="action-menu-tile" href="{{ path('admin_manuals') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h8.5A2.5 2.5 0 0 1 18 6.5v11A2.5 2.5 0 0 1 15.5 20H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m10 9 5 3-5 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -202,6 +209,15 @@
                                 </span>
                                 <span class="action-menu-tile-label">Locataires</span>
                                 <span class="action-menu-tile-caption">Arrivées et état d’avancement</span>
+                            </a>
+                        {% endif %}
+                        {% if is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_ADMIN') %}
+                            <a class="action-menu-tile" href="{{ path('employee_checkins') }}">
+                                <span class="action-menu-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Zm2 4h6V5H9v2Zm-1 4h8V9H8v2Zm0 4h8v-2H8v2Zm0 4h5v-2H8v2Z" fill="currentColor"/></svg>
+                                </span>
+                                <span class="action-menu-tile-label">Check-in</span>
+                                <span class="action-menu-tile-caption">Fiches entrée du jour</span>
                             </a>
                         {% endif %}
                         <button
@@ -301,7 +317,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="confirmActionModalLabel">Confirmer l'action</h5>
+                        <h5 class="modal-title" id="confirmActionModalLabel">Confirmer l’action</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                     </div>
                     <div class="modal-body" id="confirmActionModalBody">

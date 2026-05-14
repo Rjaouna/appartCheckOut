@@ -27,15 +27,15 @@
                     <strong>{{ anomaly.apartment.name }}</strong>
                 </div>
                 <div>
-                    <span class="employee-anomaly-label">Piece</span>
+                    <span class="employee-anomaly-label">Pièce</span>
                     <strong>{{ anomaly.room.name }}</strong>
                 </div>
                 <div>
-                    <span class="employee-anomaly-label">Equipement</span>
+                    <span class="employee-anomaly-label">Équipement</span>
                     <strong>{{ anomaly.roomEquipment.catalogEquipment ? anomaly.roomEquipment.catalogEquipment.name : anomaly.roomEquipment.displayLabel }}</strong>
                 </div>
                 <div>
-                    <span class="employee-anomaly-label">Declaree le</span>
+                    <span class="employee-anomaly-label">Déclarée le</span>
                     <strong>{{ anomaly.createdAt|date('d/m/Y H:i') }}</strong>
                 </div>
             </div>

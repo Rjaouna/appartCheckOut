@@ -200,7 +200,7 @@ class HomeController extends AbstractController
     private function buildApartmentWhatsAppShareUrl(Apartment $apartment): string
     {
         $message = sprintf(
-            "Voici l'adresse de mon appartement : %s.\nMerci de garder les codes d'acces confidentiels.",
+            "Voici l’adresse de mon appartement : %s.\nMerci de garder les codes d’accès confidentiels.",
             $apartment->getFullAddress()
         );
 
@@ -246,7 +246,7 @@ class HomeController extends AbstractController
             }
 
             $message = sprintf(
-                "Bonjour %s, je suis le locataire de l'appartement %s au %s. Je souhaiterais faire une demande pour le service : %s.",
+                "Bonjour %s, je suis le locataire de l’appartement %s au %s. Je souhaiterais faire une demande pour le service : %s.",
                 $employee->getFullName(),
                 $apartment->getName(),
                 $apartment->getFullAddress(),
@@ -256,7 +256,7 @@ class HomeController extends AbstractController
             $extras[] = [
                 'label' => $serviceOffer->getLabel(),
                 'whatsAppUrl' => 'https://wa.me/' . $phoneNumber . '?text=' . rawurlencode($message),
-                'title' => sprintf('Faire une demande par WhatsApp a %s', $employee->getFullName()),
+                'title' => sprintf('Faire une demande par WhatsApp à %s', $employee->getFullName()),
             ];
         }
 

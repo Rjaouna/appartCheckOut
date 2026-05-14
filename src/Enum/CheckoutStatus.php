@@ -15,12 +15,12 @@ enum CheckoutStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Todo => 'A faire',
+            self::Todo => 'À faire',
             self::InProgress => 'En cours',
             self::Paused => 'En pause',
-            self::PendingValidation => 'A valider',
-            self::Completed => 'Termine',
-            self::Cancelled => 'Annule',
+            self::PendingValidation => 'À valider',
+            self::Completed => 'Terminé',
+            self::Cancelled => 'Annulé',
             self::Blocked => 'Bloque',
         };
     }

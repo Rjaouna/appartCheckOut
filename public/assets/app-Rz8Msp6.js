@@ -22,8 +22,6 @@ setupInstallPrompt();
 syncPanelTriggers(document);
 initializeRichTextEditors(document);
 syncApartmentTemplateSelectState();
-syncAllCheckinGuestRows(document);
-initializeCheckinSignaturePads(document);
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -32,8 +30,6 @@ if (document.readyState === 'loading') {
         syncPanelTriggers(document);
         initializeRichTextEditors(document);
         syncApartmentTemplateSelectState();
-        syncAllCheckinGuestRows(document);
-        initializeCheckinSignaturePads(document);
     });
 } else {
     startDashboardPolling();
@@ -41,8 +37,6 @@ if (document.readyState === 'loading') {
     syncPanelTriggers(document);
     initializeRichTextEditors(document);
     syncApartmentTemplateSelectState();
-    syncAllCheckinGuestRows(document);
-    initializeCheckinSignaturePads(document);
 }
 
 document.addEventListener('submit', async (event) => {
@@ -183,7 +177,7 @@ function openConfirmationModal(form) {
     }
 
     pendingConfirmationForm = form;
-    titleElement.textContent = form.dataset.confirmTitle || "Confirmer l’action";
+    titleElement.textContent = form.dataset.confirmTitle || "Confirmer l'action";
     bodyElement.textContent = form.dataset.confirmMessage || 'Veux-tu vraiment continuer ?';
 
     showModalElement(modalElement);
@@ -821,100 +815,10 @@ function scrollToTop() {
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-function getCheckinGuestRows(trigger) {
+function addCheckinGuestRow(trigger) {
     const section = trigger.closest('.checkin-form-section');
     const manager = section?.querySelector('[data-checkin-guest-manager]');
     const rows = manager?.querySelector('[data-checkin-guest-rows]');
-
-    return rows instanceof HTMLTableSectionElement ? rows : null;
-}
-
-function getCheckinGuestRowInputs(row) {
-    const nameInput = row.querySelector('input[name="guestNames[]"]');
-    const identityInput = row.querySelector('input[name="guestIdentityNumbers[]"]');
-
-    return {
-        nameInput: nameInput instanceof HTMLInputElement ? nameInput : null,
-        identityInput: identityInput instanceof HTMLInputElement ? identityInput : null,
-    };
-}
-
-function isCheckinGuestRowComplete(row) {
-    const {nameInput, identityInput} = getCheckinGuestRowInputs(row);
-
-    return Boolean(nameInput?.value.trim()) && Boolean(identityInput?.value.trim());
-}
-
-function lockCheckinGuestRow(row) {
-    const {nameInput, identityInput} = getCheckinGuestRowInputs(row);
-    const editButton = row.querySelector('[data-checkin-edit-guest]');
-
-    row.classList.add('is-locked');
-    [nameInput, identityInput].forEach((input) => {
-        if (input instanceof HTMLInputElement) {
-            input.readOnly = true;
-        }
-    });
-
-    if (editButton instanceof HTMLButtonElement) {
-        editButton.hidden = false;
-    }
-}
-
-function unlockCheckinGuestRow(row) {
-    const {nameInput, identityInput} = getCheckinGuestRowInputs(row);
-    const editButton = row.querySelector('[data-checkin-edit-guest]');
-
-    row.classList.remove('is-locked');
-    [nameInput, identityInput].forEach((input) => {
-        if (input instanceof HTMLInputElement) {
-            input.readOnly = false;
-        }
-    });
-
-    if (editButton instanceof HTMLButtonElement) {
-        editButton.hidden = true;
-    }
-
-    if (nameInput instanceof HTMLInputElement) {
-        nameInput.focus();
-    }
-}
-
-function syncCheckinGuestRows(rows) {
-    if (!(rows instanceof HTMLTableSectionElement)) {
-        return;
-    }
-
-    const rowList = Array.from(rows.querySelectorAll('tr'));
-    const guestCountInput = document.querySelector('[data-checkin-guest-count]');
-    if (guestCountInput instanceof HTMLInputElement) {
-        guestCountInput.value = String(rowList.length);
-    }
-
-    rowList.forEach((row) => {
-        const deleteButton = row.querySelector('[data-checkin-delete-guest]');
-        if (deleteButton instanceof HTMLButtonElement) {
-            deleteButton.hidden = rowList.length <= 1;
-        }
-    });
-}
-
-function syncAllCheckinGuestRows(scope = document) {
-    if (!scope || typeof scope.querySelectorAll !== 'function') {
-        return;
-    }
-
-    scope.querySelectorAll('[data-checkin-guest-rows]').forEach((rows) => {
-        if (rows instanceof HTMLTableSectionElement) {
-            syncCheckinGuestRows(rows);
-        }
-    });
-}
-
-function addCheckinGuestRow(trigger) {
-    const rows = getCheckinGuestRows(trigger);
-    const manager = rows?.closest('[data-checkin-guest-manager]');
     const template = manager?.querySelector('[data-checkin-guest-row-template]');
 
     if (!(rows instanceof HTMLTableSectionElement) || !(template instanceof HTMLTemplateElement)) {
@@ -926,139 +830,22 @@ function addCheckinGuestRow(trigger) {
         return;
     }
 
-    const existingRows = Array.from(rows.querySelectorAll('tr'));
-    const incompleteRow = existingRows.find((existingRow) => !isCheckinGuestRowComplete(existingRow));
-    if (incompleteRow instanceof HTMLTableRowElement) {
-        unlockCheckinGuestRow(incompleteRow);
-        showToast('Remplis le nom, le prénom et le passeport ou CIN avant d’ajouter une nouvelle entrée.', 'error');
-        return;
-    }
-
-    existingRows.forEach(lockCheckinGuestRow);
-
     const row = template.content.firstElementChild?.cloneNode(true);
     if (!(row instanceof HTMLTableRowElement)) {
         return;
     }
 
     rows.appendChild(row);
-    syncCheckinGuestRows(rows);
+
+    const guestCountInput = document.querySelector('[data-checkin-guest-count]');
+    if (guestCountInput instanceof HTMLInputElement) {
+        guestCountInput.value = String(rows.querySelectorAll('tr').length);
+    }
 
     const firstInput = row.querySelector('input');
     if (firstInput instanceof HTMLInputElement) {
         firstInput.focus();
     }
-}
-
-function deleteCheckinGuestRow(trigger) {
-    const row = trigger.closest('tr');
-    const rows = row?.parentElement;
-
-    if (!(row instanceof HTMLTableRowElement) || !(rows instanceof HTMLTableSectionElement)) {
-        return;
-    }
-
-    if (rows.querySelectorAll('tr').length <= 1) {
-        showToast('Garde au moins une entrée voyageur.', 'error');
-        return;
-    }
-
-    row.remove();
-    syncCheckinGuestRows(rows);
-}
-
-function initializeCheckinSignaturePads(scope = document) {
-    if (!scope || typeof scope.querySelectorAll !== 'function') {
-        return;
-    }
-
-    scope.querySelectorAll('[data-checkin-signature-pad]').forEach((pad) => {
-        if (!(pad instanceof HTMLElement) || pad.dataset.signatureReady === 'true') {
-            return;
-        }
-
-        const canvas = pad.querySelector('canvas');
-        const input = pad.querySelector('[data-checkin-signature-input]');
-        if (!(canvas instanceof HTMLCanvasElement) || !(input instanceof HTMLInputElement)) {
-            return;
-        }
-
-        pad.dataset.signatureReady = 'true';
-        const context = canvas.getContext('2d');
-        if (!context) {
-            return;
-        }
-
-        let drawing = false;
-        let hasSignature = false;
-
-        const resizeCanvas = () => {
-            const rectangle = canvas.getBoundingClientRect();
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            const width = Math.max(rectangle.width || 320, 320);
-            const height = Math.max(rectangle.height || 150, 150);
-
-            canvas.width = Math.round(width * ratio);
-            canvas.height = Math.round(height * ratio);
-            context.setTransform(ratio, 0, 0, ratio, 0, 0);
-            context.lineWidth = 2.4;
-            context.lineCap = 'round';
-            context.lineJoin = 'round';
-            context.strokeStyle = '#222222';
-        };
-
-        const positionFromEvent = (event) => {
-            const rectangle = canvas.getBoundingClientRect();
-
-            return {
-                x: event.clientX - rectangle.left,
-                y: event.clientY - rectangle.top,
-            };
-        };
-
-        const updateSignatureInput = () => {
-            input.value = hasSignature ? canvas.toDataURL('image/png') : '';
-        };
-
-        const startDrawing = (event) => {
-            event.preventDefault();
-            drawing = true;
-            hasSignature = true;
-            const position = positionFromEvent(event);
-            context.beginPath();
-            context.moveTo(position.x, position.y);
-            canvas.setPointerCapture?.(event.pointerId);
-        };
-
-        const draw = (event) => {
-            if (!drawing) {
-                return;
-            }
-
-            event.preventDefault();
-            const position = positionFromEvent(event);
-            context.lineTo(position.x, position.y);
-            context.stroke();
-            updateSignatureInput();
-        };
-
-        const stopDrawing = (event) => {
-            if (!drawing) {
-                return;
-            }
-
-            drawing = false;
-            canvas.releasePointerCapture?.(event.pointerId);
-            updateSignatureInput();
-        };
-
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        canvas.addEventListener('pointerdown', startDrawing);
-        canvas.addEventListener('pointermove', draw);
-        canvas.addEventListener('pointerup', stopDrawing);
-        canvas.addEventListener('pointercancel', stopDrawing);
-    });
 }
 
 document.addEventListener('click', (event) => {
@@ -1074,36 +861,6 @@ document.addEventListener('click', (event) => {
     const addCheckinGuestTrigger = event.target instanceof Element ? event.target.closest('[data-checkin-add-guest]') : null;
     if (addCheckinGuestTrigger instanceof HTMLButtonElement) {
         addCheckinGuestRow(addCheckinGuestTrigger);
-        return;
-    }
-
-    const editCheckinGuestTrigger = event.target instanceof Element ? event.target.closest('[data-checkin-edit-guest]') : null;
-    if (editCheckinGuestTrigger instanceof HTMLButtonElement) {
-        const row = editCheckinGuestTrigger.closest('tr');
-        if (row instanceof HTMLTableRowElement) {
-            unlockCheckinGuestRow(row);
-        }
-        return;
-    }
-
-    const deleteCheckinGuestTrigger = event.target instanceof Element ? event.target.closest('[data-checkin-delete-guest]') : null;
-    if (deleteCheckinGuestTrigger instanceof HTMLButtonElement) {
-        deleteCheckinGuestRow(deleteCheckinGuestTrigger);
-        return;
-    }
-
-    const clearSignatureTrigger = event.target instanceof Element ? event.target.closest('[data-checkin-signature-clear]') : null;
-    if (clearSignatureTrigger instanceof HTMLButtonElement) {
-        const pad = clearSignatureTrigger.closest('[data-checkin-signature-pad]');
-        const canvas = pad?.querySelector('canvas');
-        const input = pad?.querySelector('[data-checkin-signature-input]');
-        const context = canvas instanceof HTMLCanvasElement ? canvas.getContext('2d') : null;
-
-        if (canvas instanceof HTMLCanvasElement && input instanceof HTMLInputElement && context) {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            input.value = '';
-        }
-
         return;
     }
 
@@ -1507,7 +1264,7 @@ document.addEventListener('submit', (event) => {
     const templateModeOpen = !templateFields.classList.contains('is-collapsed') && !templateFields.hidden;
     if (templateModeOpen && !templateSelect.disabled && templateSelect.value === '') {
         event.preventDefault();
-        showToast('Choisis un appartement modèle à dupliquer.', 'error');
+        showToast('Choisis un appartement modele a dupliquer.', 'error');
     }
 });
 
@@ -1996,7 +1753,7 @@ function openRoomEquipmentQuantityModal(trigger) {
 
     const label = modalElement.querySelector('[data-room-equipment-modal-label]');
     if (label instanceof HTMLElement) {
-        label.textContent = `Combien de ${trigger.dataset.equipmentLabel || 'cet équipement'} veux-tu ajouter ?`;
+        label.textContent = `Combien de ${trigger.dataset.equipmentLabel || 'cet equipement'} veux-tu ajouter ?`;
     }
 
     const quantityInput = modalElement.querySelector('[data-room-equipment-modal-input]');
@@ -2376,7 +2133,7 @@ function ensureConfirmModal() {
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="confirmActionModalLabel">Confirmer l’action</h5>
+                            <h5 class="modal-title" id="confirmActionModalLabel">Confirmer l'action</h5>
                             <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
                         </div>
                         <div class="modal-body" id="confirmActionModalBody">Veux-tu vraiment continuer ?</div>

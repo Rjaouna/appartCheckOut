@@ -59,7 +59,7 @@ class Apartment
     private string $entryInstructions = '';
 
     #[ORM\Column(length: 120)]
-    private string $conditionStatus = 'Bon etat';
+    private string $conditionStatus = 'Bon état';
 
     #[ORM\Column]
     private int $bedroomCount = 0;

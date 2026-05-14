@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Check-in{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Réservations</span>
+            <h1>Check-in</h1>
+            <p>{{ reservations|length }} fiche{{ reservations|length > 1 ? 's' : '' }} à suivre depuis les réservations actives.</p>
+        </div>
+        <div class="head-actions">
+            {% if isAdminView and historyRoute %}
+                <a class="secondary-button" href="{{ path(historyRoute) }}">Historique des check-ins</a>
+            {% endif %}
+            <a class="secondary-button app-back-button" href="{{ path(dashboardRoute) }}">Retour</a>
+        </div>
+    </section>
+
+    <section class="checkin-info-strip">
+        <div>
+            <strong>Fonctionnement</strong>
+            <p>Les check-ins viennent automatiquement des réservations. Quand la fiche est enregistrée, elle sort de cette liste et passe dans l’historique admin.</p>
+        </div>
+        <span class="status-badge is-warning">À finaliser aujourd’hui</span>
+    </section>
+
+    <div class="room-stack checkin-card-stack">
+        {% for reservation in reservations %}
+            {% set apartment = reservation.apartment %}
+            {% set isFuture = reservation.arrivalDate and reservation.arrivalDate > todayDate %}
+            {% set isActive = reservation.arrivalDate and reservation.departureDate and reservation.arrivalDate <= todayDate and reservation.departureDate >= todayDate %}
+            {% set whatsappNumber = reservation.guestWhatsappNumber|replace({'+': '', ' ': '', '-': '', '.': '', '(': '', ')': ''}) %}
+            <article class="room-card checkin-card {{ isActive ? 'is-active' : 'is-disabled' }}">
+                <div class="room-card-head checkin-card-head">
+                    <div>
+                        <h3>{{ reservation.guestName }}</h3>
+                        <p>
+                            <strong>{{ apartment.name }}</strong>
+                            <span>·</span>
+                            <span>{{ reservation.stayDateLabel }}</span>
+                        </p>
+                    </div>
+                    <span class="status-badge {{ isActive ? 'is-warning' : 'is-neutral' }}">
+                        {{ isActive ? 'Non traité' : (isFuture ? 'Pas encore arrivé' : 'Indisponible') }}
+                    </span>
+                </div>
+
+                <div class="checkin-card-grid">
+                    <div class="checkin-mini-fact">
+                        <span>Locataire</span>
+                        <strong>{{ reservation.guestName }}</strong>
+                    </div>
+                    <div class="checkin-mini-fact">
+                        <span>Appartement</span>
+                        <strong>{{ apartment.name }}</strong>
+                    </div>
+                    <div class="checkin-mini-fact">
+                        <span>Contact client</span>
+                        {% if reservation.guestWhatsappNumber %}
+                            <a href="https://wa.me/{{ whatsappNumber }}" target="_blank" rel="noreferrer">{{ reservation.guestWhatsappNumber }}</a>
+                        {% else %}
+                            <strong>Non renseigné</strong>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="checkin-card-actions">
+                    {% if isActive %}
+                        <a class="primary-button" href="{{ path(formRoute, {id: reservation.id}) }}">Finaliser la fiche</a>
+                    {% else %}
+                        <p class="muted">La fiche sera active le jour de l’arrivée. Elle reste visible pour anticiper l’organisation.</p>
+                    {% endif %}
+                </div>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucun check-in en attente. Les nouvelles réservations apparaîtront automatiquement ici.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fiche check-in{% endblock %}
+
+{% block body %}
+    {% set guestName = reservation ? reservation.guestName : checkin.guestName %}
+    {% set apartmentName = apartment ? apartment.name : checkin.apartmentName %}
+    {% set apartmentAddress = apartment ? apartment.fullAddress : checkin.apartmentAddress %}
+
+    <section class="page-head checkin-print-hidden">
+        <div>
+            <span class="eyebrow">Fiche de police</span>
+            <h1>{{ guestName }}</h1>
+            <p>{{ apartmentName }} · {{ checkin.completedAt|date('d/m/Y H:i') }}</p>
+        </div>
+        <div class="head-actions">
+            <button class="secondary-button" type="button" onclick="window.print()">Imprimer</button>
+            {% if not checkin.processed %}
+                <form method="post" action="{{ path('admin_checkin_mark_processed', {id: checkin.id}) }}">
+                    <button class="primary-button" type="submit">Marquer traité</button>
+                </form>
+            {% endif %}
+            <a class="secondary-button app-back-button" href="{{ path('admin_checkin_history') }}">Retour</a>
+        </div>
+    </section>
+
+    <article class="panel checkin-police-sheet">
+        <header class="checkin-police-head">
+            <div>
+                <span class="eyebrow">Fiche d’entrée / check-in</span>
+                <h2>{{ apartmentName }}</h2>
+                <p>{{ apartmentAddress }}</p>
+            </div>
+            <span class="status-badge {{ checkin.processed ? 'is-success' : 'is-warning' }}">
+                {{ checkin.processed ? 'Traité' : 'Non traité' }}
+            </span>
+        </header>
+
+        <section class="checkin-police-grid">
+            <div class="checkin-police-box">
+                <span>Agent d’accueil</span>
+                <strong>{{ checkin.hostAgentName }}</strong>
+            </div>
+            <div class="checkin-police-box">
+                <span>Téléphone agent</span>
+                <strong>{{ checkin.hostAgentPhone ?: 'Non renseigné' }}</strong>
+            </div>
+            <div class="checkin-police-box">
+                <span>Nombre de voyageurs</span>
+                <strong>{{ checkin.guestCount }}</strong>
+            </div>
+            <div class="checkin-police-box">
+                <span>Déjà visité la ville</span>
+                <strong>{{ checkin.visitedMarrakechLabel }}</strong>
+            </div>
+            <div class="checkin-police-box">
+                <span>Date d’entrée</span>
+                <strong>{{ checkin.checkInDate|date('d/m/Y') }}</strong>
+            </div>
+            <div class="checkin-police-box">
+                <span>Date et heure de sortie</span>
+                <strong>{{ checkin.checkOutDate|date('d/m/Y') }} à {{ checkin.checkOutTime }}</strong>
+            </div>
+            <div class="checkin-police-box">
+                <span>Transport retour</span>
+                <strong>{{ checkin.returnTransport ?: 'Non renseigné' }}</strong>
+            </div>
+            <div class="checkin-police-box">
+                <span>Prolongation</span>
+                <strong>{{ checkin.extensionRequested ?: 'Non renseigné' }}</strong>
+            </div>
+        </section>
+
+        <section class="checkin-police-section">
+            <h3>Voyageurs</h3>
+            <div class="checkin-guest-table-wrap">
+                <table class="checkin-guest-table checkin-police-table">
+                    <thead>
+                        <tr>
+                            <th>Nom et prénoms</th>
+                            <th>Numéro passeport / CIN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for guest in checkin.guestIdentities %}
+                            <tr>
+                                <td>{{ guest.name }}</td>
+                                <td>{{ guest.identityNumber }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="checkin-police-section">
+            <h3>Attestations et règlement</h3>
+            <div class="checkin-police-rules">
+                <p>Le locataire atteste qu’aucune personne non déclarée ne sera hébergée dans le logement.</p>
+                <p>Le locataire atteste qu’aucun couple avec double nationalité marocaine/étrangère ne sera reçu sans justificatif légal.</p>
+                <p>Le règlement est accepté : économie d’eau et d’électricité, interdiction de fumer, silence entre 22h et 8h, départ à 12h maximum.</p>
+            </div>
+        </section>
+
+        <footer class="checkin-police-signature">
+            <div>
+                <span>Nom du signataire</span>
+                <strong>{{ checkin.signatureName }}</strong>
+            </div>
+            {% if checkin.signatureData %}
+                <div class="checkin-police-signature-image">
+                    <span>Signature</span>
+                    <img src="{{ checkin.signatureData }}" alt="Signature du locataire">
+                </div>
+            {% endif %}
+            <div>
+                <span>Fiche enregistrée par</span>
+                <strong>{{ checkin.completedBy ? checkin.completedBy.fullName : 'Non renseigné' }}</strong>
+            </div>
+            {% if checkin.processed %}
+                <div>
+                    <span>Traité par</span>
+                    <strong>{{ checkin.processedBy ? checkin.processedBy.fullName : 'Administration' }} · {{ checkin.processedAt|date('d/m/Y H:i') }}</strong>
+                </div>
+            {% endif %}
+        </footer>
+    </article>
+{% endblock %}

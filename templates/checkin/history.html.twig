@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ pageTitle|default('Historique des check-ins') }}{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">{{ pageEyebrow|default('Administration') }}</span>
+            <h1>{{ pageTitle|default('Historique des check-ins') }}</h1>
+            <p>{{ checkins|length }} {{ checkins|length > 1 ? pageDescriptionPlural|default('fiches enregistrées pour la transmission papier.') : pageDescription|default('fiche enregistrée pour la transmission papier.') }}</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button" href="{{ path(activeListRoute|default('admin_checkins')) }}">{{ activeListLabel|default('Check-ins en cours') }}</a>
+            <a class="secondary-button app-back-button" href="{{ path(backRoute|default('admin_dashboard')) }}">Retour</a>
+        </div>
+    </section>
+
+    <div class="room-stack checkin-card-stack">
+        {% for checkin in checkins %}
+            {% set reservation = checkin.reservation %}
+            {% set apartment = reservation ? reservation.apartment : null %}
+            {% set guestName = reservation ? reservation.guestName : checkin.guestName %}
+            {% set apartmentName = apartment ? apartment.name : checkin.apartmentName %}
+            <article class="room-card checkin-card {{ checkin.processed ? 'is-treated' : 'is-history-pending' }}">
+                <div class="room-card-head checkin-card-head">
+                    <div>
+                        <h3>{{ guestName }}</h3>
+                        <p><strong>{{ apartmentName }}</strong> · Fiche du {{ checkin.completedAt|date('d/m/Y H:i') }}</p>
+                    </div>
+                    <span class="status-badge {{ checkin.processed ? 'is-success' : 'is-warning' }}">
+                        {{ checkin.processed ? 'Traité' : 'Non traité' }}
+                    </span>
+                </div>
+
+                <div class="checkin-card-grid">
+                    <div class="checkin-mini-fact">
+                        <span>Voyageurs</span>
+                        <strong>{{ checkin.guestCount }}</strong>
+                    </div>
+                    <div class="checkin-mini-fact">
+                        <span>Dates</span>
+                        <strong>{{ checkin.checkInDate|date('d/m/Y') }} → {{ checkin.checkOutDate|date('d/m/Y') }}</strong>
+                    </div>
+                    <div class="checkin-mini-fact">
+                        <span>Agent</span>
+                        <strong>{{ checkin.hostAgentName }}</strong>
+                    </div>
+                </div>
+
+                <div class="checkin-card-actions">
+                    <a class="primary-button" href="{{ path('admin_checkin_show', {id: checkin.id}) }}">Voir la fiche</a>
+                    {% if not checkin.processed %}
+                        <form method="post" action="{{ path('admin_checkin_mark_processed', {id: checkin.id}) }}">
+                            <button class="secondary-button" type="submit">Marquer traité</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </article>
+        {% else %}
+            <p class="empty-state">Aucune fiche check-in enregistrée pour le moment.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

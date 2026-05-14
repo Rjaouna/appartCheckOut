@@ -182,7 +182,7 @@ class ServiceOffer
     public function getStatusLabel(): string
     {
         return match ($this->status) {
-            self::STATUS_APPROVED => 'Valide',
+            self::STATUS_APPROVED => 'Validé',
             self::STATUS_REJECTED => 'Refuse',
             default => 'En attente',
         };

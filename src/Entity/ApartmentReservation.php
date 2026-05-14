@@ -49,6 +49,9 @@ class ApartmentReservation
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Checkout $linkedCheckout = null;
 
+    #[ORM\OneToOne(mappedBy: 'reservation', targetEntity: ReservationCheckin::class)]
+    private ?ReservationCheckin $checkin = null;
+
     public function __construct()
     {
         $now = new \DateTimeImmutable();
@@ -206,6 +209,32 @@ class ApartmentReservation
         $this->touch();
 
         return $this;
+    }
+
+    public function getCheckin(): ?ReservationCheckin
+    {
+        return $this->checkin;
+    }
+
+    public function setCheckin(?ReservationCheckin $checkin): self
+    {
+        if ($checkin === null && $this->checkin instanceof ReservationCheckin) {
+            $this->checkin->setReservation(null);
+        }
+
+        if ($checkin instanceof ReservationCheckin && $checkin->getReservation() !== $this) {
+            $checkin->setReservation($this);
+        }
+
+        $this->checkin = $checkin;
+        $this->touch();
+
+        return $this;
+    }
+
+    public function hasCompletedCheckin(): bool
+    {
+        return $this->checkin instanceof ReservationCheckin;
     }
 
     public function hasSentAccessMessage(): bool

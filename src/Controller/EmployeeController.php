@@ -212,7 +212,7 @@ class EmployeeController extends AbstractController
         $user = $this->getUser();
 
         if (!$serviceOffer->isApproved()) {
-            return new JsonResponse(['success' => false, 'message' => 'Ce service n est pas encore validé.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Ce service n’est pas encore validé.'], 422);
         }
 
         if (!$serviceOffer->isStandard() && $serviceOffer->getCreatedBy()?->getId() !== $user->getId()) {
@@ -256,7 +256,7 @@ class EmployeeController extends AbstractController
             ->getOneOrNullResult();
 
         if ($existingPending instanceof ServiceOffer) {
-            return new JsonResponse(['success' => false, 'message' => 'Ce service est deja propose sur ton profil.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Ce service est déjà proposé sur ton profil.'], 422);
         }
 
         $serviceOffer = (new ServiceOffer())
@@ -797,9 +797,11 @@ class EmployeeController extends AbstractController
             ->from(ApartmentReservation::class, 'reservation')
             ->join('reservation.apartment', 'apartment')
             ->join('apartment.assignedEmployees', 'employee')
+            ->leftJoin('reservation.checkin', 'checkin')
             ->where('employee = :user')
             ->andWhere('apartment.status = :apartmentStatus')
             ->andWhere('reservation.departureDate >= :today')
+            ->andWhere('checkin.id IS NULL')
             ->setParameter('user', $user)
             ->setParameter('apartmentStatus', ApartmentStatus::Active)
             ->setParameter('today', $today, 'date_immutable')

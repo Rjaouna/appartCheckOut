@@ -1,0 +1,174 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Finaliser le check-in{% endblock %}
+
+{% block body %}
+    <section class="page-head">
+        <div>
+            <span class="eyebrow">Fiche entrée</span>
+            <h1>Finaliser le check-in</h1>
+            <p><strong>{{ reservation.guestName }}</strong> · {{ apartment.name }} · {{ reservation.stayDateLabel }}</p>
+        </div>
+        <div class="head-actions">
+            <a class="secondary-button app-back-button" href="{{ path(indexRoute) }}">Retour</a>
+        </div>
+    </section>
+
+    <form class="panel checkin-form-panel" method="post" action="{{ path(submitRoute, {id: reservation.id}) }}">
+        <section class="checkin-form-section">
+            <div class="checkin-section-title">
+                <span class="eyebrow">Accueil</span>
+                <h2>Logement et agent</h2>
+            </div>
+
+            <div class="checkin-form-grid">
+                <label>
+                    <span>Logement concerné</span>
+                    <input type="text" value="{{ apartment.name }}" disabled>
+                </label>
+                <label>
+                    <span>Agent d’accueil</span>
+                    <input type="text" name="hostAgentName" value="{{ defaultHostAgentName }}" required>
+                </label>
+                <label>
+                    <span>Téléphone agent</span>
+                    <input type="tel" name="hostAgentPhone" value="{{ defaultHostAgentPhone }}">
+                </label>
+                <label>
+                    <span>Nombre de voyageurs</span>
+                    <input type="number" name="guestCount" min="1" max="20" value="1" required readonly data-checkin-guest-count>
+                </label>
+            </div>
+        </section>
+
+        <section class="checkin-form-section">
+            <div class="checkin-section-title">
+                <span class="eyebrow">Voyageurs</span>
+                <h2>Identité des occupants</h2>
+                <p class="muted">Renseigne le premier occupant, puis ajoute une entrée uniquement si plusieurs voyageurs sont présents.</p>
+            </div>
+
+            <div class="checkin-guest-table-wrap" data-checkin-guest-manager>
+                <table class="checkin-guest-table">
+                    <thead>
+                        <tr>
+                            <th>Nom et prénoms</th>
+                            <th>Passeport / CIN</th>
+                            <th class="checkin-guest-actions-heading">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody data-checkin-guest-rows>
+                        {% for row in guestRows %}
+                            <tr>
+                                <td>
+                                    <input type="text" name="guestNames[]" value="{{ row.name }}" placeholder="Nom complet">
+                                </td>
+                                <td>
+                                    <input type="text" name="guestIdentityNumbers[]" value="{{ row.identityNumber }}" placeholder="Numéro document">
+                                </td>
+                                <td class="checkin-guest-row-actions">
+                                    <button class="secondary-button checkin-guest-edit-button" type="button" data-checkin-edit-guest hidden>Modifier</button>
+                                    <button class="secondary-button danger-button checkin-guest-delete-button" type="button" data-checkin-delete-guest>Supprimer</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <template data-checkin-guest-row-template>
+                    <tr>
+                        <td>
+                            <input type="text" name="guestNames[]" value="" placeholder="Nom complet">
+                        </td>
+                        <td>
+                            <input type="text" name="guestIdentityNumbers[]" value="" placeholder="Numéro document">
+                        </td>
+                        <td class="checkin-guest-row-actions">
+                            <button class="secondary-button checkin-guest-edit-button" type="button" data-checkin-edit-guest hidden>Modifier</button>
+                            <button class="secondary-button danger-button checkin-guest-delete-button" type="button" data-checkin-delete-guest>Supprimer</button>
+                        </td>
+                    </tr>
+                </template>
+            </div>
+            <button class="secondary-button checkin-add-guest-button" type="button" data-checkin-add-guest>Ajouter une entrée</button>
+        </section>
+
+        <section class="checkin-form-section">
+            <div class="checkin-section-title">
+                <span class="eyebrow">Séjour</span>
+                <h2>Dates et informations utiles</h2>
+            </div>
+
+            <div class="checkin-form-grid">
+                <label>
+                    <span>Date de check-in</span>
+                    <input type="date" value="{{ defaultCheckInDate }}" disabled>
+                    <small class="muted">La date sera renseignée automatiquement à l’enregistrement.</small>
+                </label>
+                <label>
+                    <span>Date de check-out</span>
+                    <input type="date" value="{{ defaultCheckOutDate }}" disabled>
+                </label>
+                <label>
+                    <span>Heure de sortie</span>
+                    <input type="time" value="12:00" disabled>
+                </label>
+                <label>
+                    <span>Transport retour</span>
+                    <input type="text" name="returnTransport" placeholder="Taxi, avion, train…">
+                </label>
+                <label>
+                    <span>Prolongation demandée</span>
+                    <input type="text" name="extensionRequested" placeholder="Non, oui jusqu’au…">
+                </label>
+                <label>
+                    <span>Déjà visité la ville ?</span>
+                    <select name="visitedMarrakechBefore">
+                        <option value="">À confirmer</option>
+                        <option value="yes">Oui</option>
+                        <option value="no">Non</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <section class="checkin-form-section checkin-rules-section">
+            <div class="checkin-section-title">
+                <span class="eyebrow">Consignes</span>
+                <h2>Attestations à faire confirmer</h2>
+            </div>
+
+            <label class="checkin-consent-line">
+                <input type="checkbox" name="noUnregisteredGuestsAccepted" value="1" required>
+                <span>Aucune personne non déclarée ne sera hébergée dans le logement.</span>
+            </label>
+            <label class="checkin-consent-line">
+                <input type="checkbox" name="noDualNationalityAccepted" value="1" required>
+                <span>Aucun couple avec double nationalité marocaine/étrangère ne sera reçu sans justificatif légal.</span>
+            </label>
+            <label class="checkin-consent-line">
+                <input type="checkbox" name="rulesAccepted" value="1" required>
+                <span>Le règlement est accepté : économie d’eau et d’électricité, pas de fumée, silence de 22h à 8h, départ à 12h maximum.</span>
+            </label>
+            <label>
+                <span>Nom du signataire</span>
+                <input type="text" value="{{ reservation.guestName }}" readonly>
+            </label>
+
+            <div class="checkin-signature-field" data-checkin-signature-pad>
+                <div class="checkin-signature-head">
+                    <div>
+                        <span>Signature du locataire</span>
+                        <small class="muted">Signe directement dans le cadre avec le doigt ou la souris.</small>
+                    </div>
+                    <button class="secondary-button checkin-signature-clear" type="button" data-checkin-signature-clear>Effacer</button>
+                </div>
+                <canvas class="checkin-signature-canvas" width="900" height="260" aria-label="Zone de signature"></canvas>
+                <input type="hidden" name="signatureData" data-checkin-signature-input>
+            </div>
+        </section>
+
+        <div class="checkin-submit-row">
+            <button class="primary-button" type="submit">Enregistrer la fiche check-in</button>
+        </div>
+    </form>
+{% endblock %}

@@ -179,10 +179,10 @@ class AdminController extends AbstractController
     {
         if (!$this->isCsrfTokenValid('delete_anomaly_' . $anomaly->getId(), (string) $request->request->get('_token'))) {
             if ($request->isXmlHttpRequest()) {
-                return new JsonResponse(['success' => false, 'message' => 'Jeton de securite invalide.'], 422);
+                return new JsonResponse(['success' => false, 'message' => 'Jeton de sécurité invalide.'], 422);
             }
 
-            throw $this->createAccessDeniedException('Jeton de securite invalide.');
+            throw $this->createAccessDeniedException('Jeton de sécurité invalide.');
         }
 
         $redirectUrl = $this->generateUrl('admin_apartment_anomalies', ['id' => $anomaly->getApartment()?->getId()]);
@@ -197,11 +197,11 @@ class AdminController extends AbstractController
             return new JsonResponse([
                 'success' => true,
                 'redirect' => $redirectUrl,
-                'message' => 'Anomalie supprimee de la liste.',
+                'message' => 'Anomalie supprimée de la liste.',
             ]);
         }
 
-        $this->addFlash('success', 'Anomalie supprimee de la liste.');
+        $this->addFlash('success', 'Anomalie supprimée de la liste.');
 
         return $this->redirect($redirectUrl);
     }
@@ -274,7 +274,7 @@ class AdminController extends AbstractController
         }
 
         try {
-            $this->assertAcceptedVideoUpload($video, 6 * 1024 * 1024, 'La video du manuel');
+            $this->assertAcceptedVideoUpload($video, 6 * 1024 * 1024, 'La vidéo du manuel');
             $videoPath = $this->storeApartmentManualVideo($video);
         } catch (\InvalidArgumentException $exception) {
             return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
@@ -293,7 +293,7 @@ class AdminController extends AbstractController
             ->setVideoPath($videoPath);
 
         if ($manual->getTitle() === '' || $manual->getEquipmentLabel() === '') {
-            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l equipement concerne.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l’équipement concerné.'], 422);
         }
 
         $entityManager->persist($manual);
@@ -324,14 +324,14 @@ class AdminController extends AbstractController
             ->setIsActive($request->request->getBoolean('isActive', true));
 
         if ($manual->getTitle() === '' || $manual->getEquipmentLabel() === '') {
-            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l equipement concerne.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l’équipement concerné.'], 422);
         }
 
         $newVideo = $request->files->get('video');
         $previousVideoPath = $manual->getVideoPath();
         if ($newVideo instanceof UploadedFile) {
             try {
-                $this->assertAcceptedVideoUpload($newVideo, 6 * 1024 * 1024, 'La video du manuel');
+                $this->assertAcceptedVideoUpload($newVideo, 6 * 1024 * 1024, 'La vidéo du manuel');
                 $manual->setVideoPath($this->storeApartmentManualVideo($newVideo));
             } catch (\InvalidArgumentException $exception) {
                 return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
@@ -483,7 +483,7 @@ class AdminController extends AbstractController
             ], 422);
         }
 
-        return $this->userDetailResponse($user, $entityManager, 'Information employe mise a jour.');
+        return $this->userDetailResponse($user, $entityManager, 'Information employé mise à jour.');
     }
 
     #[Route('/users/{id}/photo', name: 'admin_user_photo_update', methods: ['POST'])]
@@ -507,7 +507,7 @@ class AdminController extends AbstractController
         $entityManager->flush();
         $this->deleteUserPhoto($previousPhotoPath);
 
-        return $this->userDetailResponse($user, $entityManager, 'Photo employe mise a jour.');
+        return $this->userDetailResponse($user, $entityManager, 'Photo employé mise à jour.');
     }
 
     #[Route('/services/{id}/label', name: 'admin_service_offer_label_update', methods: ['POST'])]
@@ -560,7 +560,7 @@ class AdminController extends AbstractController
     public function deleteServiceOffer(ServiceOffer $serviceOffer, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         if ($serviceOffer->isStandard()) {
-            return new JsonResponse(['success' => false, 'message' => 'Un service standard ne peut pas etre supprime ici.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Un service standard ne peut pas être supprimé ici.'], 422);
         }
 
         $owner = $serviceOffer->getCreatedBy();
@@ -617,7 +617,7 @@ class AdminController extends AbstractController
     public function createApartment(Request $request, EntityManagerInterface $entityManager): Response
     {
         if (!$this->isCsrfTokenValid('admin_apartment_create', (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Jeton de securite invalide.');
+            throw $this->createAccessDeniedException('Jeton de sécurité invalide.');
         }
 
         $name = trim((string) $request->request->get('name'));
@@ -645,7 +645,7 @@ class AdminController extends AbstractController
             $postalCode = trim((string) $request->request->get('postalCode'));
 
             if ($addressLine1 === '' || $city === '') {
-                $this->addFlash('error', 'Adresse et ville sont obligatoires pour creer un appartement vide.');
+                $this->addFlash('error', 'Adresse et ville sont obligatoires pour créer un appartement vide.');
 
                 return $this->redirectToRoute('admin_apartments');
             }
@@ -662,7 +662,7 @@ class AdminController extends AbstractController
                 ->setBuildingAccessCode($this->nullable($request->request->get('buildingAccessCode')))
                 ->setKeyBoxCode($this->nullable($request->request->get('keyBoxCode')))
                 ->setEntryInstructions($this->sanitizeRichText($request->request->get('entryInstructions')))
-                ->setConditionStatus((string) $request->request->get('conditionStatus', 'Bon etat'))
+                ->setConditionStatus((string) $request->request->get('conditionStatus', 'Bon état'))
                 ->setBedroomCount((int) $request->request->get('bedroomCount', 0))
                 ->setSleepsCount(0)
                 ->setOwnerName($this->nullable($request->request->get('ownerName')))
@@ -741,7 +741,7 @@ class AdminController extends AbstractController
             ], 422);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Information appartement mise a jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Information appartement mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/status', name: 'admin_apartment_status', methods: ['POST'])]
@@ -1114,7 +1114,7 @@ class AdminController extends AbstractController
         $entityManager->persist($room);
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece ajoutee.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Pièce ajoutée.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/catalog', name: 'admin_catalog_create', methods: ['POST'])]
@@ -1197,7 +1197,7 @@ class AdminController extends AbstractController
         if ($addedCount === 0) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Selectionne un equipement ou saisis un equipement manuel.',
+                'message' => 'Sélectionne un équipement ou saisis un équipement manuel.',
             ], 422);
         }
 
@@ -1206,7 +1206,7 @@ class AdminController extends AbstractController
         return $this->apartmentDetailResponse(
             $room->getApartment(),
             $entityManager,
-            $addedCount > 1 ? 'Equipements ajoutes.' : 'Equipement ajoute.',
+            $addedCount > 1 ? 'Équipements ajoutés.' : 'Équipement ajouté.',
             $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
         );
     }
@@ -1225,7 +1225,7 @@ class AdminController extends AbstractController
         if (count($room->getActiveRoomEquipments()) > 0) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Suppression impossible : retire d abord les equipements de cette piece.',
+                'message' => 'Suppression impossible : retire d’abord les équipements de cette pièce.',
             ], 422);
         }
 
@@ -1245,7 +1245,7 @@ class AdminController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Piece supprimee.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Pièce supprimée.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/room-equipments/{id}/delete', name: 'admin_room_equipment_delete', methods: ['POST'])]
@@ -1275,7 +1275,7 @@ class AdminController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Equipement supprime de la piece.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Équipement supprimé de la pièce.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/apartments/{id}/checkouts', name: 'admin_checkout_create', methods: ['POST'])]
@@ -1291,7 +1291,7 @@ class AdminController extends AbstractController
         }
 
         if (in_array('ROLE_ADMIN', $employee->getRoles(), true)) {
-            return new JsonResponse(['success' => false, 'message' => 'Choisis un employe terrain pour ce check-out.'], 422);
+            return new JsonResponse(['success' => false, 'message' => 'Choisis un employé terrain pour ce check-out.'], 422);
         }
 
         if (!$apartment->getAssignedEmployees()->contains($employee)) {
@@ -1448,7 +1448,7 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
         }
 
-        return $this->apartmentDetailResponse($apartment, $entityManager, 'Date du check-out mise a jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Date du check-out mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
     #[Route('/checkouts/{id}/cancel', name: 'admin_checkout_cancel', methods: ['POST'])]
@@ -1739,8 +1739,10 @@ class AdminController extends AbstractController
             ->from(ApartmentReservation::class, 'reservation')
             ->join('reservation.apartment', 'apartment')
             ->leftJoin('reservation.createdBy', 'createdBy')
+            ->leftJoin('reservation.checkin', 'checkin')
             ->where('apartment.status = :activeStatus')
             ->andWhere('reservation.departureDate >= :today')
+            ->andWhere('checkin.id IS NULL')
             ->setParameter('activeStatus', ApartmentStatus::Active)
             ->setParameter('today', $today, 'date_immutable')
             ->orderBy('reservation.arrivalDate', 'ASC')
@@ -1768,8 +1770,10 @@ class AdminController extends AbstractController
             ->select('reservation', 'createdBy')
             ->from(ApartmentReservation::class, 'reservation')
             ->leftJoin('reservation.createdBy', 'createdBy')
+            ->leftJoin('reservation.checkin', 'checkin')
             ->where('reservation.apartment = :apartment')
             ->andWhere('reservation.departureDate >= :today')
+            ->andWhere('checkin.id IS NULL')
             ->setParameter('apartment', $apartment)
             ->setParameter('today', $today, 'date_immutable')
             ->orderBy('reservation.arrivalDate', 'ASC')
@@ -2665,7 +2669,7 @@ class AdminController extends AbstractController
             'password' => $this->updateAdminUserPassword($user, $value, $passwordHasher),
             'isActive' => $user->setIsActive(in_array(strtolower($value), ['1', 'true', 'oui', 'actif'], true)),
             'canManageAnomalyWorkflow' => $user->setCanManageAnomalyWorkflow(in_array(strtolower($value), ['1', 'true', 'oui', 'autorise'], true)),
-            default => throw new \InvalidArgumentException('Champ employe non modifiable.'),
+            default => throw new \InvalidArgumentException('Champ employé non modifiable.'),
         };
     }
 
@@ -2678,7 +2682,7 @@ class AdminController extends AbstractController
 
         $existing = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
         if ($existing instanceof User && $existing->getId() !== $user->getId()) {
-            throw new \InvalidArgumentException('Cet email existe deja.');
+            throw new \InvalidArgumentException('Cet e-mail existe déjà.');
         }
 
         $user->setEmail($email);
@@ -2687,7 +2691,7 @@ class AdminController extends AbstractController
     private function updateAdminUserPassword(User $user, string $value, UserPasswordHasherInterface $passwordHasher): void
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('Le mot de passe ne peut pas etre vide.');
+            throw new \InvalidArgumentException('Le mot de passe ne peut pas être vide.');
         }
 
         $user->setPassword($passwordHasher->hashPassword($user, $value));
@@ -2790,11 +2794,11 @@ class AdminController extends AbstractController
     {
         $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/manuals';
         if (!is_dir($targetDir) && !@mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
-            throw new \RuntimeException('Le dossier des manuels video est introuvable ou non accessible en ecriture.');
+            throw new \RuntimeException('Le dossier des manuels vidéo est introuvable ou non accessible en écriture.');
         }
 
         if (!is_writable($targetDir)) {
-            throw new \RuntimeException('Le dossier des manuels video n est pas accessible en ecriture sur le serveur.');
+            throw new \RuntimeException('Le dossier des manuels vidéo n’est pas accessible en écriture sur le serveur.');
         }
 
         $safeName = pathinfo($video->getClientOriginalName(), PATHINFO_FILENAME);
@@ -2804,7 +2808,7 @@ class AdminController extends AbstractController
         try {
             $video->move($targetDir, $filename);
         } catch (\Throwable $exception) {
-            throw new \RuntimeException('Impossible d enregistrer la video sur le serveur. Verifie les droits du dossier uploads/manuals.');
+            throw new \RuntimeException('Impossible d’enregistrer la vidéo sur le serveur. Vérifie les droits du dossier uploads/manuals.');
         }
 
         return '/uploads/manuals/' . $filename;
@@ -2817,14 +2821,14 @@ class AdminController extends AbstractController
 
         if ($contentLength > 0 && $postMaxBytes > 0 && $contentLength > $postMaxBytes) {
             return sprintf(
-                'La video est trop lourde pour la configuration actuelle du serveur. Limites actuelles: upload_max_filesize=%s, post_max_size=%s.',
+                'La vidéo est trop lourde pour la configuration actuelle du serveur. Limites actuelles : upload_max_filesize=%s, post_max_size=%s.',
                 (string) ini_get('upload_max_filesize'),
                 (string) ini_get('post_max_size'),
             );
         }
 
         return sprintf(
-            'Aucune video valide n a ete recue. Verifie le format MP4, MOV ou WebM et la taille du fichier. Limite actuelle d upload: %s.',
+            'Aucune vidéo valide n’a été reçue. Vérifie le format MP4, MOV ou WebM et la taille du fichier. Limite actuelle d’upload : %s.',
             (string) ini_get('upload_max_filesize')
         );
     }
@@ -2874,7 +2878,7 @@ class AdminController extends AbstractController
         $this->assertValidUploadedFile($file, $label);
 
         if ($file->getSize() !== null && $file->getSize() > $maxBytes) {
-            throw new \InvalidArgumentException(sprintf('%s depasse la taille autorisee.', $label));
+            throw new \InvalidArgumentException(sprintf('%s dépasse la taille autorisée.', $label));
         }
 
         $mimeType = (string) ($file->getMimeType() ?? '');
@@ -2883,7 +2887,7 @@ class AdminController extends AbstractController
         $allowedExtensions = ['mp4', 'mov', 'webm', 'm4v'];
 
         if (!in_array($mimeType, $allowedMimeTypes, true) && !in_array($extension, $allowedExtensions, true)) {
-            throw new \InvalidArgumentException(sprintf('%s doit etre une video MP4, MOV ou WebM.', $label));
+            throw new \InvalidArgumentException(sprintf('%s doit être une vidéo MP4, MOV ou WebM.', $label));
         }
     }
 
@@ -2900,18 +2904,18 @@ class AdminController extends AbstractController
     {
         return match ($file->getError()) {
             UPLOAD_ERR_INI_SIZE => sprintf(
-                'Le fichier envoye pour %s est trop lourd pour le serveur. Limites actuelles: upload_max_filesize=%s, post_max_size=%s.',
+                'Le fichier envoyé pour %s est trop lourd pour le serveur. Limites actuelles : upload_max_filesize=%s, post_max_size=%s.',
                 strtolower($label),
                 (string) ini_get('upload_max_filesize'),
                 (string) ini_get('post_max_size'),
             ),
-            UPLOAD_ERR_FORM_SIZE => sprintf('%s depasse la taille autorisee par le formulaire.', $label),
-            UPLOAD_ERR_PARTIAL => sprintf('%s n a ete envoye que partiellement. Reessaie avec une connexion stable.', $label),
-            UPLOAD_ERR_NO_FILE => sprintf('Aucun fichier n a ete recu pour %s.', strtolower($label)),
-            UPLOAD_ERR_NO_TMP_DIR => 'Le dossier temporaire d upload est manquant sur le serveur.',
-            UPLOAD_ERR_CANT_WRITE => 'Le serveur n arrive pas a enregistrer le fichier temporaire.',
-            UPLOAD_ERR_EXTENSION => 'Une extension PHP a bloque l upload du fichier.',
-            default => sprintf('%s n a pas pu etre envoye. Reessaie avec un fichier valide.', $label),
+            UPLOAD_ERR_FORM_SIZE => sprintf('%s dépasse la taille autorisée par le formulaire.', $label),
+            UPLOAD_ERR_PARTIAL => sprintf('%s n’a été envoyé que partiellement. Réessaie avec une connexion stable.', $label),
+            UPLOAD_ERR_NO_FILE => sprintf('Aucun fichier n’a été reçu pour %s.', strtolower($label)),
+            UPLOAD_ERR_NO_TMP_DIR => 'Le dossier temporaire d’upload est manquant sur le serveur.',
+            UPLOAD_ERR_CANT_WRITE => 'Le serveur n’arrive pas à enregistrer le fichier temporaire.',
+            UPLOAD_ERR_EXTENSION => 'Une extension PHP a bloqué l’upload du fichier.',
+            default => sprintf('%s n’a pas pu être envoyé. Réessaie avec un fichier valide.', $label),
         };
     }
 
