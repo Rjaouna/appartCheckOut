@@ -72,12 +72,12 @@
                 <input type="file" name="video" accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mp4,.mov,.webm,.m4v" required>
                 <small>Formats acceptés : MP4, MOV, WebM. Taille maximum : 6 Mo.</small>
             </label>
-            <div class="grid-two">
+            <div class="admin-manual-settings-row">
                 <label>
                     <span>Ordre</span>
                     <input type="number" name="displayOrder" min="0" value="0">
                 </label>
-                <label class="checkbox-row">
+                <label class="admin-manual-checkbox-field">
                     <input type="checkbox" name="isActive" value="1" checked>
                     <span>Visible côté locataire</span>
                 </label>
@@ -197,12 +197,12 @@
                                 <input type="file" name="video" accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mp4,.mov,.webm,.m4v">
                                 <small>Formats acceptés : MP4, MOV, WebM. Taille maximum : 6 Mo.</small>
                             </label>
-                            <div class="grid-two">
+                            <div class="admin-manual-settings-row">
                                 <label>
                                     <span>Ordre</span>
                                     <input type="number" name="displayOrder" min="0" value="{{ manual.displayOrder }}">
                                 </label>
-                                <label class="checkbox-row">
+                                <label class="admin-manual-checkbox-field">
                                     <input type="checkbox" name="isActive" value="1" {{ manual.isActive ? 'checked' : '' }}>
                                     <span>Visible côté locataire</span>
                                 </label>
