@@ -52,7 +52,29 @@
                         <select name="templateApartmentId" data-apartment-template-select disabled>
                             <option value="">Choisir un appartement existant</option>
                             {% for templateApartment in apartmentTemplates %}
-                                <option value="{{ templateApartment.id }}">{{ templateApartment.name }} - {{ templateApartment.city }}</option>
+                                {% set templatePayload = {
+                                    addressLine1: templateApartment.addressLine1,
+                                    addressLine2: templateApartment.addressLine2,
+                                    city: templateApartment.city,
+                                    postalCode: templateApartment.postalCode,
+                                    floor: templateApartment.floor,
+                                    doorNumber: templateApartment.doorNumber,
+                                    mailboxNumber: templateApartment.mailboxNumber,
+                                    googleMapsLink: templateApartment.googleMapsLink,
+                                    buildingAccessCode: templateApartment.buildingAccessCode,
+                                    keyBoxCode: templateApartment.keyBoxCode,
+                                    entryInstructions: templateApartment.entryInstructions,
+                                    conditionStatus: templateApartment.conditionStatus,
+                                    status: templateApartment.status.value,
+                                    bedroomCount: templateApartment.bedroomCount,
+                                    ownerName: templateApartment.ownerName,
+                                    ownerPhone: templateApartment.ownerPhone,
+                                    internalNotes: templateApartment.internalNotes,
+                                    isInventoryPriority: templateApartment.isInventoryPriority,
+                                    inventoryDueAt: templateApartment.inventoryDueAt ? templateApartment.inventoryDueAt|date('Y-m-d\\TH:i') : '',
+                                    assignedEmployeeIds: templateApartment.assignedEmployees|map(employee => employee.id)
+                                } %}
+                                <option value="{{ templateApartment.id }}" data-apartment-template-payload="{{ templatePayload|json_encode|e('html_attr') }}">{{ templateApartment.name }} - {{ templateApartment.city }}</option>
                             {% endfor %}
                         </select>
                     </label>
