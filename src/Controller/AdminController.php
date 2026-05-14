@@ -2344,18 +2344,94 @@ class AdminController extends AbstractController
             }
         }
 
+        $openAnomalyInsights = [];
+        $openAnomalies = $apartments === [] ? [] : $entityManager->createQueryBuilder()
+            ->select('anomaly', 'room', 'roomEquipment', 'createdBy')
+            ->from(Anomaly::class, 'anomaly')
+            ->leftJoin('anomaly.room', 'room')
+            ->leftJoin('anomaly.roomEquipment', 'roomEquipment')
+            ->leftJoin('anomaly.createdBy', 'createdBy')
+            ->where('anomaly.status != :closedStatus')
+            ->andWhere('anomaly.apartment IN (:apartments)')
+            ->orderBy('anomaly.createdAt', 'DESC')
+            ->setParameter('closedStatus', AnomalyStatus::Closed)
+            ->setParameter('apartments', $apartments)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($openAnomalies as $anomaly) {
+            if (!$anomaly instanceof Anomaly) {
+                continue;
+            }
+
+            $apartmentId = $anomaly->getApartment()?->getId();
+            if (!$apartmentId) {
+                continue;
+            }
+
+            if (!isset($openAnomalyInsights[$apartmentId])) {
+                $openAnomalyInsights[$apartmentId] = [
+                    'latestOpenAnomaly' => null,
+                    'affectedRooms' => [],
+                    'newOpenAnomalyCount' => 0,
+                    'followedOpenAnomalyCount' => 0,
+                    'priorityOpenAnomalyCount' => 0,
+                ];
+            }
+
+            if (!$openAnomalyInsights[$apartmentId]['latestOpenAnomaly'] instanceof Anomaly) {
+                $openAnomalyInsights[$apartmentId]['latestOpenAnomaly'] = $anomaly;
+            }
+
+            $room = $anomaly->getRoom();
+            if ($room instanceof Room) {
+                $roomKey = (string) ($room->getId() ?? $room->getName());
+                if (!isset($openAnomalyInsights[$apartmentId]['affectedRooms'][$roomKey])) {
+                    $openAnomalyInsights[$apartmentId]['affectedRooms'][$roomKey] = [
+                        'name' => $room->getName(),
+                        'count' => 0,
+                    ];
+                }
+                ++$openAnomalyInsights[$apartmentId]['affectedRooms'][$roomKey]['count'];
+            }
+
+            if ($anomaly->getStatus() === AnomalyStatus::New) {
+                ++$openAnomalyInsights[$apartmentId]['newOpenAnomalyCount'];
+            } else {
+                ++$openAnomalyInsights[$apartmentId]['followedOpenAnomalyCount'];
+            }
+
+            if (in_array($anomaly->getType()->value, ['major', 'missing', 'replacement_needed'], true)) {
+                ++$openAnomalyInsights[$apartmentId]['priorityOpenAnomalyCount'];
+            }
+        }
+
         $cards = [];
         foreach ($apartments as $apartment) {
             $openCheckout = $this->getOpenCheckout($apartment, $entityManager);
             $assignedEmployees = array_values($apartment->getAssignedEmployees()->toArray());
             $employeeNames = array_map(static fn (User $user) => $user->getFullName(), $assignedEmployees);
             $openAnomalyCount = $openAnomalyCounts[$apartment->getId() ?? 0] ?? 0;
+            $insights = $openAnomalyInsights[$apartment->getId() ?? 0] ?? [
+                'latestOpenAnomaly' => null,
+                'affectedRooms' => [],
+                'newOpenAnomalyCount' => 0,
+                'followedOpenAnomalyCount' => 0,
+                'priorityOpenAnomalyCount' => 0,
+            ];
+            $affectedRooms = array_values($insights['affectedRooms']);
+            usort($affectedRooms, static fn (array $left, array $right): int => $right['count'] <=> $left['count'] ?: strcmp($left['name'], $right['name']));
 
             $cards[] = [
                 'apartment' => $apartment,
                 'openCheckout' => $openCheckout,
                 'anomalyCount' => $entityManager->getRepository(Anomaly::class)->count(['apartment' => $apartment]),
                 'openAnomalyCount' => $openAnomalyCount,
+                'latestOpenAnomaly' => $insights['latestOpenAnomaly'],
+                'affectedRooms' => $affectedRooms,
+                'newOpenAnomalyCount' => $insights['newOpenAnomalyCount'],
+                'followedOpenAnomalyCount' => $insights['followedOpenAnomalyCount'],
+                'priorityOpenAnomalyCount' => $insights['priorityOpenAnomalyCount'],
                 'assignedEmployeeNames' => $employeeNames !== [] ? implode(', ', $employeeNames) : 'Aucun employé assigné',
                 'assignedEmployees' => $assignedEmployees,
                 'firstAssignedEmployeeId' => count($assignedEmployees) === 1 ? $assignedEmployees[0]->getId() : null,

@@ -2090,55 +2090,12 @@ body.nav-compact .floating-main-menu-button {
     box-shadow: none;
 }
 
-.apartment-anomaly-room-panel.is-collapsed,
-.apartment-anomaly-room-placeholder.is-collapsed {
-    display: none;
-}
-
 .apartment-anomaly-room-panel > .panel-head {
     padding: 0 4px 8px;
 }
 
 .apartment-anomaly-list-stack {
     gap: 26px;
-}
-
-.apartment-anomaly-room-placeholder {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 18px;
-    padding: clamp(22px, 3vw, 30px);
-    border: 1px dashed rgba(var(--accent-rgb), 0.24);
-    border-radius: 30px;
-    background:
-        radial-gradient(circle at 8% 0%, rgba(var(--accent-rgb), 0.10), transparent 34%),
-        linear-gradient(135deg, rgba(var(--surface-rgb), 0.98), rgba(var(--surface-soft-rgb), 0.94));
-}
-
-.apartment-anomaly-room-placeholder h2,
-.apartment-anomaly-room-placeholder p {
-    margin: 0;
-}
-
-.apartment-anomaly-room-placeholder h2 {
-    margin-bottom: 6px;
-}
-
-.apartment-anomaly-room-placeholder-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 62px;
-    height: 62px;
-    border-radius: 22px;
-    background: var(--primary-soft);
-    color: var(--accent-dark);
-}
-
-.apartment-anomaly-room-placeholder-icon svg {
-    width: 30px;
-    height: 30px;
 }
 
 .admin-anomaly-modern-stack {
@@ -2500,11 +2457,6 @@ body.nav-compact .floating-main-menu-button {
     .apartment-anomaly-room-panel > .panel-head {
         padding: 0 0 10px;
         align-items: flex-start;
-    }
-
-    .apartment-anomaly-room-placeholder {
-        grid-template-columns: 1fr;
-        border-radius: 26px;
     }
 
     .admin-anomaly-modern-card,

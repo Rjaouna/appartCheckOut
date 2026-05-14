@@ -1507,7 +1507,6 @@ document.addEventListener('click', (event) => {
 
     const panelOpenTrigger = event.target instanceof Element ? event.target.closest('[data-panel-open]') : null;
     if (panelOpenTrigger instanceof HTMLElement) {
-        event.preventDefault();
         const groupName = panelOpenTrigger.getAttribute('data-panel-group');
         const targetSelector = panelOpenTrigger.getAttribute('data-panel-open');
         const target = targetSelector ? document.querySelector(targetSelector) : null;
@@ -1518,12 +1517,10 @@ document.addEventListener('click', (event) => {
                 document.querySelectorAll(`[data-panel-name][data-panel-group="${groupName}"]`).forEach((panel) => {
                     if (panel instanceof HTMLElement) {
                         panel.classList.add('is-collapsed');
-                        panel.hidden = true;
                     }
                 });
             }
 
-            target.hidden = false;
             target.classList.remove('is-collapsed');
             setActivePanelTrigger(groupName, targetSelector);
             syncPanelTriggers(document);

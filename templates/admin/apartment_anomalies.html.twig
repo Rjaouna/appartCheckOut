@@ -3,6 +3,8 @@
 {% block title %}Anomalies {{ apartment.name }}{% endblock %}
 
 {% block body %}
+    {% set anomalyPanelGroup = 'apartment-anomalies-' ~ apartment.id %}
+
     <section class="page-head">
         <div>
             <span class="eyebrow">Anomalies appartement</span>
@@ -17,7 +19,14 @@
     {% if anomalyCount > 0 %}
         <section class="room-tab-nav room-tab-nav-wide">
             {% for group in anomalyGroups %}
-                <a href="#room-{{ group.room.id }}" class="room-tab-button">
+                <a
+                    href="#room-{{ group.room.id }}"
+                    class="room-tab-button"
+                    data-panel-open="#room-{{ group.room.id }}"
+                    data-panel-group="{{ anomalyPanelGroup }}"
+                    aria-controls="room-{{ group.room.id }}"
+                    aria-expanded="false"
+                >
                     <span>{{ group.room.name }}</span>
                     <strong class="mini-badge is-warning">{{ group.count }}</strong>
                 </a>
@@ -25,8 +34,29 @@
         </section>
 
         <section class="workspace-main apartment-anomalies-workspace">
+            <article
+                class="panel apartment-anomaly-room-placeholder"
+                data-panel-name
+                data-panel-group="{{ anomalyPanelGroup }}"
+            >
+                <div class="apartment-anomaly-room-placeholder-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 5h16v4H4V5Zm0 6h7v8H4v-8Zm9 0h7v8h-7v-8Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2>Sélectionnez une pièce</h2>
+                    <p class="muted">Cliquez sur une pièce ci-dessus pour afficher uniquement ses anomalies et leur suivi.</p>
+                </div>
+            </article>
+
             {% for group in anomalyGroups %}
-                <article class="panel apartment-anomaly-room-panel" id="room-{{ group.room.id }}">
+                <article
+                    class="panel apartment-anomaly-room-panel is-collapsed"
+                    id="room-{{ group.room.id }}"
+                    data-panel-name
+                    data-panel-group="{{ anomalyPanelGroup }}"
+                >
                     <div class="panel-head">
                         <div>
                             <h2>{{ group.room.name }}</h2>
