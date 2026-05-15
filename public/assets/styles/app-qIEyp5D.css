@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
-@import '../vendor/bootstrap-icons/font/bootstrap-icons.css';
+@import "../vendor/bootstrap-icons/font/bootstrap-icons-UNAnHWy.css";
 
 :root {
     --bg: #f7f7f7;
@@ -1763,23 +1763,13 @@ select {
     height: 24px;
 }
 
-.top-app-install-button i {
-    font-size: 1.35rem;
-    line-height: 1;
-}
-
 .top-consumable-notifications {
     position: relative;
 }
 
 .top-consumable-notification-button {
     position: relative;
-    border-color: rgba(var(--primary-rgb), 0.18);
-    background:
-        radial-gradient(circle at 35% 25%, rgba(var(--surface-rgb), 0.96), rgba(var(--surface-rgb), 0.72)),
-        rgba(var(--surface-rgb), 0.9);
     color: var(--primary);
-    box-shadow: 0 14px 32px rgba(var(--text-rgb), 0.08);
 }
 
 .top-consumable-notification-badge {
@@ -1807,16 +1797,14 @@ select {
     top: calc(100% + 12px);
     right: 0;
     z-index: 1300;
-    width: min(94vw, 460px);
+    width: min(92vw, 420px);
     max-height: min(72vh, 680px);
     overflow-y: auto;
-    padding: 14px;
-    border: 1px solid rgba(var(--primary-rgb), 0.16);
-    border-radius: 30px;
-    background:
-        radial-gradient(circle at top left, rgba(var(--primary-rgb), 0.14), transparent 36%),
-        linear-gradient(180deg, rgba(var(--surface-rgb), 0.99), rgba(var(--bg-rgb), 0.96));
-    box-shadow: 0 30px 90px rgba(var(--text-rgb), 0.18);
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background: rgba(var(--surface-rgb), 0.98);
+    box-shadow: 0 28px 80px rgba(var(--text-rgb), 0.16);
     backdrop-filter: blur(18px);
 }
 
@@ -1836,10 +1824,7 @@ select {
 }
 
 .consumable-notification-panel-head {
-    align-items: flex-start;
     margin-bottom: 14px;
-    padding: 8px 6px 12px;
-    border-bottom: 1px solid rgba(var(--border-rgb), 0.72);
 }
 
 .consumable-notification-panel-head h3,
@@ -1847,17 +1832,6 @@ select {
 .consumable-notification-item-top p,
 .consumable-notification-note {
     margin: 0;
-}
-
-.consumable-notification-panel-head h3 {
-    font-size: 1.18rem;
-    letter-spacing: -0.03em;
-}
-
-.consumable-notification-panel-head p {
-    max-width: 280px;
-    color: var(--muted);
-    font-size: 0.9rem;
 }
 
 .consumable-notification-list {
@@ -1868,23 +1842,10 @@ select {
 .consumable-notification-item {
     display: grid;
     gap: 12px;
-    position: relative;
-    overflow: hidden;
-    padding: 15px;
-    border: 1px solid rgba(var(--border-rgb), 0.88);
-    border-radius: 24px;
-    background:
-        linear-gradient(135deg, rgba(var(--surface-rgb), 0.98), rgba(var(--surface-rgb), 0.88)),
-        rgba(var(--surface-rgb), 0.98);
-    box-shadow: 0 16px 36px rgba(var(--text-rgb), 0.07);
-}
-
-.consumable-notification-item::before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 5px;
-    background: var(--warning);
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(var(--surface-rgb), 0.98), rgba(var(--primary-rgb), 0.05));
 }
 
 .consumable-notification-item.is-warning {
@@ -1893,10 +1854,6 @@ select {
 
 .consumable-notification-item.is-danger {
     border-color: rgba(var(--danger-rgb), 0.24);
-}
-
-.consumable-notification-item.is-danger::before {
-    background: var(--danger);
 }
 
 .consumable-notification-icon,
@@ -1908,19 +1865,13 @@ select {
     height: 42px;
     flex: 0 0 42px;
     border-radius: 16px;
-    background: rgba(var(--warning-rgb), 0.12);
-    color: var(--warning);
+    background: rgba(var(--primary-rgb), 0.12);
+    color: var(--primary);
     font-size: 1.2rem;
 }
 
 .consumable-notification-item-top {
     justify-content: flex-start;
-    align-items: flex-start;
-}
-
-.consumable-notification-item.is-danger .consumable-notification-icon {
-    background: rgba(var(--danger-rgb), 0.12);
-    color: var(--danger);
 }
 
 .consumable-notification-item-top strong,
@@ -1937,37 +1888,10 @@ select {
     color: var(--muted);
 }
 
-.consumable-notification-state {
-    margin-left: auto;
-    padding: 8px 10px;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 800;
-}
-
-.consumable-notification-state.is-warning {
-    background: rgba(var(--warning-rgb), 0.12);
-    color: var(--warning);
-}
-
-.consumable-notification-state.is-danger {
-    background: rgba(var(--danger-rgb), 0.12);
-    color: var(--danger);
-}
-
 .consumable-notification-stock {
     padding: 10px 12px;
     border-radius: 16px;
     background: rgba(var(--bg-rgb), 0.72);
-}
-
-.consumable-notification-stock > div {
-    display: grid;
-    gap: 2px;
-}
-
-.consumable-notification-stock > div:last-child {
-    text-align: right;
 }
 
 .consumable-notification-note {
@@ -1981,12 +1905,6 @@ select {
 .consumable-inline-restock-form {
     display: grid;
     gap: 10px;
-}
-
-.consumable-notification-restock-form {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    padding-top: 2px;
 }
 
 .consumable-notification-restock-form label,
@@ -2005,38 +1923,12 @@ select {
     margin-bottom: 0;
 }
 
-.consumable-notification-restock-form .primary-button {
-    min-height: 50px;
-}
-
 .consumable-notification-empty {
     display: grid;
     justify-items: center;
     gap: 8px;
     padding: 20px 10px;
     text-align: center;
-}
-
-@media (max-width: 560px) {
-    .top-consumable-notification-panel {
-        position: fixed;
-        top: 86px;
-        left: 12px;
-        right: 12px;
-        width: auto;
-    }
-
-    .consumable-notification-restock-form {
-        grid-template-columns: 1fr;
-    }
-
-    .consumable-notification-item-top {
-        flex-wrap: wrap;
-    }
-
-    .consumable-notification-state {
-        margin-left: 54px;
-    }
 }
 
 .shell-header {

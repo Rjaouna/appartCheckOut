@@ -402,7 +402,6 @@ function renderConsumableNotifications(root, payload) {
         badge.textContent = String(count);
         badge.hidden = count <= 0;
     }
-
 }
 
 function closeConsumableNotificationPanels() {
@@ -427,10 +426,10 @@ function schedulePendingActionReminder(root) {
         window.clearTimeout(pendingActionReminderTimer);
     }
 
-    const delay = Number.parseInt(root.dataset.pendingNotificationsDelay || '60000', 10);
+    const delay = Number.parseInt(root.dataset.pendingNotificationsDelay || '30000', 10);
     pendingActionReminderTimer = window.setTimeout(() => {
         loadPendingActionNotifications(root);
-    }, Number.isFinite(delay) && delay > 0 ? delay : 60000);
+    }, Number.isFinite(delay) && delay > 0 ? delay : 30000);
 }
 
 async function loadPendingActionNotifications(root) {

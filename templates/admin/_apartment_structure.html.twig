@@ -109,6 +109,19 @@
                     <p>Construire la checklist pièce par pièce et garder une base propre.</p>
                 </a>
 
+                <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'consumables'}) }}">
+                    <div class="admin-detail-entry-head">
+                        <span class="admin-detail-entry-icon admin-detail-entry-icon-soft" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M7 3h10l1 5v13H6V8l1-5Zm2 2-.4 2h6.8L15 5H9Zm1 6h4v2h-4v-2Zm0 4h6v2h-6v-2Z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="admin-detail-entry-metric">{{ apartmentConsumableRestockAlerts|length > 0 ? apartmentConsumableRestockAlerts|length ~ ' alerte' : consumableItems|length }}</span>
+                    </div>
+                    <strong>Consommables</strong>
+                    <p>Papier toilette, savon, capsules café et petits stocks à suivre pendant le check-out.</p>
+                </a>
+
                 <a class="admin-detail-entry-card admin-detail-entry-card-soft" href="{{ path('admin_apartment_section', {id: apartment.id, section: 'anomalies'}) }}">
                     <div class="admin-detail-entry-head">
                         <span class="admin-detail-entry-icon admin-detail-entry-icon-warning" aria-hidden="true">
@@ -917,6 +930,155 @@
                         <p class="empty-state">Commence par ajouter les pièces principales de l’appartement.</p>
                     {% endfor %}
                 </div>
+            </section>
+        {% elseif currentSection == 'consumables' %}
+            <section class="admin-detail-panel">
+                <div class="admin-detail-panel-head">
+                    <div>
+                        <span class="admin-detail-entry-kicker">Stock terrain</span>
+                        <h2>Consommables</h2>
+                        <p>Prépare les consommables à vérifier pendant le check-out : papier toilette, savon, capsules café, sacs poubelle...</p>
+                    </div>
+                    <div class="admin-detail-panel-actions">
+                        <form method="post" action="{{ path('admin_consumable_item_add_standards', {id: apartment.id}) }}" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                            <button class="secondary-button" type="submit">Ajouter les standards</button>
+                        </form>
+                        <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
+                    </div>
+                </div>
+
+                <div class="admin-consumable-layout">
+                    <article class="admin-detail-focus-card admin-detail-focus-card-primary">
+                        <div class="admin-detail-focus-head">
+                            <div>
+                                <span class="admin-detail-focus-kicker">Nouveau stock</span>
+                                <h3>Ajouter un consommable</h3>
+                            </div>
+                            <span class="status-badge">{{ consumableItems|length }}</span>
+                        </div>
+                        <form method="post" action="{{ path('admin_consumable_item_create', {id: apartment.id}) }}" class="stack-form admin-detail-form-card" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                            <label>
+                                <span>Nom</span>
+                                <input type="text" name="name" placeholder="Ex. Papier toilette" required>
+                            </label>
+                            <div class="form-grid-3">
+                                <label>
+                                    <span>Unité</span>
+                                    <input type="text" name="unit" placeholder="rouleaux, flacons...">
+                                </label>
+                                <label>
+                                    <span>Minimum</span>
+                                    <input type="number" name="minimumQuantity" min="0" value="0">
+                                </label>
+                                <label>
+                                    <span>Stock actuel</span>
+                                    <input type="number" name="currentQuantity" min="0" placeholder="Optionnel">
+                                </label>
+                            </div>
+                            <button class="primary-button" type="submit">Ajouter le consommable</button>
+                        </form>
+                    </article>
+
+                    <article class="admin-consumable-alert-card">
+                        <div class="panel-head">
+                            <div>
+                                <h3>Alertes de réapprovisionnement</h3>
+                                <p class="muted">Les stocks faibles ou manquants remontent ici après un check-out.</p>
+                            </div>
+                            <span class="status-badge {{ apartmentConsumableRestockAlerts|length > 0 ? 'is-warning' : 'is-success' }}">{{ apartmentConsumableRestockAlerts|length }}</span>
+                        </div>
+
+                        {% if apartmentConsumableRestockAlerts|length > 0 %}
+                            <div class="mini-list admin-consumable-alert-list">
+                                {% for alert in apartmentConsumableRestockAlerts %}
+                                    <article class="compact-card admin-consumable-alert">
+                                        <div>
+                                            <strong>{{ alert.item.name }}</strong>
+                                            <p>
+                                                {{ alert.status.label }}
+                                                {% if alert.checkout and alert.checkout.scheduledAt %}
+                                                    · check-out du {{ alert.checkout.scheduledAt|date('d/m/Y H:i') }}
+                                                {% endif %}
+                                                {% if alert.quantity is not null %}
+                                                    · relevé : {{ alert.quantity }}{% if alert.item.unit %} {{ alert.item.unit }}{% endif %}
+                                                {% endif %}
+                                            </p>
+                                            {% if alert.note %}
+                                                <small>{{ alert.note }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <form method="post" action="{{ path(alert.restockRoute, alert.routeParams) }}" class="consumable-inline-restock-form" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                                            <input type="hidden" name="context" value="apartment">
+                                            <input type="number" name="addedQuantity" min="1" inputmode="numeric" placeholder="Qté ajoutée" required>
+                                            <button class="secondary-button" type="submit">Réapprovisionner</button>
+                                        </form>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="empty-state">Aucune alerte de stock pour cet appartement.</p>
+                        {% endif %}
+                    </article>
+                </div>
+
+                {% if consumableItems|length > 0 %}
+                    <div class="admin-consumable-grid">
+                        {% for consumable in consumableItems %}
+                            <article class="admin-consumable-item-card">
+                                <div class="admin-consumable-item-head">
+                                    <div>
+                                        <strong>{{ consumable.name }}</strong>
+                                        <p>
+                                            Minimum {{ consumable.minimumQuantity }}{% if consumable.unit %} {{ consumable.unit }}{% endif %}
+                                            {% if consumable.currentQuantity is not null %}
+                                                · stock actuel {{ consumable.currentQuantity }}{% if consumable.unit %} {{ consumable.unit }}{% endif %}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <form
+                                        method="post"
+                                        action="{{ path('admin_consumable_item_delete', {id: consumable.id}) }}"
+                                        data-async-form
+                                        data-update-target="{{ detailUpdateTarget }}"
+                                        data-confirm-reset
+                                        data-confirm-title="Retirer ce consommable"
+                                        data-confirm-message="Il ne sera plus proposé pendant les prochains check-outs. L’historique déjà créé reste conservé."
+                                    >
+                                        <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Retirer {{ consumable.name }}" title="Retirer">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M6 7h12l-1 14H7L6 7Zm3-4h6l1 2h4v2H4V5h4l1-2Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <form method="post" action="{{ path('admin_consumable_item_update', {id: consumable.id}) }}" class="stack-form compact-form" data-async-form data-update-target="{{ detailUpdateTarget }}">
+                                    <label>
+                                        <span>Nom</span>
+                                        <input type="text" name="name" value="{{ consumable.name }}" required>
+                                    </label>
+                                    <div class="form-grid-3">
+                                        <label>
+                                            <span>Unité</span>
+                                            <input type="text" name="unit" value="{{ consumable.unit }}">
+                                        </label>
+                                        <label>
+                                            <span>Minimum</span>
+                                            <input type="number" name="minimumQuantity" min="0" value="{{ consumable.minimumQuantity }}">
+                                        </label>
+                                        <label>
+                                            <span>Stock actuel</span>
+                                            <input type="number" name="currentQuantity" min="0" value="{{ consumable.currentQuantity }}">
+                                        </label>
+                                    </div>
+                                    <button class="secondary-button" type="submit">Mettre à jour</button>
+                                </form>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-state">Aucun consommable n’est encore configuré. Ajoute les standards ou crée ton premier stock.</p>
+                {% endif %}
             </section>
         {% elseif currentSection == 'anomalies' %}
             <section class="admin-detail-panel">

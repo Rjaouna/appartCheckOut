@@ -11,11 +11,14 @@ use App\Entity\ApartmentManual;
 use App\Entity\ApartmentReservation;
 use App\Entity\Checkout;
 use App\Entity\CheckoutLine;
+use App\Entity\ConsumableCheck;
+use App\Entity\ConsumableItem;
 use App\Entity\EquipmentCatalog;
 use App\Entity\Room;
 use App\Entity\RoomEquipment;
 use App\Entity\ServiceOffer;
 use App\Entity\User;
+use App\Enum\ConsumableCheckStatus;
 use App\Enum\EquipmentCheckStatus;
 use App\Enum\ApartmentStatus;
 use App\Enum\CheckoutStatus;
@@ -37,7 +40,18 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 #[Route('/admin')]
 class AdminController extends AbstractController
 {
-    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'guidebook', 'arrivals', 'assignment', 'rooms', 'anomalies', 'settings'];
+    private const APARTMENT_DETAIL_SECTIONS = ['checkout', 'access', 'apartment-access', 'guidebook', 'arrivals', 'assignment', 'rooms', 'consumables', 'anomalies', 'settings'];
+    private const STANDARD_CONSUMABLES = [
+        ['name' => 'Papier toilette', 'unit' => 'rouleaux', 'minimumQuantity' => 2],
+        ['name' => 'Savon mains', 'unit' => 'flacons', 'minimumQuantity' => 1],
+        ['name' => 'Gel douche', 'unit' => 'flacons', 'minimumQuantity' => 1],
+        ['name' => 'Shampooing', 'unit' => 'flacons', 'minimumQuantity' => 1],
+        ['name' => 'Capsules café', 'unit' => 'capsules', 'minimumQuantity' => 10],
+        ['name' => 'Sacs poubelle', 'unit' => 'sacs', 'minimumQuantity' => 3],
+        ['name' => 'Liquide vaisselle', 'unit' => 'flacons', 'minimumQuantity' => 1],
+        ['name' => 'Éponge', 'unit' => 'pièces', 'minimumQuantity' => 1],
+        ['name' => 'Piles', 'unit' => 'pièces', 'minimumQuantity' => 2],
+    ];
     private const APARTMENT_RICH_TEXT_FIELDS = [
         'entryInstructions',
         'internalNotes',
@@ -860,6 +874,199 @@ class AdminController extends AbstractController
         return $this->apartmentDetailResponse($apartment, $entityManager, 'Image de l’appartement mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
+    #[Route('/apartments/{id}/consumables', name: 'admin_consumable_item_create', methods: ['POST'])]
+    public function createConsumableItem(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        try {
+            $item = $this->hydrateConsumableItem(new ConsumableItem(), $apartment, $request);
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        $entityManager->persist($item);
+        $entityManager->flush();
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Consommable ajouté au stock.', 'consumables');
+    }
+
+    #[Route('/apartments/{id}/consumables/standards', name: 'admin_consumable_item_add_standards', methods: ['POST'])]
+    public function addStandardConsumables(Apartment $apartment, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $items = $entityManager->getRepository(ConsumableItem::class)->findBy(['apartment' => $apartment]);
+        $itemsByName = [];
+        foreach ($items as $item) {
+            if ($item instanceof ConsumableItem) {
+                $itemsByName[mb_strtolower($item->getName())] = $item;
+            }
+        }
+
+        $addedCount = 0;
+        foreach (self::STANDARD_CONSUMABLES as $standard) {
+            $key = mb_strtolower($standard['name']);
+            if (isset($itemsByName[$key])) {
+                if (!$itemsByName[$key]->isActive()) {
+                    $itemsByName[$key]->setActive(true);
+                    ++$addedCount;
+                }
+
+                continue;
+            }
+
+            $item = (new ConsumableItem())
+                ->setApartment($apartment)
+                ->setName($standard['name'])
+                ->setUnit($standard['unit'])
+                ->setMinimumQuantity((int) $standard['minimumQuantity']);
+
+            $entityManager->persist($item);
+            ++$addedCount;
+        }
+
+        $entityManager->flush();
+
+        $message = $addedCount > 0
+            ? sprintf('%d consommable%s standard%s ajouté%s.', $addedCount, $addedCount > 1 ? 's' : '', $addedCount > 1 ? 's' : '', $addedCount > 1 ? 's' : '')
+            : 'Les consommables standards sont déjà présents.';
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, $message, 'consumables');
+    }
+
+    #[Route('/consumables/{id}/update', name: 'admin_consumable_item_update', methods: ['POST'])]
+    public function updateConsumableItem(ConsumableItem $item, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $apartment = $item->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
+        }
+
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $this->hydrateConsumableItem($item, $apartment, $request);
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        if ($this->isConsumableStockBackToMinimum($item)) {
+            $this->markConsumableAlertsRestocked($item, $entityManager, $actor);
+        }
+
+        $entityManager->flush();
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Consommable mis à jour.', 'consumables');
+    }
+
+    #[Route('/consumables/{id}/restock', name: 'admin_consumable_item_restock', methods: ['POST'])]
+    public function restockConsumableItem(ConsumableItem $item, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $rawQuantity = trim((string) $request->request->get('addedQuantity'));
+        if ($rawQuantity === '' || !ctype_digit($rawQuantity) || (int) $rawQuantity <= 0) {
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne la quantité ajoutée au stock.'], 422);
+        }
+
+        $item->setCurrentQuantity(($item->getCurrentQuantity() ?? 0) + (int) $rawQuantity);
+        if ($this->isConsumableStockBackToMinimum($item)) {
+            $this->markConsumableAlertsRestocked($item, $entityManager, $actor);
+        }
+
+        $entityManager->flush();
+
+        if ((string) $request->request->get('context') === 'topbar') {
+            return $this->consumableNotificationPayload($entityManager, 'Stock mis à jour.');
+        }
+
+        if ((string) $request->request->get('context') === 'dashboard') {
+            return new JsonResponse([
+                'success' => true,
+                'html' => $this->renderView('admin/_dashboard_content.html.twig', $this->buildDashboardData($entityManager)),
+                'message' => 'Stock mis à jour.',
+            ]);
+        }
+
+        $apartment = $item->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => true, 'message' => 'Stock mis à jour.']);
+        }
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Stock mis à jour.', 'consumables');
+    }
+
+    #[Route('/consumables/{id}/delete', name: 'admin_consumable_item_delete', methods: ['POST'])]
+    public function deleteConsumableItem(ConsumableItem $item, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $apartment = $item->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 404);
+        }
+
+        $item->setActive(false);
+        $entityManager->flush();
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Consommable retiré de la liste.', 'consumables');
+    }
+
+    #[Route('/consumables/notifications', name: 'admin_consumable_notifications', methods: ['GET'])]
+    public function consumableNotifications(EntityManagerInterface $entityManager): JsonResponse
+    {
+        return $this->consumableNotificationPayload($entityManager);
+    }
+
+    #[Route('/consumable-checks/{id}/restock', name: 'admin_consumable_check_restock', methods: ['POST'])]
+    public function markConsumableRestocked(ConsumableCheck $check, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $item = $check->getConsumableItem();
+        if (!$item instanceof ConsumableItem) {
+            return new JsonResponse(['success' => false, 'message' => 'Consommable introuvable.'], 404);
+        }
+
+        $rawQuantity = trim((string) $request->request->get('addedQuantity'));
+        if ($rawQuantity === '' || !ctype_digit($rawQuantity) || (int) $rawQuantity <= 0) {
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne la quantité ajoutée au stock.'], 422);
+        }
+
+        $addedQuantity = (int) $rawQuantity;
+        $currentQuantity = $item->getCurrentQuantity() ?? $check->getQuantity() ?? 0;
+        $item->setCurrentQuantity($currentQuantity + $addedQuantity);
+
+        if ($this->isConsumableStockBackToMinimum($item)) {
+            $this->markConsumableAlertsRestocked($item, $entityManager, $actor);
+        }
+
+        $entityManager->flush();
+
+        if ((string) $request->request->get('context') === 'topbar') {
+            return $this->consumableNotificationPayload($entityManager, 'Stock mis à jour.');
+        }
+
+        if ((string) $request->request->get('context') === 'dashboard') {
+            return new JsonResponse([
+                'success' => true,
+                'html' => $this->renderView('admin/_dashboard_content.html.twig', $this->buildDashboardData($entityManager)),
+                'message' => 'Stock mis à jour.',
+            ]);
+        }
+
+        $apartment = $check->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return new JsonResponse(['success' => true, 'message' => 'Stock mis à jour.']);
+        }
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Stock mis à jour.', 'consumables');
+    }
+
     #[Route('/apartments/{id}/status', name: 'admin_apartment_status', methods: ['POST'])]
     public function updateApartmentStatus(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -1436,7 +1643,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/checkouts/{id}', name: 'admin_checkout_show', methods: ['GET'])]
-    public function showCheckout(Checkout $checkout): Response
+    public function showCheckout(Checkout $checkout, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
 
@@ -1451,6 +1658,8 @@ class AdminController extends AbstractController
             'checkoutCompleteRoute' => 'admin_checkout_complete',
             'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
             'checkoutRoomBulkOkRoute' => 'admin_checkout_room_bulk_ok',
+            'checkoutConsumableUpdateRoute' => 'admin_checkout_consumable_update',
+            ...$this->buildCheckoutConsumableTemplateData($checkout, $entityManager),
         ]);
     }
 
@@ -1511,8 +1720,46 @@ class AdminController extends AbstractController
                 'checkoutCompleteRoute' => 'admin_checkout_complete',
                 'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
                 'checkoutRoomBulkOkRoute' => 'admin_checkout_room_bulk_ok',
+                'checkoutConsumableUpdateRoute' => 'admin_checkout_consumable_update',
+                ...$this->buildCheckoutConsumableTemplateData($checkout, $entityManager),
             ]),
             'message' => $message,
+        ]);
+    }
+
+    #[Route('/checkouts/{checkout}/consumables/{item}', name: 'admin_checkout_consumable_update', methods: ['POST'])]
+    public function updateCheckoutConsumable(Checkout $checkout, ConsumableItem $item, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $this->saveCheckoutConsumableCheck($checkout, $item, $request, $entityManager, $actor);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'html' => $this->renderView('employee/_checkout_workspace.html.twig', [
+                'checkout' => $checkout,
+                'roomGroups' => $this->buildCheckoutRoomGroups($checkout),
+                'dashboardRoute' => 'admin_dashboard',
+                'checkoutShowRoute' => 'admin_checkout_show',
+                'checkoutRoomRoute' => 'admin_checkout_room_show',
+                'checkoutPauseRoute' => 'admin_checkout_pause',
+                'checkoutResumeRoute' => 'admin_checkout_resume',
+                'checkoutCompleteRoute' => 'admin_checkout_complete',
+                'checkoutLineUpdateRoute' => 'admin_checkout_line_update',
+                'checkoutRoomBulkOkRoute' => 'admin_checkout_room_bulk_ok',
+                'checkoutConsumableUpdateRoute' => 'admin_checkout_consumable_update',
+                ...$this->buildCheckoutConsumableTemplateData($checkout, $entityManager),
+            ]),
+            'message' => 'Stock consommable mis à jour.',
         ]);
     }
 
@@ -1583,9 +1830,64 @@ class AdminController extends AbstractController
             'html' => $this->renderView('employee/_checkout_completion.html.twig', [
                 'apartmentName' => $checkout->getApartment()?->getName() ?? 'Appartement',
             ]),
-            'redirect' => $this->generateUrl('admin_dashboard'),
-            'redirectDelayMs' => 2000,
+            'redirect' => $this->hasCheckoutConsumables($checkout, $entityManager)
+                ? $this->generateUrl('admin_checkout_consumable_inventory', ['id' => $checkout->getId()])
+                : $this->generateUrl('admin_dashboard'),
+            'redirectDelayMs' => 1200,
             'message' => 'Check-out terminé.',
+        ]);
+    }
+
+    #[Route('/checkouts/{id}/consumables/inventory', name: 'admin_checkout_consumable_inventory', methods: ['GET'])]
+    public function consumableInventory(Checkout $checkout, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+        $this->denyConsumableInventoryUnlessCheckoutCompleted($checkout);
+
+        return $this->render('employee/consumable_inventory.html.twig', [
+            'checkout' => $checkout,
+            'dashboardRoute' => 'admin_dashboard',
+            'inventoryRoute' => 'admin_checkout_consumable_inventory',
+            'skipRoute' => 'admin_checkout_consumable_inventory_skip',
+            'quantityRoute' => 'admin_checkout_consumable_quantity_update',
+            ...$this->buildConsumableInventoryData($checkout, $entityManager, $request),
+        ]);
+    }
+
+    #[Route('/checkouts/{id}/consumables/inventory/skip', name: 'admin_checkout_consumable_inventory_skip', methods: ['POST'])]
+    public function skipConsumableInventory(Checkout $checkout): Response
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+        $this->addFlash('success', 'Check-out terminé. Inventaire consommables ignoré.');
+
+        return $this->redirectToRoute('admin_dashboard');
+    }
+
+    #[Route('/checkouts/{checkout}/consumables/{item}/quantity', name: 'admin_checkout_consumable_quantity_update', methods: ['POST'])]
+    public function updateConsumableInventoryQuantity(Checkout $checkout, ConsumableItem $item, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $this->denyAccessUnlessGrantedToAdminCheckout($checkout);
+        $actor = $this->getUser();
+        if (!$actor instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $this->saveConsumableInventoryQuantity($checkout, $item, $request, $entityManager, $actor);
+            $entityManager->flush();
+        } catch (\InvalidArgumentException $exception) {
+            $this->addFlash('error', $exception->getMessage());
+
+            return $this->redirectToRoute('admin_checkout_consumable_inventory', [
+                'id' => $checkout->getId(),
+                'start' => 1,
+                'item' => $item->getId(),
+            ]);
+        }
+
+        return $this->redirectToRoute('admin_checkout_consumable_inventory', [
+            'id' => $checkout->getId(),
+            'start' => 1,
         ]);
     }
 
@@ -2002,12 +2304,423 @@ class AdminController extends AbstractController
             'reservations' => $reservations,
             'nextArrivalReservation' => $nextArrivalReservation,
             'todayDate' => $today,
+            'consumableItems' => $this->findConsumableItems($apartment, $entityManager),
+            'consumableStatuses' => ConsumableCheckStatus::cases(),
+            'apartmentConsumableRestockAlerts' => $this->buildConsumableRestockAlertRows($entityManager, $apartment),
             'hasOpenCheckout' => $this->hasOpenCheckout($apartment, $entityManager),
             'anomalyCount' => count($anomalies),
             'anomalyGroups' => $this->buildAnomalyGroups($anomalies, $this->buildApartmentRepeatCounts($apartment, $entityManager)),
             'canDeleteApartment' => !$this->hasCheckoutHistory($apartment, $entityManager)
                 && !$this->hasOpenAnomalies($apartment, $entityManager),
         ];
+    }
+
+    private function hydrateConsumableItem(ConsumableItem $item, Apartment $apartment, Request $request): ConsumableItem
+    {
+        $name = trim((string) $request->request->get('name'));
+        if ($name === '') {
+            throw new \InvalidArgumentException('Le nom du consommable est obligatoire.');
+        }
+
+        $currentQuantityValue = trim((string) $request->request->get('currentQuantity', ''));
+
+        return $item
+            ->setApartment($apartment)
+            ->setName($name)
+            ->setUnit($request->request->get('unit') !== null ? (string) $request->request->get('unit') : null)
+            ->setMinimumQuantity(max(0, (int) $request->request->get('minimumQuantity', 0)))
+            ->setCurrentQuantity($currentQuantityValue !== '' ? max(0, (int) $currentQuantityValue) : null)
+            ->setActive(true);
+    }
+
+    /**
+     * @return list<ConsumableItem>
+     */
+    private function findConsumableItems(Apartment $apartment, EntityManagerInterface $entityManager): array
+    {
+        return $entityManager->getRepository(ConsumableItem::class)->findBy(
+            ['apartment' => $apartment, 'active' => true],
+            ['name' => 'ASC']
+        );
+    }
+
+    /**
+     * @return list<ConsumableCheck>
+     */
+    private function findOpenConsumableRestockAlerts(EntityManagerInterface $entityManager, ?Apartment $apartment = null, ?int $limit = null): array
+    {
+        $queryBuilder = $entityManager->createQueryBuilder()
+            ->select('consumableCheck', 'item', 'apartment', 'checkout', 'checkedBy')
+            ->from(ConsumableCheck::class, 'consumableCheck')
+            ->join('consumableCheck.consumableItem', 'item')
+            ->join('consumableCheck.apartment', 'apartment')
+            ->join('consumableCheck.checkout', 'checkout')
+            ->leftJoin('consumableCheck.checkedBy', 'checkedBy')
+            ->where('consumableCheck.status IN (:statuses)')
+            ->andWhere('consumableCheck.restockedAt IS NULL')
+            ->andWhere('item.active = :active')
+            ->setParameter('statuses', [ConsumableCheckStatus::Low, ConsumableCheckStatus::Missing])
+            ->setParameter('active', true)
+            ->orderBy('consumableCheck.checkedAt', 'DESC');
+
+        if ($apartment instanceof Apartment) {
+            $queryBuilder
+                ->andWhere('consumableCheck.apartment = :apartmentFilter')
+                ->setParameter('apartmentFilter', $apartment);
+        }
+
+        if ($limit !== null) {
+            $queryBuilder->setMaxResults($limit);
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    private function consumableNotificationPayload(EntityManagerInterface $entityManager, string $message = ''): JsonResponse
+    {
+        $alerts = $this->buildConsumableRestockAlertRows($entityManager, null, 12);
+
+        return new JsonResponse([
+            'success' => true,
+            'count' => count($alerts),
+            'html' => $this->renderView('admin/_consumable_notifications_panel.html.twig', [
+                'consumableRestockAlerts' => $alerts,
+            ]),
+            'message' => $message,
+        ]);
+    }
+
+    /**
+     * @return list<array{kind:string,key:string,item:ConsumableItem,apartment:Apartment,checkout:?Checkout,status:ConsumableCheckStatus,quantity:?int,note:?string,restockRoute:string,routeParams:array<string,int>}>
+     */
+    private function buildConsumableRestockAlertRows(EntityManagerInterface $entityManager, ?Apartment $apartment = null, ?int $limit = null): array
+    {
+        $alerts = [];
+        $itemIdsWithAlert = [];
+
+        foreach ($this->findOpenConsumableRestockAlerts($entityManager, $apartment) as $check) {
+            $item = $check->getConsumableItem();
+            $alertApartment = $check->getApartment();
+            if (!$item instanceof ConsumableItem || !$alertApartment instanceof Apartment) {
+                continue;
+            }
+
+            $currentQuantity = $item->getCurrentQuantity();
+            if ($currentQuantity !== null && $this->isConsumableStockBackToMinimum($item)) {
+                continue;
+            }
+
+            $itemId = $item->getId();
+            if ($itemId !== null) {
+                $itemIdsWithAlert[$itemId] = true;
+            }
+
+            $alerts[] = [
+                'kind' => 'check',
+                'key' => 'check-' . $check->getId(),
+                'item' => $item,
+                'apartment' => $alertApartment,
+                'checkout' => $check->getCheckout(),
+                'status' => $check->getStatus(),
+                'quantity' => $currentQuantity ?? $check->getQuantity(),
+                'note' => $check->getNote(),
+                'restockRoute' => 'admin_consumable_check_restock',
+                'routeParams' => ['id' => (int) $check->getId()],
+            ];
+        }
+
+        $queryBuilder = $entityManager->createQueryBuilder()
+            ->select('item', 'apartment')
+            ->from(ConsumableItem::class, 'item')
+            ->join('item.apartment', 'apartment')
+            ->where('item.active = :active')
+            ->andWhere('item.currentQuantity IS NOT NULL')
+            ->andWhere('item.minimumQuantity > 0')
+            ->andWhere('item.currentQuantity < item.minimumQuantity')
+            ->setParameter('active', true)
+            ->orderBy('apartment.name', 'ASC')
+            ->addOrderBy('item.name', 'ASC');
+
+        if ($apartment instanceof Apartment) {
+            $queryBuilder
+                ->andWhere('item.apartment = :apartmentFilter')
+                ->setParameter('apartmentFilter', $apartment);
+        }
+
+        foreach ($queryBuilder->getQuery()->getResult() as $item) {
+            if (!$item instanceof ConsumableItem || !$item->getApartment() instanceof Apartment || $item->getId() === null || isset($itemIdsWithAlert[$item->getId()])) {
+                continue;
+            }
+
+            $alerts[] = [
+                'kind' => 'item',
+                'key' => 'item-' . $item->getId(),
+                'item' => $item,
+                'apartment' => $item->getApartment(),
+                'checkout' => null,
+                'status' => ($item->getCurrentQuantity() ?? 0) <= 0 ? ConsumableCheckStatus::Missing : ConsumableCheckStatus::Low,
+                'quantity' => $item->getCurrentQuantity(),
+                'note' => null,
+                'restockRoute' => 'admin_consumable_item_restock',
+                'routeParams' => ['id' => $item->getId()],
+            ];
+        }
+
+        usort($alerts, static fn (array $left, array $right): int => strcasecmp($left['apartment']->getName(), $right['apartment']->getName()) ?: strcasecmp($left['item']->getName(), $right['item']->getName()));
+
+        return $limit !== null ? array_slice($alerts, 0, $limit) : $alerts;
+    }
+
+    private function isConsumableStockBackToMinimum(ConsumableItem $item): bool
+    {
+        $currentQuantity = $item->getCurrentQuantity();
+        if ($currentQuantity === null) {
+            return false;
+        }
+
+        $minimumQuantity = $item->getMinimumQuantity() > 0 ? $item->getMinimumQuantity() : 1;
+
+        return $currentQuantity >= $minimumQuantity;
+    }
+
+    private function markConsumableAlertsRestocked(ConsumableItem $item, EntityManagerInterface $entityManager, User $actor): void
+    {
+        $openAlerts = $entityManager->createQueryBuilder()
+            ->select('consumableCheck')
+            ->from(ConsumableCheck::class, 'consumableCheck')
+            ->where('consumableCheck.consumableItem = :item')
+            ->andWhere('consumableCheck.status IN (:statuses)')
+            ->andWhere('consumableCheck.restockedAt IS NULL')
+            ->setParameter('item', $item)
+            ->setParameter('statuses', [ConsumableCheckStatus::Low, ConsumableCheckStatus::Missing])
+            ->getQuery()
+            ->getResult();
+
+        foreach ($openAlerts as $alert) {
+            if ($alert instanceof ConsumableCheck) {
+                $alert->markRestocked($actor);
+            }
+        }
+    }
+
+    /**
+     * @return array{consumableItems:list<ConsumableItem>, consumableChecksByItemId:array<int, ConsumableCheck>, consumableStatuses:list<ConsumableCheckStatus>}
+     */
+    private function buildCheckoutConsumableTemplateData(Checkout $checkout, EntityManagerInterface $entityManager): array
+    {
+        $apartment = $checkout->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return [
+                'consumableItems' => [],
+                'consumableChecksByItemId' => [],
+                'consumableStatuses' => ConsumableCheckStatus::cases(),
+            ];
+        }
+
+        $checks = $entityManager->getRepository(ConsumableCheck::class)->findBy(['checkout' => $checkout]);
+        $checksByItemId = [];
+        foreach ($checks as $check) {
+            if (!$check instanceof ConsumableCheck || !$check->getConsumableItem() instanceof ConsumableItem) {
+                continue;
+            }
+
+            $itemId = $check->getConsumableItem()->getId();
+            if ($itemId !== null) {
+                $checksByItemId[$itemId] = $check;
+            }
+        }
+
+        return [
+            'consumableItems' => $this->findConsumableItems($apartment, $entityManager),
+            'consumableChecksByItemId' => $checksByItemId,
+            'consumableStatuses' => ConsumableCheckStatus::cases(),
+        ];
+    }
+
+    private function saveCheckoutConsumableCheck(Checkout $checkout, ConsumableItem $item, Request $request, EntityManagerInterface $entityManager, User $actor): void
+    {
+        $apartment = $checkout->getApartment();
+        if (!$apartment instanceof Apartment || !$item->getApartment() instanceof Apartment || $item->getApartment()->getId() !== $apartment->getId() || !$item->isActive()) {
+            throw new \InvalidArgumentException('Ce consommable ne correspond pas à cet appartement.');
+        }
+
+        $status = ConsumableCheckStatus::tryFrom((string) $request->request->get('status'));
+        if (!$status instanceof ConsumableCheckStatus) {
+            throw new \InvalidArgumentException('Sélectionne un statut de stock valide.');
+        }
+
+        $check = $entityManager->getRepository(ConsumableCheck::class)->findOneBy([
+            'checkout' => $checkout,
+            'consumableItem' => $item,
+        ]);
+
+        if (!$check instanceof ConsumableCheck) {
+            $check = (new ConsumableCheck())
+                ->setCheckout($checkout)
+                ->setConsumableItem($item)
+                ->setApartment($apartment);
+            $entityManager->persist($check);
+        }
+
+        $check
+            ->setStatus($status)
+            ->setNote($request->request->get('note') !== null ? (string) $request->request->get('note') : null)
+            ->setCheckedBy($actor)
+            ->setCheckedAt(new \DateTimeImmutable());
+    }
+
+    private function hasCheckoutConsumables(Checkout $checkout, EntityManagerInterface $entityManager): bool
+    {
+        $apartment = $checkout->getApartment();
+        if (!$apartment instanceof Apartment) {
+            return false;
+        }
+
+        return count($this->findConsumableItems($apartment, $entityManager)) > 0;
+    }
+
+    private function denyConsumableInventoryUnlessCheckoutCompleted(Checkout $checkout): void
+    {
+        if ($checkout->getStatus() !== CheckoutStatus::Completed) {
+            throw $this->createAccessDeniedException('L’inventaire des consommables est disponible après la clôture du check-out.');
+        }
+    }
+
+    /**
+     * @return array{started:bool, consumableItems:list<ConsumableItem>, consumableChecksByItemId:array<int, ConsumableCheck>, completedConsumableCount:int, currentConsumable:?ConsumableItem, currentConsumableCheck:?ConsumableCheck, isFinished:bool}
+     */
+    private function buildConsumableInventoryData(Checkout $checkout, EntityManagerInterface $entityManager, Request $request): array
+    {
+        $apartment = $checkout->getApartment();
+        $items = $apartment instanceof Apartment ? $this->findConsumableItems($apartment, $entityManager) : [];
+        $checksByItemId = $this->buildConsumableChecksByItemId($checkout, $entityManager);
+        $started = (bool) $request->query->get('start', false);
+        $requestedItemId = max(0, (int) $request->query->get('item', 0));
+        $currentItem = null;
+        $completedCount = 0;
+
+        foreach ($items as $item) {
+            $itemId = $item->getId();
+            $check = $itemId !== null && isset($checksByItemId[$itemId]) ? $checksByItemId[$itemId] : null;
+            if ($check instanceof ConsumableCheck && $check->getQuantity() !== null) {
+                ++$completedCount;
+            }
+
+            if ($started && $requestedItemId > 0 && $itemId === $requestedItemId) {
+                $currentItem = $item;
+            }
+        }
+
+        if ($started && !$currentItem instanceof ConsumableItem) {
+            foreach ($items as $item) {
+                $itemId = $item->getId();
+                $check = $itemId !== null && isset($checksByItemId[$itemId]) ? $checksByItemId[$itemId] : null;
+                if (!$check instanceof ConsumableCheck || $check->getQuantity() === null) {
+                    $currentItem = $item;
+                    break;
+                }
+            }
+        }
+
+        $currentCheck = $currentItem instanceof ConsumableItem && $currentItem->getId() !== null && isset($checksByItemId[$currentItem->getId()])
+            ? $checksByItemId[$currentItem->getId()]
+            : null;
+
+        return [
+            'started' => $started,
+            'consumableItems' => $items,
+            'consumableChecksByItemId' => $checksByItemId,
+            'completedConsumableCount' => $completedCount,
+            'currentConsumable' => $currentItem,
+            'currentConsumableCheck' => $currentCheck,
+            'isFinished' => $started && count($items) > 0 && !$currentItem instanceof ConsumableItem,
+        ];
+    }
+
+    /**
+     * @return array<int, ConsumableCheck>
+     */
+    private function buildConsumableChecksByItemId(Checkout $checkout, EntityManagerInterface $entityManager): array
+    {
+        $checksByItemId = [];
+        foreach ($entityManager->getRepository(ConsumableCheck::class)->findBy(['checkout' => $checkout]) as $check) {
+            if (!$check instanceof ConsumableCheck || !$check->getConsumableItem() instanceof ConsumableItem) {
+                continue;
+            }
+
+            $itemId = $check->getConsumableItem()->getId();
+            if ($itemId !== null) {
+                $checksByItemId[$itemId] = $check;
+            }
+        }
+
+        return $checksByItemId;
+    }
+
+    private function saveConsumableInventoryQuantity(Checkout $checkout, ConsumableItem $item, Request $request, EntityManagerInterface $entityManager, User $actor): void
+    {
+        $apartment = $checkout->getApartment();
+        if (!$apartment instanceof Apartment || !$item->getApartment() instanceof Apartment || $item->getApartment()->getId() !== $apartment->getId() || !$item->isActive()) {
+            throw new \InvalidArgumentException('Ce consommable ne correspond pas à cet appartement.');
+        }
+
+        $rawQuantity = trim((string) $request->request->get('quantity'));
+        if ($rawQuantity === '' || !ctype_digit($rawQuantity)) {
+            throw new \InvalidArgumentException('Renseigne une quantité actuelle valide.');
+        }
+
+        $quantity = (int) $rawQuantity;
+        $status = ConsumableCheckStatus::Ok;
+        if ($quantity <= 0) {
+            $status = ConsumableCheckStatus::Missing;
+        } elseif ($item->getMinimumQuantity() > 0 && $quantity < $item->getMinimumQuantity()) {
+            $status = ConsumableCheckStatus::Low;
+        }
+
+        $check = $entityManager->getRepository(ConsumableCheck::class)->findOneBy([
+            'checkout' => $checkout,
+            'consumableItem' => $item,
+        ]);
+
+        if (!$check instanceof ConsumableCheck) {
+            $check = (new ConsumableCheck())
+                ->setCheckout($checkout)
+                ->setConsumableItem($item)
+                ->setApartment($apartment);
+            $entityManager->persist($check);
+        }
+
+        $item->setCurrentQuantity($quantity);
+        $check
+            ->setQuantity($quantity)
+            ->setStatus($status)
+            ->setNote($request->request->get('note') !== null ? (string) $request->request->get('note') : null)
+            ->setCheckedBy($actor)
+            ->setCheckedAt(new \DateTimeImmutable());
+
+        $this->closePreviousConsumableRestockAlerts($item, $check, $entityManager, $actor);
+    }
+
+    private function closePreviousConsumableRestockAlerts(ConsumableItem $item, ConsumableCheck $currentCheck, EntityManagerInterface $entityManager, User $actor): void
+    {
+        $openAlerts = $entityManager->createQueryBuilder()
+            ->select('consumableCheck')
+            ->from(ConsumableCheck::class, 'consumableCheck')
+            ->where('consumableCheck.consumableItem = :item')
+            ->andWhere('consumableCheck.status IN (:statuses)')
+            ->andWhere('consumableCheck.restockedAt IS NULL')
+            ->setParameter('item', $item)
+            ->setParameter('statuses', [ConsumableCheckStatus::Low, ConsumableCheckStatus::Missing])
+            ->getQuery()
+            ->getResult();
+
+        foreach ($openAlerts as $alert) {
+            if (!$alert instanceof ConsumableCheck || ($currentCheck->getId() !== null && $alert->getId() === $currentCheck->getId())) {
+                continue;
+            }
+
+            $alert->markRestocked($actor);
+        }
     }
 
     private function normalizeApartmentDetailSection(?string $section): ?string
@@ -2208,6 +2921,7 @@ class AdminController extends AbstractController
             )),
             'todayDate' => $today,
             'pendingServiceOffers' => $pendingServiceOffers,
+            'consumableRestockAlerts' => $this->buildConsumableRestockAlertRows($entityManager, null, 8),
             'manualCount' => $entityManager->getRepository(ApartmentManual::class)->count([]),
             'employeeCount' => count(array_filter(
                 $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),

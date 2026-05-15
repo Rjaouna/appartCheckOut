@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inventaire consommables{% endblock %}
+
+{% block body %}
+    {% set totalConsumables = consumableItems|length %}
+    {% set progressPercent = totalConsumables > 0 ? ((completedConsumableCount / totalConsumables) * 100)|round(0, 'floor') : 0 %}
+
+    <section class="consumable-inventory-shell">
+        <div class="consumable-inventory-topbar">
+            <a class="secondary-button app-back-button" href="{{ path(dashboardRoute) }}">Accueil</a>
+            <span class="status-badge">{{ checkout.apartment.name }}</span>
+        </div>
+
+        <article class="consumable-inventory-card">
+            {% if totalConsumables == 0 %}
+                <span class="employee-home-kicker">Stock terrain</span>
+                <h1>Aucun consommable à inventorier</h1>
+                <p class="muted">Aucun consommable n’est configuré pour cet appartement. Tu peux terminer le parcours.</p>
+                <a class="primary-button full-width" href="{{ path(dashboardRoute) }}">Retour à l’accueil</a>
+            {% elseif not started %}
+                <span class="employee-home-kicker">Check-out terminé</span>
+                <h1>Souhaitez-vous lancer un inventaire des consommables ?</h1>
+                <p class="muted">Cette étape permet de relever les quantités restantes. Si le stock est sous le minimum, une alerte sera envoyée automatiquement à l’administrateur.</p>
+
+                <div class="consumable-inventory-summary">
+                    <strong>{{ totalConsumables }}</strong>
+                    <span>consommable{{ totalConsumables > 1 ? 's' : '' }} à vérifier</span>
+                </div>
+
+                <div class="consumable-inventory-actions">
+                    <a class="primary-button full-width" href="{{ path(inventoryRoute, {id: checkout.id, start: 1}) }}">Oui, lancer l’inventaire</a>
+                    <form method="post" action="{{ path(skipRoute, {id: checkout.id}) }}">
+                        <button class="secondary-button full-width" type="submit">Non, terminer</button>
+                    </form>
+                </div>
+            {% elseif isFinished %}
+                {% set alertCount = 0 %}
+                {% for consumable in consumableItems %}
+                    {% set check = consumableChecksByItemId[consumable.id] is defined ? consumableChecksByItemId[consumable.id] : null %}
+                    {% if check and check.status.value != 'ok' %}
+                        {% set alertCount = alertCount + 1 %}
+                    {% endif %}
+                {% endfor %}
+
+                <span class="employee-home-kicker">Inventaire terminé</span>
+                <h1>Stock consommables enregistré</h1>
+                <p class="muted">
+                    {% if alertCount > 0 %}
+                        {{ alertCount }} alerte{{ alertCount > 1 ? 's' : '' }} de réapprovisionnement {{ alertCount > 1 ? 'ont été créées' : 'a été créée' }} pour l’administrateur.
+                    {% else %}
+                        Tous les consommables sont au-dessus du stock minimum.
+                    {% endif %}
+                </p>
+
+                <div class="consumable-inventory-done-list">
+                    {% for consumable in consumableItems %}
+                        {% set check = consumableChecksByItemId[consumable.id] is defined ? consumableChecksByItemId[consumable.id] : null %}
+                        <div class="consumable-inventory-done-item">
+                            <span>{{ consumable.name }}</span>
+                            {% if check %}
+                                <strong>{{ check.quantity }}{% if consumable.unit %} {{ consumable.unit }}{% endif %}</strong>
+                                <em class="{{ check.status.badgeClass }}">{{ check.status.label }}</em>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <a class="primary-button full-width" href="{{ path(dashboardRoute) }}">Retour à l’accueil</a>
+            {% else %}
+                {% set currentPosition = completedConsumableCount + 1 %}
+                {% for consumable in consumableItems %}
+                    {% if consumable.id == currentConsumable.id %}
+                        {% set currentPosition = loop.index %}
+                    {% endif %}
+                {% endfor %}
+                <span class="employee-home-kicker">Inventaire consommables</span>
+                <div class="consumable-inventory-progress">
+                    <div>
+                        <h1>{{ currentConsumable.name }}</h1>
+                        <p>{{ currentPosition }} sur {{ totalConsumables }}</p>
+                    </div>
+                    <span class="progress-badge">{{ progressPercent }}%</span>
+                </div>
+                <div class="consumable-inventory-progressbar">
+                    <span style="width: {{ progressPercent }}%"></span>
+                </div>
+
+                <div class="consumable-inventory-current">
+                    <div class="consumable-inventory-current-icon" aria-hidden="true">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div>
+                        <strong>{{ currentConsumable.name }}</strong>
+                        <p>
+                            Minimum attendu : {{ currentConsumable.minimumQuantity }}{% if currentConsumable.unit %} {{ currentConsumable.unit }}{% endif %}
+                            {% if currentConsumable.currentQuantity is not null %}
+                                · dernier stock connu : {{ currentConsumable.currentQuantity }}{% if currentConsumable.unit %} {{ currentConsumable.unit }}{% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" action="{{ path(quantityRoute, {checkout: checkout.id, item: currentConsumable.id}) }}" class="stack-form consumable-inventory-form">
+                    <label>
+                        <span>Quantité actuelle</span>
+                        <input type="number" name="quantity" min="0" inputmode="numeric" value="{{ currentConsumableCheck and currentConsumableCheck.quantity is not null ? currentConsumableCheck.quantity : '' }}" placeholder="Ex. 6" required autofocus>
+                    </label>
+                    <label>
+                        <span>Note optionnelle</span>
+                        <textarea name="note" rows="2" placeholder="Ex. à racheter rapidement, paquet entamé...">{{ currentConsumableCheck ? currentConsumableCheck.note : '' }}</textarea>
+                    </label>
+                    <button class="primary-button full-width" type="submit">Enregistrer et continuer</button>
+                </form>
+
+                {% if completedConsumableCount > 0 %}
+                    <div class="consumable-inventory-mini-list">
+                        <strong>Déjà saisis</strong>
+                        {% for consumable in consumableItems %}
+                            {% set check = consumableChecksByItemId[consumable.id] is defined ? consumableChecksByItemId[consumable.id] : null %}
+                            {% if check and check.quantity is not null %}
+                                <a href="{{ path(inventoryRoute, {id: checkout.id, start: 1, item: consumable.id}) }}">
+                                    <span>{{ consumable.name }}</span>
+                                    <small>{{ check.quantity }}{% if consumable.unit %} {{ consumable.unit }}{% endif %} · modifier</small>
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endif %}
+        </article>
+    </section>
+{% endblock %}

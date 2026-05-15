@@ -54,6 +54,28 @@
                 </a>
 
                 <div class="top-app-actions">
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <div
+                            class="top-consumable-notifications"
+                            data-consumable-notifications
+                            data-consumable-notifications-endpoint="{{ path('admin_consumable_notifications') }}"
+                        >
+                            <button
+                                class="top-app-install-button top-consumable-notification-button"
+                                type="button"
+                                title="Stocks consommables"
+                                aria-label="Ouvrir les notifications consommables"
+                                aria-expanded="false"
+                                data-consumable-notifications-trigger
+                            >
+                                <i class="bi bi-bell-fill" aria-hidden="true"></i>
+                                <span class="top-consumable-notification-badge" data-consumable-notifications-badge hidden>0</span>
+                            </button>
+                            <div class="top-consumable-notification-panel" data-consumable-notifications-panel hidden>
+                                <div class="consumable-notification-loading">Chargement des stocks...</div>
+                            </div>
+                        </div>
+                    {% else %}
                     <button
                         class="top-app-install-button"
                         type="button"
@@ -68,6 +90,7 @@
                             <path d="M5 17v1a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
                     </button>
+                    {% endif %}
 
                     <button
                         id="floating-main-menu-button"
@@ -117,7 +140,7 @@
                 id="pending-action-reminder-root"
                 data-pending-notifications
                 data-pending-notifications-endpoint="{{ path('app_pending_notifications') }}"
-                data-pending-notifications-delay="30000"
+                data-pending-notifications-delay="60000"
                 aria-live="polite"
             ></div>
         {% endif %}

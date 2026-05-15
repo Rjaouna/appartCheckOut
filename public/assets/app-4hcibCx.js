@@ -403,6 +403,28 @@ function renderConsumableNotifications(root, payload) {
         badge.hidden = count <= 0;
     }
 
+    if (
+        count > 0
+        && root.dataset.consumableNotificationsAutoOpen === 'true'
+        && root.dataset.consumableNotificationsAutoOpened !== 'true'
+    ) {
+        root.dataset.consumableNotificationsAutoOpened = 'true';
+        window.setTimeout(() => openConsumableNotificationPanel(root), 500);
+    }
+}
+
+function openConsumableNotificationPanel(root) {
+    const panel = root.querySelector('[data-consumable-notifications-panel]');
+    const trigger = root.querySelector('[data-consumable-notifications-trigger]');
+    if (!(panel instanceof HTMLElement)) {
+        return;
+    }
+
+    closeConsumableNotificationPanels();
+    panel.hidden = false;
+    if (trigger instanceof HTMLElement) {
+        trigger.setAttribute('aria-expanded', 'true');
+    }
 }
 
 function closeConsumableNotificationPanels() {
@@ -427,10 +449,10 @@ function schedulePendingActionReminder(root) {
         window.clearTimeout(pendingActionReminderTimer);
     }
 
-    const delay = Number.parseInt(root.dataset.pendingNotificationsDelay || '60000', 10);
+    const delay = Number.parseInt(root.dataset.pendingNotificationsDelay || '30000', 10);
     pendingActionReminderTimer = window.setTimeout(() => {
         loadPendingActionNotifications(root);
-    }, Number.isFinite(delay) && delay > 0 ? delay : 60000);
+    }, Number.isFinite(delay) && delay > 0 ? delay : 30000);
 }
 
 async function loadPendingActionNotifications(root) {

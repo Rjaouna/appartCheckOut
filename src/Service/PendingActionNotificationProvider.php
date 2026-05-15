@@ -5,11 +5,14 @@ namespace App\Service;
 use App\Entity\ApartmentReservation;
 use App\Entity\AirbnbCheck;
 use App\Entity\Checkout;
+use App\Entity\ConsumableCheck;
+use App\Entity\ConsumableItem;
 use App\Entity\ReservationCheckin;
 use App\Entity\ServiceOffer;
 use App\Entity\User;
 use App\Enum\ApartmentStatus;
 use App\Enum\CheckoutStatus;
+use App\Enum\ConsumableCheckStatus;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -40,6 +43,7 @@ class PendingActionNotificationProvider
             $this->appendPendingServiceValidationActions($actions);
             $this->appendUnprocessedCheckinActions($actions);
             $this->appendAirbnbAuditActions($actions);
+            $this->appendConsumableRestockActions($actions);
         } else {
             $this->appendEmployeePendingServiceActions($actions, $user);
         }
@@ -351,6 +355,90 @@ class PendingActionNotificationProvider
             if (count($seenApartmentIds) >= 4) {
                 break;
             }
+        }
+    }
+
+    /**
+     * @param list<array{id:string,type:string,title:string,description:string,url:string,meta:string,priority:string}> $actions
+     */
+    private function appendConsumableRestockActions(array &$actions): void
+    {
+        $seenItemIds = [];
+        $alerts = $this->entityManager->createQueryBuilder()
+            ->select('consumableCheck', 'item', 'apartment')
+            ->from(ConsumableCheck::class, 'consumableCheck')
+            ->join('consumableCheck.consumableItem', 'item')
+            ->join('consumableCheck.apartment', 'apartment')
+            ->where('consumableCheck.status IN (:statuses)')
+            ->andWhere('consumableCheck.restockedAt IS NULL')
+            ->andWhere('item.active = :active')
+            ->setParameter('statuses', [ConsumableCheckStatus::Low, ConsumableCheckStatus::Missing])
+            ->setParameter('active', true)
+            ->orderBy('consumableCheck.checkedAt', 'DESC')
+            ->setMaxResults(4)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($alerts as $alert) {
+            if (!$alert instanceof ConsumableCheck || !$alert->getApartment() || !$alert->getConsumableItem()) {
+                continue;
+            }
+
+            $item = $alert->getConsumableItem();
+            $currentQuantity = $item->getCurrentQuantity();
+            if ($currentQuantity !== null && $item->getMinimumQuantity() > 0 && $currentQuantity >= $item->getMinimumQuantity()) {
+                continue;
+            }
+
+            if ($item->getId() !== null) {
+                $seenItemIds[$item->getId()] = true;
+            }
+
+            $quantityMeta = $alert->getQuantity() !== null
+                ? sprintf('Relevé : %d', $alert->getQuantity())
+                : $alert->getStatus()->label();
+
+            $actions[] = [
+                'id' => sprintf('consumable-restock-%d', $alert->getId()),
+                'type' => 'consumable',
+                'title' => 'Stock à réapprovisionner',
+                'description' => sprintf('%s · %s', $alert->getConsumableItem()->getName(), $alert->getApartment()->getName()),
+                'url' => $this->urlGenerator->generate('admin_apartment_section', ['id' => $alert->getApartment()->getId(), 'section' => 'consumables']),
+                'meta' => $quantityMeta,
+                'priority' => $alert->getStatus() === ConsumableCheckStatus::Missing ? 'danger' : 'warning',
+            ];
+        }
+
+        $items = $this->entityManager->createQueryBuilder()
+            ->select('item', 'apartment')
+            ->from(ConsumableItem::class, 'item')
+            ->join('item.apartment', 'apartment')
+            ->where('item.active = :active')
+            ->andWhere('item.currentQuantity IS NOT NULL')
+            ->andWhere('item.minimumQuantity > 0')
+            ->andWhere('item.currentQuantity < item.minimumQuantity')
+            ->setParameter('active', true)
+            ->orderBy('apartment.name', 'ASC')
+            ->addOrderBy('item.name', 'ASC')
+            ->setMaxResults(4)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($items as $item) {
+            if (!$item instanceof ConsumableItem || !$item->getApartment() || $item->getId() === null || isset($seenItemIds[$item->getId()])) {
+                continue;
+            }
+
+            $status = ($item->getCurrentQuantity() ?? 0) <= 0 ? ConsumableCheckStatus::Missing : ConsumableCheckStatus::Low;
+            $actions[] = [
+                'id' => sprintf('consumable-item-%d-low-stock', $item->getId()),
+                'type' => 'consumable',
+                'title' => 'Stock consommable faible',
+                'description' => sprintf('%s · %s', $item->getName(), $item->getApartment()->getName()),
+                'url' => $this->urlGenerator->generate('admin_apartment_section', ['id' => $item->getApartment()->getId(), 'section' => 'consumables']),
+                'meta' => sprintf('Stock : %d / min. %d', $item->getCurrentQuantity() ?? 0, $item->getMinimumQuantity()),
+                'priority' => $status === ConsumableCheckStatus::Missing ? 'danger' : 'warning',
+            ];
         }
     }
 }
