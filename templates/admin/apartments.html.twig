@@ -33,7 +33,7 @@
                 </button>
             </div>
 
-            <form id="admin-apartment-create-form" method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form admin-create-form is-collapsed">
+            <form id="admin-apartment-create-form" method="post" action="{{ path('admin_apartment_create') }}" class="stack-form tight-form admin-create-form is-collapsed" enctype="multipart/form-data">
                 <input type="hidden" name="_token" value="{{ csrf_token('admin_apartment_create') }}">
                 <label><span>Nom *</span><input name="name" required data-apartment-template-name></label>
                 <button
@@ -126,6 +126,7 @@
                     <label><span>Nom du propriétaire *</span><input name="ownerName"></label>
                     <label><span>Numéro de téléphone *</span><input name="ownerPhone"></label>
                 </div>
+                <label><span>Image de l’appartement</span><input type="file" name="image" accept="image/*"></label>
                 <label><span>Email propriétaire</span><input type="email" name="ownerEmail" placeholder="proprietaire@exemple.com"></label>
                 <label><span>Notes internes</span></label>
                 <div class="trix-field-shell">

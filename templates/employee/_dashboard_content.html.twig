@@ -1,5 +1,8 @@
+{% set employeeApartmentHeroImages = apartments|map(apartment => apartment.imagePath)|filter(path => path) %}
+{% set employeeHeroImage = todayCheckout and todayCheckout.apartment.imagePath ? todayCheckout.apartment.imagePath : (employeeApartmentHeroImages|length > 0 ? random(employeeApartmentHeroImages) : '/img/ecrans/appartement.png') %}
+
 <div id="employee-dashboard-content" data-checkout-count="{{ checkoutCount }}">
-    <section class="employee-home-intro">
+    <section class="employee-home-intro dashboard-photo-hero" style="--dashboard-photo: url('{{ asset(employeeHeroImage)|e('html_attr') }}');">
         <h1>Mon espace</h1>
         <p>{{ user.fullName }}</p>
     </section>
@@ -16,6 +19,7 @@
 
             <div class="dashboard-ongoing-list">
                 {% for checkout in ongoingCheckouts %}
+                    {% set ongoingEmployees = checkout.apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
                     <article class="dashboard-ongoing-card">
                         <div class="dashboard-ongoing-copy">
                             <strong>{{ checkout.apartment.name }}</strong>
@@ -26,6 +30,22 @@
                                 {% endif %}
                             </p>
                         </div>
+                        {% if ongoingEmployees|length > 0 %}
+                            <div class="dashboard-ongoing-avatars" aria-label="Employés associés">
+                                {% for employee in ongoingEmployees|slice(0, 4) %}
+                                    <span class="dashboard-ongoing-avatar {{ employee.photoPath ? 'has-photo' : '' }}" title="{{ employee.fullName }}">
+                                        {% if employee.photoPath %}
+                                            <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
+                                        {% else %}
+                                            {{ employee.fullName|first|upper }}
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
+                                {% if ongoingEmployees|length > 4 %}
+                                    <span class="dashboard-ongoing-avatar dashboard-ongoing-avatar-more">+{{ ongoingEmployees|length - 4 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                         <a class="primary-button dashboard-ongoing-action" href="{{ path('employee_checkout_show', {id: checkout.id}) }}">Reprendre</a>
                     </article>
                 {% endfor %}
@@ -108,6 +128,9 @@
                         {% endif %}
                     </p>
                 </div>
+                <span class="dashboard-card-visual" aria-hidden="true">
+                    <img src="{{ asset('/img/ecrans/mesanomalies.png') }}" alt="">
+                </span>
             </article>
 
             <article class="employee-home-entry-card employee-home-entry-card-soft">
@@ -134,6 +157,9 @@
                         {% endif %}
                     </p>
                 </div>
+                <span class="dashboard-card-visual" aria-hidden="true">
+                    <img src="{{ asset('/img/ecrans/monprochaincheck-out.png') }}" alt="">
+                </span>
             </article>
 
             <article class="employee-home-entry-card employee-home-entry-card-primary" data-click-url="{{ path('employee_apartments') }}">
@@ -151,6 +177,9 @@
                     <h4><a class="employee-home-title-link" href="{{ path('employee_apartments') }}">Mes appartements</a></h4>
                     <p>{{ apartments|length }} appartement{{ apartments|length > 1 ? 's' : '' }} assigné{{ apartments|length > 1 ? 's' : '' }}.</p>
                 </div>
+                <span class="dashboard-card-visual" aria-hidden="true">
+                    <img src="{{ asset('/img/ecrans/mesappartements.png') }}" alt="">
+                </span>
             </article>
 
             <article class="employee-home-entry-card employee-home-entry-card-soft" data-click-url="{{ path('employee_arrivals') }}">
@@ -170,6 +199,9 @@
                     <h4><a class="employee-home-title-link" href="{{ path('employee_arrivals') }}">Mes arrivées</a></h4>
                     <p>{{ arrivalCount }} arrivée{{ arrivalCount > 1 ? 's' : '' }} avec état d’avancement visible.</p>
                 </div>
+                <span class="dashboard-card-visual" aria-hidden="true">
+                    <img src="{{ asset('/img/ecrans/mesarrivees.png') }}" alt="">
+                </span>
             </article>
 
             <article class="employee-home-entry-card employee-home-entry-card-soft" data-click-url="{{ path('employee_profile') }}">
@@ -188,6 +220,9 @@
                     <h4><a class="employee-home-title-link" href="{{ path('employee_profile') }}">Mon profil</a></h4>
                     <p>{{ activeServiceCount }} service{{ activeServiceCount > 1 ? 's' : '' }} actif{{ activeServiceCount > 1 ? 's' : '' }}.</p>
                 </div>
+                <span class="dashboard-card-visual" aria-hidden="true">
+                    <img src="{{ asset('/img/ecrans/monprofil.png') }}" alt="">
+                </span>
             </article>
         </div>
     </section>

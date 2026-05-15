@@ -955,6 +955,35 @@
                     </div>
                     <a class="secondary-button admin-detail-back-button app-back-button" href="{{ overviewUrl }}">Retour à la fiche</a>
                 </div>
+                <section class="admin-apartment-image-card">
+                    <div class="admin-apartment-image-preview {{ apartment.imagePath ? 'has-image' : '' }}">
+                        {% if apartment.imagePath %}
+                            <img src="{{ apartment.imagePath }}" alt="{{ apartment.name }}">
+                        {% else %}
+                            <img src="{{ asset('/img/ecrans/appartement.png') }}" alt="">
+                        {% endif %}
+                    </div>
+                    <form
+                        method="post"
+                        action="{{ path('admin_apartment_image_update', {id: apartment.id}) }}"
+                        class="stack-form compact-form admin-apartment-image-form"
+                        enctype="multipart/form-data"
+                        data-async-form
+                        data-update-target="{{ detailUpdateTarget }}"
+                    >
+                        <input type="hidden" name="section" value="{{ currentSection }}">
+                        <div>
+                            <span class="admin-detail-entry-kicker">Image d’accueil</span>
+                            <h3>Photo de l’appartement</h3>
+                            <p class="muted">Elle sera utilisée pour donner plus de vie aux accueils admin et employé.</p>
+                        </div>
+                        <label>
+                            <span>Choisir une image</span>
+                            <input type="file" name="image" accept="image/*" required>
+                        </label>
+                        <button class="secondary-button" type="submit">Mettre à jour l’image</button>
+                    </form>
+                </section>
                 <div class="panel-head">
                     <h3>Statut actuel</h3>
                     <span class="status-badge">{{ apartment.status.label }}</span>

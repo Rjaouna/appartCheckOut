@@ -3,9 +3,11 @@
 {% set pendingCheckoutCount = scheduledCheckouts|length %}
 {% set todayArrivalCount = todayArrivalReservations|length %}
 {% set upcomingArrivalCount = upcomingArrivalReservations|length %}
+{% set apartmentHeroImages = apartmentCards|map(card => card.apartment.imagePath)|filter(path => path) %}
+{% set dashboardHeroImage = apartmentHeroImages|length > 0 ? random(apartmentHeroImages) : '/img/ecrans/appartement.png' %}
 
 <div class="admin-dashboard-hub">
-    <section class="admin-dashboard-hero">
+    <section class="admin-dashboard-hero dashboard-photo-hero" style="--dashboard-photo: url('{{ asset(dashboardHeroImage)|e('html_attr') }}');">
         <div class="admin-dashboard-hero-copy">
             <h1>Bonjour {{ app.user.fullName|split(' ')|first }}</h1>
             <p>Tout le nécessaire pour gérer les appartements, les anomalies et les check-outs.</p>
@@ -42,6 +44,7 @@
 
             <div class="dashboard-ongoing-list">
                 {% for checkout in ongoingCheckouts %}
+                    {% set ongoingEmployees = checkout.apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
                     <article class="dashboard-ongoing-card">
                         <div class="dashboard-ongoing-copy">
                             <strong>{{ checkout.apartment.name }}</strong>
@@ -55,6 +58,22 @@
                                 {% endif %}
                             </p>
                         </div>
+                        {% if ongoingEmployees|length > 0 %}
+                            <div class="dashboard-ongoing-avatars" aria-label="Employés associés">
+                                {% for employee in ongoingEmployees|slice(0, 4) %}
+                                    <span class="dashboard-ongoing-avatar {{ employee.photoPath ? 'has-photo' : '' }}" title="{{ employee.fullName }}">
+                                        {% if employee.photoPath %}
+                                            <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
+                                        {% else %}
+                                            {{ employee.fullName|first|upper }}
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
+                                {% if ongoingEmployees|length > 4 %}
+                                    <span class="dashboard-ongoing-avatar dashboard-ongoing-avatar-more">+{{ ongoingEmployees|length - 4 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                         <a class="primary-button dashboard-ongoing-action" href="{{ path('admin_checkout_show', {id: checkout.id}) }}">Reprendre</a>
                     </article>
                 {% endfor %}
@@ -76,6 +95,9 @@
                 <h2><a class="admin-dashboard-title-link" href="{{ path('admin_apartments') }}">Appartements</a></h2>
                 <p>{{ apartmentCards|length > 0 ? 'Liste complète et accès rapide aux fiches.' : 'Aucun appartement actif.' }}</p>
             </div>
+            <span class="dashboard-card-visual" aria-hidden="true">
+                <img src="{{ asset('/img/ecrans/appartement.png') }}" alt="">
+            </span>
         </article>
 
         <article class="admin-dashboard-entry-card admin-dashboard-entry-card-warning" data-click-url="{{ path('admin_anomalies') }}">
@@ -97,6 +119,9 @@
                     {% endif %}
                 </p>
             </div>
+            <span class="dashboard-card-visual" aria-hidden="true">
+                <img src="{{ asset('/img/ecrans/appartementavecannomalies.png') }}" alt="">
+            </span>
         </article>
     </section>
 
@@ -122,6 +147,9 @@
                     {% endif %}
                 </p>
             </div>
+            <span class="dashboard-card-visual dashboard-card-visual-wide" aria-hidden="true">
+                <img src="{{ asset('/img/ecrans/gestiondesarrivees.png') }}" alt="">
+            </span>
         </article>
 
         <article class="admin-dashboard-wide-card admin-dashboard-wide-card-soft" data-click-url="{{ path('admin_users') }}">
@@ -137,6 +165,9 @@
                 <h2><a class="admin-dashboard-title-link" href="{{ path('admin_users') }}">Gérer les employés</a></h2>
                 <p>Créer, modifier et autoriser le suivi des anomalies.</p>
             </div>
+            <span class="dashboard-card-visual dashboard-card-visual-wide" aria-hidden="true">
+                <img src="{{ asset('/img/ecrans/gererlesemployes.png') }}" alt="">
+            </span>
         </article>
 
         <article class="admin-dashboard-wide-card admin-dashboard-wide-card-soft" data-click-url="{{ path('admin_manuals') }}">
@@ -150,6 +181,9 @@
                 <h2><a class="admin-dashboard-title-link" href="{{ path('admin_manuals') }}">Manuels</a></h2>
                 <p>Vidéos et consignes importantes par appartement.</p>
             </div>
+            <span class="dashboard-card-visual dashboard-card-visual-wide" aria-hidden="true">
+                <img src="{{ asset('/img/ecrans/manuels.png') }}" alt="">
+            </span>
         </article>
 
         <article class="admin-dashboard-wide-card admin-dashboard-wide-card-accent">
@@ -170,6 +204,9 @@
                     <span class="admin-dashboard-chip">{{ finishedCheckouts|length }} terminés</span>
                 </div>
             </div>
+            <span class="dashboard-card-visual dashboard-card-visual-wide" aria-hidden="true">
+                <img src="{{ asset('/img/ecrans/check-out.png') }}" alt="">
+            </span>
 
             <div class="admin-dashboard-wide-actions">
                 {% if pendingCheckoutCount == 0 %}

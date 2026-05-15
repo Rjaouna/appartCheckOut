@@ -118,6 +118,9 @@ class Apartment
     #[ORM\Column(type: Types::JSON)]
     private array $generalPhotos = [];
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $imagePath = null;
+
     /**
      * @var Collection<int, User>
      */
@@ -621,6 +624,18 @@ class Apartment
     public function setGeneralPhotos(array $generalPhotos): self
     {
         $this->generalPhotos = $generalPhotos;
+
+        return $this;
+    }
+
+    public function getImagePath(): ?string
+    {
+        return $this->imagePath;
+    }
+
+    public function setImagePath(?string $imagePath): self
+    {
+        $this->imagePath = $imagePath;
 
         return $this;
     }

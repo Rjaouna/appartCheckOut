@@ -12,22 +12,33 @@
         {% set airbnbBadges = airbnbCheckBadges|default({}) %}
         {% for apartment in apartments %}
             {% set activeManagers = apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
-            {% set leadManager = activeManagers|first %}
-            {% set extraManagerCount = activeManagers|length > 1 ? activeManagers|length - 1 : 0 %}
-            {% set managerListId = 'admin-apartment-managers-' ~ apartment.id %}
             {% set keyBoxCode = apartment.keyBoxCode ?: 'Non renseigné' %}
-            {% set buildingCode = apartment.buildingAccessCode ?: 'Non renseigné' %}
             {% set openAnomalyCount = openAnomalyCounts[apartment.id] ?? 0 %}
             {% set airbnbBadge = airbnbBadges[apartment.id] ?? {label: 'Non audité', class: 'is-neutral'} %}
             <article class="admin-apartment-card admin-apartment-list-card {{ apartment.status.value != 'active' ? 'is-dimmed' : '' }}" data-click-url="{{ path('admin_apartment_show', {id: apartment.id}) }}">
                 <div class="admin-apartment-card-glow" aria-hidden="true"></div>
 
+                <div class="admin-apartment-card-media">
+                    <img src="{{ asset(apartment.imagePath ?: '/img/ecrans/appartement.png') }}" alt="{{ apartment.name }}">
+                    {% if activeManagers|length > 0 %}
+                        <div class="admin-apartment-card-avatars" aria-label="Employés associés">
+                            {% for employee in activeManagers|slice(0, 4) %}
+                                <a class="admin-apartment-card-avatar {{ employee.photoPath ? 'has-photo' : '' }}" href="{{ path('admin_user_show', {id: employee.id}) }}" title="{{ employee.fullName }}" aria-label="Voir la fiche de {{ employee.fullName }}">
+                                    {% if employee.photoPath %}
+                                        <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
+                                    {% else %}
+                                        {{ employee.fullName|first|upper }}
+                                    {% endif %}
+                                </a>
+                            {% endfor %}
+                            {% if activeManagers|length > 4 %}
+                                <span class="admin-apartment-card-avatar admin-apartment-card-avatar-more" title="{{ activeManagers|length - 4 }} employé{{ activeManagers|length - 4 > 1 ? 's' : '' }} supplémentaire{{ activeManagers|length - 4 > 1 ? 's' : '' }}">+{{ activeManagers|length - 4 }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
                 <header class="admin-apartment-card-header">
-                    <span class="admin-apartment-card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M4 20V9.8L12 4l8 5.8V20h-5.4v-6.1H9.4V20H4Z" fill="currentColor"/>
-                        </svg>
-                    </span>
                     <div class="admin-apartment-card-title">
                         <div class="admin-apartment-card-badges">
                             <span class="status-badge {{ apartment.status.value == 'active' ? 'is-success' : 'is-neutral' }}">{{ apartment.status.label }}</span>
@@ -54,45 +65,7 @@
                         <span>Code porte</span>
                         <strong>{{ keyBoxCode }}</strong>
                     </div>
-                    <div>
-                        <span>Code immeuble</span>
-                        <strong>{{ buildingCode }}</strong>
-                    </div>
-                    <div>
-                        <span>Chambres</span>
-                        <strong>{{ apartment.bedroomCount }}</strong>
-                    </div>
                 </div>
-
-                <div class="admin-apartment-card-manager">
-                    <span class="admin-apartment-card-manager-label">Responsable</span>
-                    <div>
-                        {% if leadManager %}
-                            <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: leadManager.id}) }}">{{ leadManager.fullName }}</a>
-                            {% if extraManagerCount > 0 %}
-                                <button
-                                    class="apartment-manager-toggle"
-                                    type="button"
-                                    data-toggle-target="#{{ managerListId }}"
-                                    data-toggle-label-open="+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }}"
-                                    data-toggle-label-closed="+{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }}"
-                                >
-                                    +{{ extraManagerCount }} autre{{ extraManagerCount > 1 ? 's' : '' }}
-                                </button>
-                            {% endif %}
-                        {% else %}
-                            <span class="muted">Aucun employé assigné</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                {% if extraManagerCount > 0 %}
-                    <div id="{{ managerListId }}" class="apartment-manager-list is-collapsed">
-                        {% for employee in activeManagers|slice(1) %}
-                            <a class="apartment-manager-link" href="{{ path('admin_user_show', {id: employee.id}) }}">{{ employee.fullName }}</a>
-                        {% endfor %}
-                    </div>
-                {% endif %}
 
                 <footer class="admin-apartment-card-footer">
                     <span>{{ apartment.city }}</span>

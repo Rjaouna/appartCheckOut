@@ -764,6 +764,18 @@ class AdminController extends AbstractController
             }
         }
 
+        $image = $request->files->get('image');
+        if ($image instanceof UploadedFile && $image->getError() !== UPLOAD_ERR_NO_FILE) {
+            try {
+                $this->assertAcceptedImageUpload($image, 8 * 1024 * 1024, 'L’image de l’appartement');
+                $apartment->setImagePath($this->storeApartmentImage($image));
+            } catch (\InvalidArgumentException $exception) {
+                $this->addFlash('error', $exception->getMessage());
+
+                return $this->redirectToRoute('admin_apartments');
+            }
+        }
+
         $apartment->setWazeLink($this->buildWazeLink(
             $apartment->getAddressLine1(),
             $apartment->getCity(),
@@ -827,6 +839,27 @@ class AdminController extends AbstractController
         return $this->apartmentDetailResponse($apartment, $entityManager, 'Information appartement mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
     }
 
+    #[Route('/apartments/{id}/image', name: 'admin_apartment_image_update', methods: ['POST'])]
+    public function updateApartmentImage(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $image = $request->files->get('image');
+        if (!$image instanceof UploadedFile || $image->getError() === UPLOAD_ERR_NO_FILE) {
+            return new JsonResponse(['success' => false, 'message' => 'Ajoute une image avant de valider.'], 422);
+        }
+
+        try {
+            $this->assertAcceptedImageUpload($image, 8 * 1024 * 1024, 'L’image de l’appartement');
+            $oldImagePath = $apartment->getImagePath();
+            $apartment->setImagePath($this->storeApartmentImage($image));
+            $entityManager->flush();
+            $this->deleteApartmentImage($oldImagePath);
+        } catch (\InvalidArgumentException $exception) {
+            return new JsonResponse(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+
+        return $this->apartmentDetailResponse($apartment, $entityManager, 'Image de l’appartement mise à jour.', $this->normalizeApartmentDetailSection((string) $request->request->get('section')));
+    }
+
     #[Route('/apartments/{id}/status', name: 'admin_apartment_status', methods: ['POST'])]
     public function updateApartmentStatus(Apartment $apartment, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -861,6 +894,7 @@ class AdminController extends AbstractController
             static fn (ApartmentAccessStep $step): ?string => $step->getImagePath(),
             $apartment->getOrderedAccessSteps()
         );
+        $apartmentImagePath = $apartment->getImagePath();
 
         $entityManager->remove($apartment);
         $entityManager->flush();
@@ -868,6 +902,7 @@ class AdminController extends AbstractController
         foreach ($accessStepImagePaths as $imagePath) {
             $this->deleteApartmentAccessStepImage($imagePath);
         }
+        $this->deleteApartmentImage($apartmentImagePath);
 
         return new JsonResponse([
             'success' => true,
@@ -2859,6 +2894,7 @@ class AdminController extends AbstractController
             ->setGuestEmergencyInfo($templateApartment->getGuestEmergencyInfo())
             ->setGuestEquipmentInfo($templateApartment->getGuestEquipmentInfo())
             ->setGeneralPhotos($templateApartment->getGeneralPhotos())
+            ->setImagePath($templateApartment->getImagePath())
             ->setStatus(ApartmentStatus::Active)
             ->setIsInventoryPriority($templateApartment->isInventoryPriority())
             ->setInventoryDueAt($templateApartment->getInventoryDueAt());
@@ -3063,6 +3099,22 @@ class AdminController extends AbstractController
         return '/uploads/apartment-access/' . $filename;
     }
 
+    private function storeApartmentImage(UploadedFile $image): string
+    {
+        $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/apartments';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $safeName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeName = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeName) ?: 'apartment';
+        $filename = sprintf('%s-%s.%s', $safeName, bin2hex(random_bytes(4)), $image->guessExtension() ?: 'jpg');
+
+        $image->move($targetDir, $filename);
+
+        return '/uploads/apartments/' . $filename;
+    }
+
     private function storeApartmentManualVideo(UploadedFile $video): string
     {
         $targetDir = $this->getParameter('kernel.project_dir') . '/public/uploads/manuals';
@@ -3207,6 +3259,18 @@ class AdminController extends AbstractController
     private function deleteApartmentAccessStepImage(?string $imagePath): void
     {
         if (!is_string($imagePath) || $imagePath === '' || !str_starts_with($imagePath, '/uploads/apartment-access/')) {
+            return;
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $imagePath;
+        if (is_file($fullPath)) {
+            @unlink($fullPath);
+        }
+    }
+
+    private function deleteApartmentImage(?string $imagePath): void
+    {
+        if (!is_string($imagePath) || $imagePath === '' || !str_starts_with($imagePath, '/uploads/apartments/')) {
             return;
         }
 
