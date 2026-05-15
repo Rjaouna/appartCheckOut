@@ -34,24 +34,38 @@
             <div class="airbnb-apartment-list">
                 {% for apartment in apartments %}
                     {% set latestCheck = latestChecks[apartment.id] ?? null %}
-                    <article class="airbnb-apartment-card">
+                    <article class="airbnb-apartment-card {{ latestCheck ? latestCheck.badgeClass : 'is-neutral' }}">
+                        <span class="airbnb-apartment-card-glow" aria-hidden="true"></span>
                         <div class="airbnb-apartment-card-main">
-                            <div class="airbnb-room-icon">
+                            <div class="airbnb-apartment-icon">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.6 12 3l9 7.6V21h-6v-6H9v6H3V10.6Z" fill="currentColor"/></svg>
                             </div>
-                            <div>
-                                <h3>{{ apartment.name }}</h3>
+                            <div class="airbnb-apartment-card-copy">
+                                <div class="airbnb-apartment-card-title-row">
+                                    <h3>{{ apartment.name }}</h3>
+                                    {% if latestCheck %}
+                                        <span class="airbnb-audit-badge {{ latestCheck.badgeClass }}">{{ latestCheck.badgeLabel }}</span>
+                                    {% else %}
+                                        <span class="airbnb-audit-badge is-neutral">Non audité</span>
+                                    {% endif %}
+                                </div>
                                 <p>{{ apartment.city }} · {{ apartment.ownerName ?: 'Propriétaire non renseigné' }}</p>
-                                {% if latestCheck %}
-                                    <span class="airbnb-audit-badge {{ latestCheck.badgeClass }}">{{ latestCheck.badgeLabel }}</span>
-                                {% else %}
-                                    <span class="airbnb-audit-badge is-neutral">Non audité</span>
-                                {% endif %}
+                                <span class="airbnb-apartment-card-hint">
+                                    {{ latestCheck ? 'Dernier audit disponible' : 'Aucun audit enregistré' }}
+                                </span>
                             </div>
                         </div>
-                        <form method="post" action="{{ path('admin_airbnb_check_launch', {id: apartment.id}) }}">
+                        <form method="post" action="{{ path('admin_airbnb_check_launch', {id: apartment.id}) }}" class="airbnb-apartment-action-form">
                             <input type="hidden" name="_token" value="{{ csrf_token('admin_airbnb_check_launch_' ~ apartment.id) }}">
-                            <button class="airbnb-primary-button" type="submit">Lancer le check</button>
+                            <button class="airbnb-primary-button airbnb-apartment-launch-button" type="submit">
+                                <span>Lancer le check</span>
+                                {% if latestCheck %}
+                                    <small>{{ latestCheck.score }}%</small>
+                                {% endif %}
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M5 12h13m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
                         </form>
                     </article>
                 {% else %}
