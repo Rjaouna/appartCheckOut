@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rapports Airbnb{% endblock %}
+{% block body_class %}airbnb-check-body{% endblock %}
+
+{% block body %}
+    <section class="airbnb-shell airbnb-reports-shell">
+        <div class="airbnb-mobile-frame">
+            <header class="airbnb-topbar">
+                <a class="airbnb-icon-button" href="{{ path('admin_airbnb_check_index') }}" aria-label="Retour">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <h1>Rapports</h1>
+                <span></span>
+            </header>
+
+            <div class="airbnb-section-head">
+                <div>
+                    <h2>Historique des audits</h2>
+                    <p>Les rapports sont conservés pour fiabiliser le suivi qualité.</p>
+                </div>
+            </div>
+
+            <div class="airbnb-report-list">
+                {% for report in reports %}
+                    {% set apartment = report.apartment %}
+                    <a class="airbnb-report-card" href="{{ path('admin_airbnb_check_report_show', {id: report.id}) }}">
+                        <div class="airbnb-report-score {{ report.badgeClass }}">
+                            {{ report.score }}%
+                        </div>
+                        <div>
+                            <strong>{{ apartment ? apartment.name : 'Appartement supprimé' }}</strong>
+                            <span>{{ report.completedAt ? report.completedAt|date('d/m/Y H:i') : report.createdAt|date('d/m/Y H:i') }}</span>
+                            <p>
+                                {{ apartment ? apartment.ownerName ?: 'Propriétaire non renseigné' : 'Propriétaire non renseigné' }}
+                                · {{ apartment ? apartment.ownerPhone ?: 'Téléphone manquant' : 'Téléphone manquant' }}
+                                · {{ apartment ? apartment.ownerEmail ?: 'Email manquant' : 'Email manquant' }}
+                            </p>
+                            <em>{{ report.reportSentAt ? 'Envoyé au propriétaire' : 'Non envoyé' }}</em>
+                        </div>
+                    </a>
+                {% else %}
+                    <div class="airbnb-empty-state">
+                        <strong>Aucun rapport enregistré.</strong>
+                        <p>Lance un check depuis un appartement pour créer le premier rapport.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

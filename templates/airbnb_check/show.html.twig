@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Audit Airbnb{% endblock %}
+{% block body_class %}airbnb-check-body{% endblock %}
+
+{% block body %}
+    {% set apartment = check.apartment %}
+    <section class="airbnb-shell">
+        <div class="airbnb-mobile-frame">
+            <header class="airbnb-topbar">
+                <a class="airbnb-icon-button" href="{{ path('admin_airbnb_check_index') }}" aria-label="Retour">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <span class="airbnb-topbar-score">{{ check.score }}%</span>
+            </header>
+
+            <div class="airbnb-center-title">
+                <span class="airbnb-kicker">{{ apartment ? apartment.name : 'Appartement' }}</span>
+                <h1>Check d’utilisabilité Airbnb</h1>
+            </div>
+
+            <div class="airbnb-score-card">
+                <div>
+                    <strong>{{ check.score }}%</strong>
+                    <p>{{ check.validationLabel }}</p>
+                </div>
+                <div class="airbnb-progress-ring" style="--angle: {{ check.score * 3.6 }}deg;">
+                    <span>{{ check.score }}%</span>
+                </div>
+            </div>
+
+            <div class="airbnb-section-head">
+                <div>
+                    <h2>Pièces concernées</h2>
+                    <p>Vérifie chaque pièce et ses équipements.</p>
+                </div>
+            </div>
+
+            <div class="airbnb-room-grid">
+                {% for room in check.rooms %}
+                    <a class="airbnb-room-card" href="{{ path('admin_airbnb_check_room', {check: check.id, room: room.id}) }}">
+                        <div class="airbnb-room-icon">
+                            <i class="bi bi-{{ room.icon }}" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <strong>{{ room.roomName }}</strong>
+                            <span>{{ room.equipmentCount }} équipement{{ room.equipmentCount > 1 ? 's' : '' }} · {{ room.checkedEquipmentCount }}/{{ room.equipmentCount }} vérifiés</span>
+                            <em class="{{ room.scoreClass }}">{{ room.score }}%</em>
+                        </div>
+                        <svg class="airbnb-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                {% endfor %}
+            </div>
+
+            <form method="post" action="{{ path('admin_airbnb_check_complete', {id: check.id}) }}" class="airbnb-footer-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('admin_airbnb_check_complete_' ~ check.id) }}">
+                <button class="airbnb-primary-button" type="submit">
+                    Valider et voir le récapitulatif
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </form>
+        </div>
+    </section>
+{% endblock %}

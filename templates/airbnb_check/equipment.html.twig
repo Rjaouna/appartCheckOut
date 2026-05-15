@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ equipment.name }} - Audit Airbnb{% endblock %}
+{% block body_class %}airbnb-check-body{% endblock %}
+
+{% block body %}
+    <section class="airbnb-shell">
+        <div class="airbnb-mobile-frame airbnb-equipment-frame">
+            <header class="airbnb-topbar">
+                <a class="airbnb-icon-button" href="{{ path('admin_airbnb_check_room', {check: check.id, room: room.id}) }}" aria-label="Retour">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <h1>{{ equipment.name }}</h1>
+                <span></span>
+            </header>
+
+            <div class="airbnb-equipment-hero">
+                <div class="airbnb-equipment-hero-icon">
+                    <i class="bi bi-{{ equipment.icon }}" aria-hidden="true"></i>
+                </div>
+                <h2>{{ equipment.name }}</h2>
+                <p>{{ equipment.importanceLabel }}</p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="airbnb-equipment-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('admin_airbnb_check_equipment_' ~ equipment.id) }}">
+                <div class="airbnb-form-section">
+                    <h3>État de l’équipement</h3>
+                    <p>Sélectionne l’état actuel de cet équipement.</p>
+
+                    <div class="airbnb-status-options">
+                        {% for option in statusOptions %}
+                            <label class="airbnb-status-option {{ equipment.status == option.value ? 'is-selected' : '' }}">
+                                <input type="radio" name="status" value="{{ option.value }}" {{ equipment.status == option.value ? 'checked' : '' }} required>
+                                <span class="airbnb-status-dot {{ option.value == 'good' ? 'is-good' : option.value == 'average' ? 'is-average' : option.value == 'missing' ? 'is-missing' : 'is-na' }}">
+                                    <i class="bi bi-{{ option.icon }}" aria-hidden="true"></i>
+                                </span>
+                                <span>
+                                    <strong>{{ option.label }}</strong>
+                                    <em>{{ option.description }}</em>
+                                </span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="airbnb-form-section airbnb-form-section-soft">
+                    <label>
+                        <span>Note interne</span>
+                        <textarea name="note" rows="3" placeholder="Ex. rayures visibles, remplacement conseillé...">{{ equipment.note }}</textarea>
+                    </label>
+                    <label>
+                        <span>Tâche à créer</span>
+                        <input type="text" name="taskLabel" value="{{ equipment.taskLabel }}" placeholder="Ex. Ajouter un sèche-cheveux">
+                    </label>
+                    <label>
+                        <span>Photo</span>
+                        <input type="file" name="photo" accept="image/*">
+                    </label>
+                    {% if equipment.photoPath %}
+                        <img class="airbnb-equipment-photo" src="{{ asset(equipment.photoPath) }}" alt="Photo {{ equipment.name }}">
+                    {% endif %}
+                </div>
+
+                <button class="airbnb-primary-button" type="submit">Enregistrer</button>
+                <a class="airbnb-muted-link" href="{{ path('admin_airbnb_check_room', {check: check.id, room: room.id}) }}">Annuler</a>
+            </form>
+        </div>
+    </section>
+{% endblock %}

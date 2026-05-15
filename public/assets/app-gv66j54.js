@@ -64,8 +64,6 @@ window.addEventListener('pageshow', () => {
     initializeInteractiveWidgets(document);
 });
 
-document.addEventListener('click', handleModalDismissClick, true);
-
 document.addEventListener('submit', async (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement)) {
@@ -90,14 +88,7 @@ document.addEventListener('submit', async (event) => {
     clearInlineFormError(form);
     syncRichTextEditors(form);
 
-    const confirmationLoadingWasActive = form.dataset.confirmLoadingActive === 'true';
-
     if (!validateReservationCreationForm(form)) {
-        if (confirmationLoadingWasActive) {
-            delete form.dataset.confirmLoadingActive;
-            pendingConfirmationForm = form;
-            setConfirmationModalLoading(false);
-        }
         return;
     }
 
@@ -130,12 +121,6 @@ document.addEventListener('submit', async (event) => {
 
         if (!response.ok || !payload?.success) {
             throw new Error(payload?.message || 'Une erreur est survenue.');
-        }
-
-        if (confirmationLoadingWasActive) {
-            delete form.dataset.confirmLoadingActive;
-            setConfirmationModalLoading(false);
-            hideModal('confirmActionModal');
         }
 
         const modalToClose = form.getAttribute('data-close-modal');
@@ -195,11 +180,6 @@ document.addEventListener('submit', async (event) => {
         hideModal('actionMenuModal');
         showToast(payload?.message || 'Opération terminée.');
     } catch (error) {
-        if (confirmationLoadingWasActive) {
-            delete form.dataset.confirmLoadingActive;
-            pendingConfirmationForm = form;
-            setConfirmationModalLoading(false);
-        }
         setInlineFormError(form, error.message || 'Opération impossible.');
         showToast(error.message || 'Opération impossible.', 'error');
     } finally {
@@ -217,22 +197,6 @@ function initializeInteractiveWidgets(scope = document) {
     syncApartmentTemplateSelectState();
     syncAllCheckinGuestRows(scope);
     initializeCheckinSignaturePads(scope);
-}
-
-function handleModalDismissClick(event) {
-    const dismissTrigger = event.target instanceof Element ? event.target.closest('[data-bs-dismiss="modal"], [data-modal-close]') : null;
-    if (!(dismissTrigger instanceof HTMLElement)) {
-        return;
-    }
-
-    const modalElement = dismissTrigger.closest('.modal');
-    if (!(modalElement instanceof HTMLElement)) {
-        return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-    hideModalElement(modalElement);
 }
 
 function initializePendingActionNotifications() {
@@ -496,38 +460,10 @@ function openConfirmationModal(form) {
     }
 
     pendingConfirmationForm = form;
-    setConfirmationModalLoading(false);
     titleElement.textContent = form.dataset.confirmTitle || "Confirmer l’action";
     bodyElement.textContent = form.dataset.confirmMessage || 'Veux-tu vraiment continuer ?';
 
     showModalElement(modalElement);
-}
-
-function setConfirmationModalLoading(isLoading, message = '') {
-    const modalElement = document.getElementById('confirmActionModal');
-    const bodyElement = document.getElementById('confirmActionModalBody');
-    const confirmButton = document.getElementById('confirmActionModalSubmit');
-
-    if (modalElement instanceof HTMLElement) {
-        modalElement.classList.toggle('is-confirm-loading', isLoading);
-    }
-
-    if (bodyElement instanceof HTMLElement) {
-        if (isLoading) {
-            if (!bodyElement.dataset.confirmOriginalText) {
-                bodyElement.dataset.confirmOriginalText = bodyElement.textContent || '';
-            }
-            bodyElement.textContent = message || 'Traitement en cours...';
-        } else if (bodyElement.dataset.confirmOriginalText) {
-            bodyElement.textContent = bodyElement.dataset.confirmOriginalText;
-            delete bodyElement.dataset.confirmOriginalText;
-        }
-    }
-
-    if (confirmButton instanceof HTMLButtonElement) {
-        confirmButton.disabled = isLoading;
-        confirmButton.textContent = isLoading ? 'Traitement...' : 'Confirmer';
-    }
 }
 
 function openWorkflowModal(trigger) {
@@ -1158,46 +1094,6 @@ function hideModal(id) {
     }
 }
 
-async function loadAirbnbRoomFragment(trigger) {
-    const targetSelector = trigger.getAttribute('data-update-target') || '#airbnb-room-content';
-    const target = document.querySelector(targetSelector);
-    if (!(target instanceof HTMLElement)) {
-        window.location.href = trigger.href;
-        return;
-    }
-
-    target.classList.add('is-loading-fragment');
-
-    try {
-        const response = await fetch(trigger.href, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            },
-        });
-
-        let payload = null;
-        try {
-            payload = await response.json();
-        } catch (error) {
-            payload = null;
-        }
-
-        if (!response.ok || !payload?.success || !payload.html) {
-            throw new Error(payload?.message || 'Impossible de charger ce filtre.');
-        }
-
-        target.innerHTML = payload.html;
-        initializeInteractiveWidgets(target);
-        window.history.replaceState({}, '', trigger.href);
-    } catch (error) {
-        showToast(error.message || 'Impossible de charger ce filtre.', 'error');
-    } finally {
-        target.classList.remove('is-loading-fragment');
-    }
-}
-
 function scrollToTop() {
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
@@ -1493,24 +1389,6 @@ document.addEventListener('click', (event) => {
         return;
     }
 
-    const airbnbEquipmentModalTrigger = event.target instanceof Element ? event.target.closest('[data-airbnb-equipment-modal-target]') : null;
-    if (airbnbEquipmentModalTrigger instanceof HTMLElement) {
-        event.preventDefault();
-        const modalSelector = airbnbEquipmentModalTrigger.getAttribute('data-airbnb-equipment-modal-target');
-        const modalElement = modalSelector ? document.querySelector(modalSelector) : null;
-        if (modalElement instanceof HTMLElement) {
-            showModalElement(modalElement);
-        }
-        return;
-    }
-
-    const airbnbRoomFilterTrigger = event.target instanceof Element ? event.target.closest('[data-airbnb-room-filter]') : null;
-    if (airbnbRoomFilterTrigger instanceof HTMLAnchorElement) {
-        event.preventDefault();
-        loadAirbnbRoomFragment(airbnbRoomFilterTrigger);
-        return;
-    }
-
     const addCheckinGuestTrigger = event.target instanceof Element ? event.target.closest('[data-checkin-add-guest]') : null;
     if (addCheckinGuestTrigger instanceof HTMLButtonElement) {
         addCheckinGuestRow(addCheckinGuestTrigger);
@@ -1558,19 +1436,12 @@ document.addEventListener('click', (event) => {
 
     const confirmButton = event.target instanceof Element ? event.target.closest('#confirmActionModalSubmit') : null;
     if (confirmButton instanceof HTMLButtonElement && pendingConfirmationForm instanceof HTMLFormElement) {
-        event.preventDefault();
-        const formToSubmit = pendingConfirmationForm;
         confirmButton.blur();
-        formToSubmit.dataset.confirmed = 'true';
+        pendingConfirmationForm.dataset.confirmed = 'true';
+        hideModal('confirmActionModal');
+
+        const formToSubmit = pendingConfirmationForm;
         pendingConfirmationForm = null;
-
-        if (formToSubmit.hasAttribute('data-async-form') && formToSubmit.dataset.confirmLoadingMessage) {
-            formToSubmit.dataset.confirmLoadingActive = 'true';
-            setConfirmationModalLoading(true, formToSubmit.dataset.confirmLoadingMessage);
-        } else {
-            hideModal('confirmActionModal');
-        }
-
         formToSubmit.requestSubmit();
         return;
     }
@@ -2182,7 +2053,6 @@ function openExternalConfirmationModal(link) {
         target: link.target || '_blank',
     };
 
-    setConfirmationModalLoading(false);
     titleElement.textContent = link.dataset.confirmTitle || 'Ouvrir Waze';
     bodyElement.textContent = link.dataset.confirmMessage || 'Tu vas quitter cet espace pour ouvrir cette adresse dans Waze. Veux-tu continuer ?';
 
@@ -2757,9 +2627,6 @@ function captureUiState(target) {
         openPanels: Array.from(target.querySelectorAll('[data-panel-name]:not(.is-collapsed)'))
             .map((panel) => panel instanceof HTMLElement ? `#${panel.id}` : null)
             .filter((selector) => typeof selector === 'string'),
-        openRoomAccordions: Array.from(target.querySelectorAll('[data-room-accordion][open]'))
-            .map((accordion) => accordion instanceof HTMLElement ? accordion.getAttribute('data-room-accordion') : null)
-            .filter((accordionId) => typeof accordionId === 'string' && accordionId !== ''),
     };
 }
 
@@ -2779,15 +2646,6 @@ function restoreUiState(targetSelector, uiState) {
                 const panel = target.querySelector(panelSelector);
                 if (panel instanceof HTMLElement) {
                     panel.classList.remove('is-collapsed');
-                }
-            });
-        }
-
-        if (Array.isArray(uiState.openRoomAccordions) && uiState.openRoomAccordions.length > 0) {
-            uiState.openRoomAccordions.forEach((accordionId) => {
-                const accordion = target.querySelector(`[data-room-accordion="${accordionId}"]`);
-                if (accordion instanceof HTMLDetailsElement) {
-                    accordion.open = true;
                 }
             });
         }
@@ -3418,8 +3276,6 @@ function showModalElement(modalElement) {
         return;
     }
 
-    bindModalCloseButtons(modalElement);
-
     if (typeof bootstrap !== 'undefined' && bootstrap?.Modal) {
         bootstrap.Modal.getOrCreateInstance(modalElement).show();
         return;
@@ -3441,73 +3297,31 @@ function showModalElement(modalElement) {
     }
 }
 
-function bindModalCloseButtons(modalElement) {
-    if (!(modalElement instanceof HTMLElement)) {
-        return;
-    }
-
-    modalElement.querySelectorAll('[data-bs-dismiss="modal"], [data-modal-close]').forEach((closeButton) => {
-        if (!(closeButton instanceof HTMLElement) || closeButton.dataset.modalCloseBound === 'true') {
-            return;
-        }
-
-        closeButton.dataset.modalCloseBound = 'true';
-        closeButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            hideModalElement(modalElement);
-        });
-    });
-}
-
 function hideModalElement(modalElement) {
     if (!(modalElement instanceof HTMLElement)) {
         return;
     }
 
-    const focusedElement = modalElement.querySelector(':focus');
-    if (focusedElement instanceof HTMLElement) {
-        focusedElement.blur();
-    }
-
     if (typeof bootstrap !== 'undefined' && bootstrap?.Modal) {
         bootstrap.Modal.getOrCreateInstance(modalElement).hide();
-        window.setTimeout(() => forceHideModalElement(modalElement), 260);
-    } else {
-        forceHideModalElement(modalElement);
-    }
-
-    if (modalElement.id === 'confirmActionModal') {
-        setConfirmationModalLoading(false);
-        pendingConfirmationForm = null;
-    }
-
-    if (modalElement.id === 'employeeEntryModal') {
-        resetEmployeeEntryModal();
-    }
-}
-
-function forceHideModalElement(modalElement) {
-    if (!(modalElement instanceof HTMLElement)) {
         return;
     }
 
     modalElement.classList.remove('show');
     modalElement.style.display = 'none';
-    modalElement.style.removeProperty('padding-right');
     modalElement.setAttribute('aria-hidden', 'true');
     modalElement.removeAttribute('aria-modal');
-
-    const hasOtherOpenModal = Array.from(document.querySelectorAll('.modal.show, .modal[aria-modal="true"]'))
-        .some((openModal) => openModal instanceof HTMLElement && openModal !== modalElement);
-
-    if (!hasOtherOpenModal) {
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('padding-right');
-        document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
-    }
+    document.body.classList.remove('modal-open');
 
     if (plainModalBackdrop instanceof HTMLElement && document.body.contains(plainModalBackdrop)) {
         plainModalBackdrop.remove();
+    }
+
+    if (modalElement.id === 'confirmActionModal') {
+        pendingConfirmationForm = null;
+    }
+
+    if (modalElement.id === 'employeeEntryModal') {
+        resetEmployeeEntryModal();
     }
 }

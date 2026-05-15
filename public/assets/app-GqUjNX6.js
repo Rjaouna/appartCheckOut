@@ -90,14 +90,7 @@ document.addEventListener('submit', async (event) => {
     clearInlineFormError(form);
     syncRichTextEditors(form);
 
-    const confirmationLoadingWasActive = form.dataset.confirmLoadingActive === 'true';
-
     if (!validateReservationCreationForm(form)) {
-        if (confirmationLoadingWasActive) {
-            delete form.dataset.confirmLoadingActive;
-            pendingConfirmationForm = form;
-            setConfirmationModalLoading(false);
-        }
         return;
     }
 
@@ -130,12 +123,6 @@ document.addEventListener('submit', async (event) => {
 
         if (!response.ok || !payload?.success) {
             throw new Error(payload?.message || 'Une erreur est survenue.');
-        }
-
-        if (confirmationLoadingWasActive) {
-            delete form.dataset.confirmLoadingActive;
-            setConfirmationModalLoading(false);
-            hideModal('confirmActionModal');
         }
 
         const modalToClose = form.getAttribute('data-close-modal');
@@ -195,11 +182,6 @@ document.addEventListener('submit', async (event) => {
         hideModal('actionMenuModal');
         showToast(payload?.message || 'Opération terminée.');
     } catch (error) {
-        if (confirmationLoadingWasActive) {
-            delete form.dataset.confirmLoadingActive;
-            pendingConfirmationForm = form;
-            setConfirmationModalLoading(false);
-        }
         setInlineFormError(form, error.message || 'Opération impossible.');
         showToast(error.message || 'Opération impossible.', 'error');
     } finally {
@@ -496,38 +478,10 @@ function openConfirmationModal(form) {
     }
 
     pendingConfirmationForm = form;
-    setConfirmationModalLoading(false);
     titleElement.textContent = form.dataset.confirmTitle || "Confirmer l’action";
     bodyElement.textContent = form.dataset.confirmMessage || 'Veux-tu vraiment continuer ?';
 
     showModalElement(modalElement);
-}
-
-function setConfirmationModalLoading(isLoading, message = '') {
-    const modalElement = document.getElementById('confirmActionModal');
-    const bodyElement = document.getElementById('confirmActionModalBody');
-    const confirmButton = document.getElementById('confirmActionModalSubmit');
-
-    if (modalElement instanceof HTMLElement) {
-        modalElement.classList.toggle('is-confirm-loading', isLoading);
-    }
-
-    if (bodyElement instanceof HTMLElement) {
-        if (isLoading) {
-            if (!bodyElement.dataset.confirmOriginalText) {
-                bodyElement.dataset.confirmOriginalText = bodyElement.textContent || '';
-            }
-            bodyElement.textContent = message || 'Traitement en cours...';
-        } else if (bodyElement.dataset.confirmOriginalText) {
-            bodyElement.textContent = bodyElement.dataset.confirmOriginalText;
-            delete bodyElement.dataset.confirmOriginalText;
-        }
-    }
-
-    if (confirmButton instanceof HTMLButtonElement) {
-        confirmButton.disabled = isLoading;
-        confirmButton.textContent = isLoading ? 'Traitement...' : 'Confirmer';
-    }
 }
 
 function openWorkflowModal(trigger) {
@@ -1558,19 +1512,12 @@ document.addEventListener('click', (event) => {
 
     const confirmButton = event.target instanceof Element ? event.target.closest('#confirmActionModalSubmit') : null;
     if (confirmButton instanceof HTMLButtonElement && pendingConfirmationForm instanceof HTMLFormElement) {
-        event.preventDefault();
-        const formToSubmit = pendingConfirmationForm;
         confirmButton.blur();
-        formToSubmit.dataset.confirmed = 'true';
+        pendingConfirmationForm.dataset.confirmed = 'true';
+        hideModal('confirmActionModal');
+
+        const formToSubmit = pendingConfirmationForm;
         pendingConfirmationForm = null;
-
-        if (formToSubmit.hasAttribute('data-async-form') && formToSubmit.dataset.confirmLoadingMessage) {
-            formToSubmit.dataset.confirmLoadingActive = 'true';
-            setConfirmationModalLoading(true, formToSubmit.dataset.confirmLoadingMessage);
-        } else {
-            hideModal('confirmActionModal');
-        }
-
         formToSubmit.requestSubmit();
         return;
     }
@@ -2182,7 +2129,6 @@ function openExternalConfirmationModal(link) {
         target: link.target || '_blank',
     };
 
-    setConfirmationModalLoading(false);
     titleElement.textContent = link.dataset.confirmTitle || 'Ouvrir Waze';
     bodyElement.textContent = link.dataset.confirmMessage || 'Tu vas quitter cet espace pour ouvrir cette adresse dans Waze. Veux-tu continuer ?';
 
@@ -2757,9 +2703,6 @@ function captureUiState(target) {
         openPanels: Array.from(target.querySelectorAll('[data-panel-name]:not(.is-collapsed)'))
             .map((panel) => panel instanceof HTMLElement ? `#${panel.id}` : null)
             .filter((selector) => typeof selector === 'string'),
-        openRoomAccordions: Array.from(target.querySelectorAll('[data-room-accordion][open]'))
-            .map((accordion) => accordion instanceof HTMLElement ? accordion.getAttribute('data-room-accordion') : null)
-            .filter((accordionId) => typeof accordionId === 'string' && accordionId !== ''),
     };
 }
 
@@ -2779,15 +2722,6 @@ function restoreUiState(targetSelector, uiState) {
                 const panel = target.querySelector(panelSelector);
                 if (panel instanceof HTMLElement) {
                     panel.classList.remove('is-collapsed');
-                }
-            });
-        }
-
-        if (Array.isArray(uiState.openRoomAccordions) && uiState.openRoomAccordions.length > 0) {
-            uiState.openRoomAccordions.forEach((accordionId) => {
-                const accordion = target.querySelector(`[data-room-accordion="${accordionId}"]`);
-                if (accordion instanceof HTMLDetailsElement) {
-                    accordion.open = true;
                 }
             });
         }
@@ -3478,7 +3412,6 @@ function hideModalElement(modalElement) {
     }
 
     if (modalElement.id === 'confirmActionModal') {
-        setConfirmationModalLoading(false);
         pendingConfirmationForm = null;
     }
 

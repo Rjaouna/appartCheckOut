@@ -1,0 +1,121 @@
+{% set auditDate = check.completedAt ? check.completedAt|date('d/m/Y H:i') : check.createdAt|date('d/m/Y H:i') %}
+
+<div style="margin:0;padding:0;background:#f7f7f7;color:#222222;font-family:Arial,Helvetica,sans-serif;">
+    <div style="max-width:760px;margin:0 auto;padding:28px 16px;">
+        <div style="background:#ffffff;border:1px solid #e7e7e2;border-radius:22px;overflow:hidden;">
+            <div style="padding:26px 28px;background:linear-gradient(135deg,#fff7f9,#ffffff);border-bottom:1px solid #f0ece8;">
+                <p style="margin:0 0 8px;color:#ff385c;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Rapport propriétaire</p>
+                <h1 style="margin:0;color:#222222;font-size:26px;line-height:1.2;">Rapport d’utilisabilité Airbnb</h1>
+                <p style="margin:12px 0 0;color:#6a6a6a;font-size:15px;line-height:1.6;">
+                    Bonjour,<br>
+                    Voici le rapport qualité du logement <strong style="color:#222222;">{{ apartment.name }}</strong>, avec le récapitulatif complet de l’inventaire contrôlé.
+                </p>
+            </div>
+
+            <div style="padding:24px 28px;">
+                <h2 style="margin:0 0 14px;color:#222222;font-size:20px;">Résumé du rapport</h2>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-bottom:26px;">
+                    <tr>
+                        <td style="padding:14px;border:1px solid #eee8e3;border-radius:14px;background:#fffafb;">
+                            <span style="display:block;color:#6a6a6a;font-size:13px;">Score global</span>
+                            <strong style="display:block;margin-top:4px;color:#ff385c;font-size:28px;">{{ check.score }}%</strong>
+                        </td>
+                        <td style="width:12px;"></td>
+                        <td style="padding:14px;border:1px solid #eee8e3;border-radius:14px;background:#fffafb;">
+                            <span style="display:block;color:#6a6a6a;font-size:13px;">Statut</span>
+                            <strong style="display:block;margin-top:4px;color:#222222;font-size:16px;">{{ check.validationLabel }}</strong>
+                        </td>
+                    </tr>
+                </table>
+
+                <ul style="margin:0 0 26px;padding-left:18px;color:#444444;font-size:15px;line-height:1.7;">
+                    <li>Points à corriger : <strong>{{ check.missingIssueCount }}</strong></li>
+                    <li>Date de l’audit : <strong>{{ auditDate }}</strong></li>
+                    {% if apartment.ownerName %}
+                        <li>Propriétaire : <strong>{{ apartment.ownerName }}</strong></li>
+                    {% endif %}
+                </ul>
+
+                {% if issueEquipments|length > 0 %}
+                    <h2 style="margin:0 0 14px;color:#222222;font-size:20px;">Éléments à améliorer</h2>
+                    <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-bottom:28px;">
+                        {% for equipment in issueEquipments %}
+                            {% set statusColor = equipment.status == 'missing' ? '#b42318' : '#b35a00' %}
+                            <tr>
+                                <td style="padding:12px 14px;border:1px solid #eee8e3;background:#ffffff;">
+                                    <strong style="display:block;color:#222222;">{{ equipment.name }}</strong>
+                                    <span style="display:block;margin-top:3px;color:#6a6a6a;font-size:13px;">{{ equipment.room.roomName }}</span>
+                                </td>
+                                <td style="padding:12px 14px;border:1px solid #eee8e3;background:#ffffff;text-align:right;">
+                                    <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#fff4e8;color:{{ statusColor }};font-size:13px;font-weight:700;">{{ equipment.statusLabel }}</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                {% endif %}
+
+                <h2 style="margin:0 0 8px;color:#222222;font-size:20px;">Inventaire par pièce</h2>
+                <p style="margin:0 0 18px;color:#6a6a6a;font-size:14px;line-height:1.6;">
+                    Les équipements ci-dessous sont regroupés par pièce pour faciliter la lecture et le suivi côté propriétaire.
+                </p>
+
+                {% for room in check.rooms %}
+                    <div style="margin:0 0 22px;border:1px solid #eee8e3;border-radius:18px;overflow:hidden;background:#ffffff;">
+                        <div style="padding:15px 16px;background:#fffafb;border-bottom:1px solid #eee8e3;">
+                            <strong style="display:block;color:#222222;font-size:17px;">{{ room.roomName }}</strong>
+                            <span style="display:block;margin-top:4px;color:#6a6a6a;font-size:13px;">
+                                {{ room.checkedEquipmentCount }} / {{ room.equipmentCount }} équipements contrôlés · Score {{ room.score }}%
+                            </span>
+                        </div>
+
+                        <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                            <thead>
+                                <tr>
+                                    <th align="left" style="padding:10px 12px;border-bottom:1px solid #eee8e3;color:#6a6a6a;font-size:12px;text-transform:uppercase;letter-spacing:.03em;">Équipement</th>
+                                    <th align="left" style="padding:10px 12px;border-bottom:1px solid #eee8e3;color:#6a6a6a;font-size:12px;text-transform:uppercase;letter-spacing:.03em;">Importance</th>
+                                    <th align="left" style="padding:10px 12px;border-bottom:1px solid #eee8e3;color:#6a6a6a;font-size:12px;text-transform:uppercase;letter-spacing:.03em;">État</th>
+                                    <th align="left" style="padding:10px 12px;border-bottom:1px solid #eee8e3;color:#6a6a6a;font-size:12px;text-transform:uppercase;letter-spacing:.03em;">Note / action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for equipment in room.equipments %}
+                                    {% set statusColor = equipment.status == 'good' ? '#237b4b' : (equipment.status == 'average' ? '#b35a00' : (equipment.status == 'missing' ? '#b42318' : '#6a6a6a')) %}
+                                    <tr>
+                                        <td style="padding:11px 12px;border-bottom:1px solid #f3efeb;color:#222222;font-size:14px;font-weight:700;">{{ equipment.name }}</td>
+                                        <td style="padding:11px 12px;border-bottom:1px solid #f3efeb;color:#555555;font-size:14px;">{{ equipment.importanceLabel }}</td>
+                                        <td style="padding:11px 12px;border-bottom:1px solid #f3efeb;color:{{ statusColor }};font-size:14px;font-weight:700;">{{ equipment.statusLabel }}</td>
+                                        <td style="padding:11px 12px;border-bottom:1px solid #f3efeb;color:#555555;font-size:14px;">
+                                            {% set details = [] %}
+                                            {% if equipment.note %}
+                                                {% set details = details|merge(['Note : ' ~ equipment.note]) %}
+                                            {% endif %}
+                                            {% if equipment.taskLabel %}
+                                                {% set details = details|merge(['Action : ' ~ equipment.taskLabel]) %}
+                                            {% endif %}
+                                            {% if details|length > 0 %}
+                                                {{ details|join(' - ') }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" style="padding:14px;color:#6a6a6a;font-size:14px;">Aucun équipement enregistré pour cette pièce.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="margin:0 0 24px;color:#6a6a6a;font-size:14px;">Aucune pièce n’est associée à ce rapport.</p>
+                {% endfor %}
+
+                <p style="margin:28px 0 0;color:#6a6a6a;font-size:14px;line-height:1.6;">
+                    Cordialement,<br>
+                    L’équipe Check-out
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

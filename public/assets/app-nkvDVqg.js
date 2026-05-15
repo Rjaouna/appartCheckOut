@@ -2757,9 +2757,6 @@ function captureUiState(target) {
         openPanels: Array.from(target.querySelectorAll('[data-panel-name]:not(.is-collapsed)'))
             .map((panel) => panel instanceof HTMLElement ? `#${panel.id}` : null)
             .filter((selector) => typeof selector === 'string'),
-        openRoomAccordions: Array.from(target.querySelectorAll('[data-room-accordion][open]'))
-            .map((accordion) => accordion instanceof HTMLElement ? accordion.getAttribute('data-room-accordion') : null)
-            .filter((accordionId) => typeof accordionId === 'string' && accordionId !== ''),
     };
 }
 
@@ -2779,15 +2776,6 @@ function restoreUiState(targetSelector, uiState) {
                 const panel = target.querySelector(panelSelector);
                 if (panel instanceof HTMLElement) {
                     panel.classList.remove('is-collapsed');
-                }
-            });
-        }
-
-        if (Array.isArray(uiState.openRoomAccordions) && uiState.openRoomAccordions.length > 0) {
-            uiState.openRoomAccordions.forEach((accordionId) => {
-                const accordion = target.querySelector(`[data-room-accordion="${accordionId}"]`);
-                if (accordion instanceof HTMLDetailsElement) {
-                    accordion.open = true;
                 }
             });
         }

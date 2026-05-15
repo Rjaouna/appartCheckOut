@@ -354,6 +354,7 @@
                     <div class="info-list admin-detail-info-group">
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerName', label: 'Nom du propriétaire', value: apartment.ownerName ?: 'Non renseigné', rawValue: apartment.ownerName } %}
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerPhone', label: 'Téléphone', value: apartment.ownerPhone ?: 'Non renseigné', rawValue: apartment.ownerPhone } %}
+                        {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'ownerEmail', label: 'Email propriétaire', value: apartment.ownerEmail ?: 'Non renseigné', rawValue: apartment.ownerEmail } %}
                         {% include 'admin/_editable_apartment_field.html.twig' with { apartment: apartment, field: 'internalNotes', label: 'Notes internes', value: apartment.internalNotes ?: 'Aucune note', rawValue: apartment.internalNotes, multiline: true, richText: true } %}
                     </div>
                 </section>
@@ -777,22 +778,32 @@
 
                 <div class="room-stack">
                     {% for room in apartment.activeRooms %}
-                        <article class="room-card">
+                        <details class="room-card admin-room-accordion" data-room-accordion="room-{{ room.id }}">
                             {% set existingCatalogIds = [] %}
                             {% for existingEquipment in room.activeRoomEquipments %}
                                 {% if existingEquipment.catalogEquipment %}
                                     {% set existingCatalogIds = existingCatalogIds|merge([existingEquipment.catalogEquipment.id]) %}
                                 {% endif %}
                             {% endfor %}
-                            <div class="room-card-head">
+                            <summary class="room-card-head admin-room-accordion-summary">
                                 <div>
                                     <h3>{{ room.name }}</h3>
                                     <p>{{ room.type.label }} · {{ room.activeRoomEquipments|length }} équipements</p>
                                 </div>
+                                <span class="admin-room-accordion-indicator" aria-hidden="true">
+                                    <span class="admin-room-accordion-label-open">Ouvrir</span>
+                                    <span class="admin-room-accordion-label-close">Fermer</span>
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="m8 10 4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                            </summary>
+                            <div class="admin-room-accordion-body">
                                 {% if room.activeRoomEquipments|length == 0 %}
                                     <form
                                         method="post"
                                         action="{{ path('admin_room_delete', {id: room.id}) }}"
+                                        class="admin-room-delete-form"
                                         data-async-form
                                         data-update-target="{{ detailUpdateTarget }}"
                                         data-confirm-reset
@@ -810,7 +821,6 @@
                                         </button>
                                     </form>
                                 {% endif %}
-                            </div>
                             <div class="equipment-tags">
                                 {% for equipment in room.activeRoomEquipments %}
                                     <form
@@ -901,7 +911,8 @@
                                     </div>
                                 </div>
                             </div>
-                        </article>
+                            </div>
+                        </details>
                     {% else %}
                         <p class="empty-state">Commence par ajouter les pièces principales de l’appartement.</p>
                     {% endfor %}

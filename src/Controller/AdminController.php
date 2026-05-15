@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Anomaly;
+use App\Entity\AirbnbCheck;
 use App\Entity\AppAppearanceSettings;
 use App\Entity\Apartment;
 use App\Entity\ApartmentAccessStep;
@@ -348,6 +349,11 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 422);
         }
 
+        $equipmentLabel = $this->normalizeManualText((string) $request->request->get('equipmentLabel'));
+        if ($equipmentLabel === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne l’équipement concerné.'], 422);
+        }
+
         $video = $request->files->get('video');
         if (!$video instanceof UploadedFile) {
             return new JsonResponse(['success' => false, 'message' => $this->buildManualUploadErrorMessage($request)], 422);
@@ -364,17 +370,13 @@ class AdminController extends AbstractController
 
         $manual = (new ApartmentManual())
             ->setApartment($apartment)
-            ->setTitle($this->normalizeManualText((string) $request->request->get('title')))
-            ->setEquipmentLabel($this->normalizeManualText((string) $request->request->get('equipmentLabel')))
-            ->setShortMessage($this->normalizeNullableManualText($request->request->get('shortMessage')))
+            ->setTitle($equipmentLabel)
+            ->setEquipmentLabel($equipmentLabel)
+            ->setShortMessage(null)
             ->setImportantNotice($this->normalizeNullableManualText($request->request->get('importantNotice')))
-            ->setDisplayOrder(max(0, (int) $request->request->get('displayOrder', 0)))
+            ->setDisplayOrder($apartment->getManuals()->count() + 1)
             ->setIsActive($request->request->getBoolean('isActive', true))
             ->setVideoPath($videoPath);
-
-        if ($manual->getTitle() === '' || $manual->getEquipmentLabel() === '') {
-            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l’équipement concerné.'], 422);
-        }
 
         $entityManager->persist($manual);
         $entityManager->flush();
@@ -394,18 +396,18 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Appartement introuvable.'], 422);
         }
 
+        $equipmentLabel = $this->normalizeManualText((string) $request->request->get('equipmentLabel'));
+        if ($equipmentLabel === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Renseigne l’équipement concerné.'], 422);
+        }
+
         $manual
             ->setApartment($apartment)
-            ->setTitle($this->normalizeManualText((string) $request->request->get('title')))
-            ->setEquipmentLabel($this->normalizeManualText((string) $request->request->get('equipmentLabel')))
-            ->setShortMessage($this->normalizeNullableManualText($request->request->get('shortMessage')))
+            ->setTitle($equipmentLabel)
+            ->setEquipmentLabel($equipmentLabel)
+            ->setShortMessage(null)
             ->setImportantNotice($this->normalizeNullableManualText($request->request->get('importantNotice')))
-            ->setDisplayOrder(max(0, (int) $request->request->get('displayOrder', 0)))
             ->setIsActive($request->request->getBoolean('isActive', true));
-
-        if ($manual->getTitle() === '' || $manual->getEquipmentLabel() === '') {
-            return new JsonResponse(['success' => false, 'message' => 'Renseigne le titre et l’équipement concerné.'], 422);
-        }
 
         $newVideo = $request->files->get('video');
         $previousVideoPath = $manual->getVideoPath();
@@ -747,6 +749,7 @@ class AdminController extends AbstractController
                 ->setSleepsCount(0)
                 ->setOwnerName($this->nullable($request->request->get('ownerName')))
                 ->setOwnerPhone($this->nullable($request->request->get('ownerPhone')))
+                ->setOwnerEmail($this->nullable($request->request->get('ownerEmail')))
                 ->setInternalNotes($this->sanitizeRichText($request->request->get('internalNotes'), true))
                 ->setStatus(ApartmentStatus::from((string) $request->request->get('status', ApartmentStatus::Active->value)))
                 ->setIsInventoryPriority($request->request->getBoolean('isInventoryPriority'));
@@ -2224,12 +2227,15 @@ class AdminController extends AbstractController
             }
         }
 
+        $latestAirbnbChecks = $this->findLatestAirbnbChecksByApartment($apartments, $entityManager);
+
         return [
             'apartments' => $apartments,
             'employees' => $entityManager->getRepository(User::class)->findBy([], ['fullName' => 'ASC']),
             'apartmentStatuses' => ApartmentStatus::cases(),
             'apartmentTemplates' => $entityManager->getRepository(Apartment::class)->findBy([], ['name' => 'ASC']),
             'openAnomalyCounts' => $openAnomalyCounts,
+            'airbnbCheckBadges' => $this->buildAirbnbCheckBadges($latestAirbnbChecks),
         ];
     }
 
@@ -2369,6 +2375,9 @@ class AdminController extends AbstractController
      */
     private function buildApartmentCards(array $apartments, EntityManagerInterface $entityManager): array
     {
+        $latestAirbnbChecks = $this->findLatestAirbnbChecksByApartment($apartments, $entityManager);
+        $airbnbCheckBadges = $this->buildAirbnbCheckBadges($latestAirbnbChecks);
+
         $rows = $apartments === [] ? [] : $entityManager->createQueryBuilder()
             ->select('IDENTITY(anomaly.apartment) AS apartmentId, COUNT(anomaly.id) AS openAnomalyCount')
             ->from(Anomaly::class, 'anomaly')
@@ -2481,10 +2490,72 @@ class AdminController extends AbstractController
                 'firstAssignedEmployeeId' => count($assignedEmployees) === 1 ? $assignedEmployees[0]->getId() : null,
                 'canQuickLaunch' => $openCheckout === null && count($assignedEmployees) === 1,
                 'canLaunchCheckout' => $openCheckout === null,
+                'airbnbCheck' => $latestAirbnbChecks[$apartment->getId() ?? 0] ?? null,
+                'airbnbCheckBadge' => $airbnbCheckBadges[$apartment->getId() ?? 0] ?? [
+                    'label' => 'Non audité',
+                    'class' => 'is-neutral',
+                    'score' => null,
+                ],
             ];
         }
 
         return $cards;
+    }
+
+    /**
+     * @param list<Apartment> $apartments
+     * @return array<int, AirbnbCheck>
+     */
+    private function findLatestAirbnbChecksByApartment(array $apartments, EntityManagerInterface $entityManager): array
+    {
+        if ($apartments === []) {
+            return [];
+        }
+
+        $checks = $entityManager->createQueryBuilder()
+            ->select('airbnbCheck', 'apartment')
+            ->from(AirbnbCheck::class, 'airbnbCheck')
+            ->join('airbnbCheck.apartment', 'apartment')
+            ->where('airbnbCheck.apartment IN (:apartments)')
+            ->andWhere('airbnbCheck.status = :status')
+            ->setParameter('apartments', $apartments)
+            ->setParameter('status', AirbnbCheck::STATUS_COMPLETED)
+            ->orderBy('airbnbCheck.completedAt', 'DESC')
+            ->addOrderBy('airbnbCheck.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $latestChecks = [];
+        foreach ($checks as $check) {
+            if (!$check instanceof AirbnbCheck) {
+                continue;
+            }
+
+            $apartmentId = $check->getApartment()?->getId();
+            if ($apartmentId !== null && !isset($latestChecks[$apartmentId])) {
+                $latestChecks[$apartmentId] = $check;
+            }
+        }
+
+        return $latestChecks;
+    }
+
+    /**
+     * @param array<int, AirbnbCheck> $latestChecks
+     * @return array<int, array{label:string,class:string,score:?int}>
+     */
+    private function buildAirbnbCheckBadges(array $latestChecks): array
+    {
+        $badges = [];
+        foreach ($latestChecks as $apartmentId => $check) {
+            $badges[(int) $apartmentId] = [
+                'label' => $check->getBadgeLabel(),
+                'class' => $check->getBadgeClass(),
+                'score' => $check->getScore(),
+            ];
+        }
+
+        return $badges;
     }
 
     /**
@@ -2778,6 +2849,7 @@ class AdminController extends AbstractController
             ->setSleepsCount($templateApartment->getSleepsCount())
             ->setOwnerName($templateApartment->getOwnerName())
             ->setOwnerPhone($templateApartment->getOwnerPhone())
+            ->setOwnerEmail($templateApartment->getOwnerEmail())
             ->setInternalNotes($templateApartment->getInternalNotes())
             ->setGuestWifiName($templateApartment->getGuestWifiName())
             ->setGuestWifiPassword($templateApartment->getGuestWifiPassword())
@@ -2842,6 +2914,7 @@ class AdminController extends AbstractController
             'entryInstructions' => $apartment->setEntryInstructions($value === '' ? 'Aucune consigne pour le moment.' : $this->sanitizeRichText($value)),
             'ownerName' => $apartment->setOwnerName($normalizedValue),
             'ownerPhone' => $apartment->setOwnerPhone($normalizedValue),
+            'ownerEmail' => $apartment->setOwnerEmail($normalizedValue),
             'internalNotes' => $apartment->setInternalNotes($this->sanitizeRichText($value, true)),
             'guestWifiName' => $apartment->setGuestWifiName($normalizedValue),
             'guestWifiPassword' => $apartment->setGuestWifiPassword($normalizedValue),

@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ room.roomName }} - Audit Airbnb{% endblock %}
+{% block body_class %}airbnb-check-body{% endblock %}
+
+{% block body %}
+    <section class="airbnb-shell">
+        <div class="airbnb-mobile-frame" id="airbnb-room-content">
+            {% include 'airbnb_check/_room_content.html.twig' %}
+        </div>
+    </section>
+{% endblock %}

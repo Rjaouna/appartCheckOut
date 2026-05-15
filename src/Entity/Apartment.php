@@ -73,6 +73,9 @@ class Apartment
     #[ORM\Column(length: 40, nullable: true)]
     private ?string $ownerPhone = null;
 
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $ownerEmail = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $internalNotes = null;
 
@@ -395,6 +398,18 @@ class Apartment
     public function setOwnerPhone(?string $ownerPhone): self
     {
         $this->ownerPhone = $ownerPhone;
+
+        return $this;
+    }
+
+    public function getOwnerEmail(): ?string
+    {
+        return $this->ownerEmail;
+    }
+
+    public function setOwnerEmail(?string $ownerEmail): self
+    {
+        $this->ownerEmail = $ownerEmail;
 
         return $this;
     }

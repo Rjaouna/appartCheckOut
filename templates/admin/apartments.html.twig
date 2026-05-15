@@ -69,6 +69,7 @@
                                     bedroomCount: templateApartment.bedroomCount,
                                     ownerName: templateApartment.ownerName,
                                     ownerPhone: templateApartment.ownerPhone,
+                                    ownerEmail: templateApartment.ownerEmail,
                                     internalNotes: templateApartment.internalNotes,
                                     isInventoryPriority: templateApartment.isInventoryPriority,
                                     inventoryDueAt: templateApartment.inventoryDueAt ? templateApartment.inventoryDueAt|date('Y-m-d\\TH:i') : '',
@@ -125,6 +126,7 @@
                     <label><span>Nom du propriétaire *</span><input name="ownerName"></label>
                     <label><span>Numéro de téléphone *</span><input name="ownerPhone"></label>
                 </div>
+                <label><span>Email propriétaire</span><input type="email" name="ownerEmail" placeholder="proprietaire@exemple.com"></label>
                 <label><span>Notes internes</span></label>
                 <div class="trix-field-shell">
                     <input id="apartment-create-internal-notes" type="hidden" name="internalNotes" value="">

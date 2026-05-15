@@ -9,6 +9,7 @@
     </div>
 
     <div class="card-grid apartment-card-grid admin-home-apartment-grid admin-apartments-grid">
+        {% set airbnbBadges = airbnbCheckBadges|default({}) %}
         {% for apartment in apartments %}
             {% set activeManagers = apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
             {% set leadManager = activeManagers|first %}
@@ -17,6 +18,7 @@
             {% set keyBoxCode = apartment.keyBoxCode ?: 'Non renseigné' %}
             {% set buildingCode = apartment.buildingAccessCode ?: 'Non renseigné' %}
             {% set openAnomalyCount = openAnomalyCounts[apartment.id] ?? 0 %}
+            {% set airbnbBadge = airbnbBadges[apartment.id] ?? {label: 'Non audité', class: 'is-neutral'} %}
             <article class="admin-apartment-card admin-apartment-list-card {{ apartment.status.value != 'active' ? 'is-dimmed' : '' }}" data-click-url="{{ path('admin_apartment_show', {id: apartment.id}) }}">
                 <div class="admin-apartment-card-glow" aria-hidden="true"></div>
 
@@ -29,6 +31,7 @@
                     <div class="admin-apartment-card-title">
                         <div class="admin-apartment-card-badges">
                             <span class="status-badge {{ apartment.status.value == 'active' ? 'is-success' : 'is-neutral' }}">{{ apartment.status.label }}</span>
+                            <span class="airbnb-audit-badge {{ airbnbBadge.class }}">{{ airbnbBadge.label }}</span>
                             {% if apartment.isInventoryPriority %}
                                 <span class="priority-pill">Inventaire prioritaire</span>
                             {% endif %}

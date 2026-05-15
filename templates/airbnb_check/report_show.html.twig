@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rapport Airbnb{% endblock %}
+{% block body_class %}airbnb-check-body{% endblock %}
+
+{% block body %}
+    {% set apartment = check.apartment %}
+    <section class="airbnb-shell airbnb-report-shell">
+        <div class="airbnb-mobile-frame">
+            <header class="airbnb-topbar">
+                <a class="airbnb-icon-button" href="{{ path('admin_airbnb_check_reports') }}" aria-label="Retour">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <h1>Rapport</h1>
+                <span class="airbnb-topbar-score">{{ check.score }}%</span>
+            </header>
+
+            <div class="airbnb-score-card">
+                <div>
+                    <span>{{ apartment ? apartment.name : 'Appartement' }}</span>
+                    <strong>{{ check.score }}%</strong>
+                    <p>{{ check.validationLabel }}</p>
+                </div>
+                <div class="airbnb-progress-ring" style="--angle: {{ check.score * 3.6 }}deg;">
+                    <span>{{ check.score }}%</span>
+                </div>
+            </div>
+
+            <div class="airbnb-report-actions">
+                <a class="airbnb-secondary-button" href="{{ path('admin_airbnb_check_show', {id: check.id}) }}">Modifier le rapport</a>
+                <form method="post" action="{{ path('admin_airbnb_check_report_send_email', {id: check.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('admin_airbnb_check_send_email_' ~ check.id) }}">
+                    <button class="airbnb-primary-button" type="submit">Envoyer au propriétaire</button>
+                </form>
+            </div>
+
+            {% if apartment and apartment.ownerEmail is empty %}
+                <div class="airbnb-warning-card">
+                    Adresse email du propriétaire manquante. Ajoute-la dans la fiche appartement avant d’envoyer le rapport.
+                </div>
+            {% endif %}
+
+            <section class="airbnb-report-panel">
+                <h2>Points à corriger</h2>
+                {% if issueEquipments|length > 0 %}
+                    <div class="airbnb-issue-list">
+                        {% for equipment in issueEquipments %}
+                            <article class="airbnb-issue-card">
+                                <span class="airbnb-status-dot {{ equipment.statusClass }}">{{ equipment.status == 'missing' ? '!' : '-' }}</span>
+                                <div>
+                                    <strong>{{ equipment.name }}</strong>
+                                    <p>{{ equipment.room.roomName }} · {{ equipment.statusLabel }}</p>
+                                    {% if equipment.taskLabel %}
+                                        <em>{{ equipment.taskLabel }}</em>
+                                    {% endif %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="airbnb-muted">Aucun point bloquant détecté.</p>
+                {% endif %}
+            </section>
+
+            <section class="airbnb-report-panel">
+                <h2>Détail par pièce</h2>
+                <div class="airbnb-room-grid airbnb-room-grid-report">
+                    {% for room in check.rooms %}
+                        <div class="airbnb-room-card">
+                            <div class="airbnb-room-icon"><i class="bi bi-{{ room.icon }}" aria-hidden="true"></i></div>
+                            <div>
+                                <strong>{{ room.roomName }}</strong>
+                                <span>{{ room.checkedEquipmentCount }} / {{ room.equipmentCount }} contrôlés</span>
+                                <em class="{{ room.scoreClass }}">{{ room.score }}%</em>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </section>
+{% endblock %}

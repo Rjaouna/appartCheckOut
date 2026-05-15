@@ -142,6 +142,13 @@
                                 <span class="action-menu-tile-label">Appartements</span>
                                 <span class="action-menu-tile-caption">Liste, fiches et accès logements</span>
                             </a>
+                            <a class="action-menu-tile" href="{{ path('admin_airbnb_check_index') }}">
+                                <span class="action-menu-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6.8V12c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6.8L12 3Zm-1.2 12.6-3-3 1.4-1.4 1.6 1.6 4-4 1.4 1.4-5.4 5.4Z" fill="currentColor"/></svg>
+                                </span>
+                                <span class="action-menu-tile-label">Check Airbnb</span>
+                                <span class="action-menu-tile-caption">Audit d’utilisabilité et rapports</span>
+                            </a>
                             <a class="action-menu-tile" href="{{ path('admin_anomalies') }}">
                                 <span class="action-menu-icon">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V8h2v4Z" fill="currentColor"/></svg>
@@ -283,6 +290,7 @@
                         <div class="action-menu-shortcuts">
                             {% if is_granted('ROLE_ADMIN') %}
                                 <a href="{{ path('admin_apartments') }}">Ajouter un appartement</a>
+                                <a href="{{ path('admin_airbnb_check_index') }}">Lancer un check Airbnb</a>
                                 <a href="{{ path('admin_users') }}">Gérer l’équipe</a>
                                 <a href="{{ path('admin_anomalies') }}">Suivre les anomalies</a>
                                 <a href="{{ path('admin_dashboard') }}">Voir les check-outs</a>

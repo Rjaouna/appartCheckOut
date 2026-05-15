@@ -92,6 +92,16 @@
             </div>
 
             <div class="head-actions apartment-hero-actions">
+                <form
+                    method="post"
+                    action="{{ path('admin_airbnb_check_launch', {id: apartment.id}) }}"
+                    class="apartment-hero-priority-form"
+                >
+                    <input type="hidden" name="_token" value="{{ csrf_token('admin_airbnb_check_launch_' ~ apartment.id) }}">
+                    <button class="primary-button apartment-hero-priority-button" type="submit">
+                        Lancer le check d’utilisabilité
+                    </button>
+                </form>
                 <button class="primary-button apartment-hero-priority-button" type="button" data-apartment-reservation-modal-trigger>
                     Réserver le logement
                 </button>

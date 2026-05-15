@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\ApartmentReservation;
+use App\Entity\AirbnbCheck;
 use App\Entity\Checkout;
 use App\Entity\ReservationCheckin;
 use App\Entity\ServiceOffer;
@@ -38,6 +39,7 @@ class PendingActionNotificationProvider
         if ($isAdmin) {
             $this->appendPendingServiceValidationActions($actions);
             $this->appendUnprocessedCheckinActions($actions);
+            $this->appendAirbnbAuditActions($actions);
         } else {
             $this->appendEmployeePendingServiceActions($actions, $user);
         }
@@ -296,6 +298,59 @@ class PendingActionNotificationProvider
                 'meta' => $checkin->getCompletedAt()->format('d/m/Y H:i'),
                 'priority' => 'warning',
             ];
+        }
+    }
+
+    /**
+     * @param list<array{id:string,type:string,title:string,description:string,url:string,meta:string,priority:string}> $actions
+     */
+    private function appendAirbnbAuditActions(array &$actions): void
+    {
+        $checks = $this->entityManager->createQueryBuilder()
+            ->select('airbnbCheck', 'apartment')
+            ->from(AirbnbCheck::class, 'airbnbCheck')
+            ->join('airbnbCheck.apartment', 'apartment')
+            ->where('airbnbCheck.status = :status')
+            ->andWhere('airbnbCheck.score < 100')
+            ->setParameter('status', AirbnbCheck::STATUS_COMPLETED)
+            ->orderBy('airbnbCheck.completedAt', 'DESC')
+            ->addOrderBy('airbnbCheck.id', 'DESC')
+            ->setMaxResults(12)
+            ->getQuery()
+            ->getResult();
+
+        $seenApartmentIds = [];
+        foreach ($checks as $check) {
+            if (!$check instanceof AirbnbCheck || !$check->getApartment()) {
+                continue;
+            }
+
+            $apartmentId = $check->getApartment()->getId();
+            if ($apartmentId === null || isset($seenApartmentIds[$apartmentId])) {
+                continue;
+            }
+            $seenApartmentIds[$apartmentId] = true;
+
+            $completedAt = $check->getCompletedAt();
+            $actions[] = [
+                'id' => sprintf('airbnb-check-%d-incomplete', $check->getId()),
+                'type' => 'airbnb-check',
+                'title' => 'Audit Airbnb à compléter',
+                'description' => sprintf(
+                    '%s · Score %d%% · %d point%s à corriger',
+                    $check->getApartment()->getName(),
+                    $check->getScore(),
+                    $check->getMissingIssueCount(),
+                    $check->getMissingIssueCount() > 1 ? 's' : ''
+                ),
+                'url' => $this->urlGenerator->generate('admin_airbnb_check_report_show', ['id' => $check->getId()]),
+                'meta' => $completedAt instanceof \DateTimeImmutable ? $completedAt->format('d/m/Y H:i') : 'Audit enregistré',
+                'priority' => $check->getScore() < 70 ? 'danger' : 'warning',
+            ];
+
+            if (count($seenApartmentIds) >= 4) {
+                break;
+            }
         }
     }
 }

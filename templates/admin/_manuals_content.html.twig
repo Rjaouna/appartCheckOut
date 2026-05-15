@@ -56,14 +56,6 @@
                 <input type="text" name="equipmentLabel" list="manual-equipment-suggestions" placeholder="Ex. Cafetière" required>
             </label>
             <label>
-                <span>Titre</span>
-                <input type="text" name="title" placeholder="Ex. Utiliser la cafetière" required>
-            </label>
-            <label>
-                <span>Message court</span>
-                <textarea name="shortMessage" rows="3" placeholder="Expliquez en une phrase ce que le locataire doit savoir."></textarea>
-            </label>
-            <label>
                 <span>Consigne importante</span>
                 <textarea name="importantNotice" rows="3" placeholder="Ex. Ne jamais lancer sans eau."></textarea>
             </label>
@@ -73,10 +65,6 @@
                 <small>Formats acceptés : MP4, MOV, WebM. Taille maximum : 6 Mo.</small>
             </label>
             <div class="admin-manual-settings-row">
-                <label>
-                    <span>Ordre</span>
-                    <input type="number" name="displayOrder" min="0" value="0">
-                </label>
                 <label class="admin-manual-checkbox-field">
                     <span>Visible côté locataire</span>
                     <input type="checkbox" name="isActive" value="1" checked>
@@ -118,19 +106,10 @@
                         <div class="admin-manual-card-top">
                             <div>
                                 <span class="eyebrow">{{ manual.apartment.name }}</span>
-                                <h3>{{ manual.title }}</h3>
+                                <h3>{{ manual.equipmentLabel }}</h3>
                             </div>
                             <span class="status-badge {{ manual.isActive ? 'is-success' : 'is-neutral' }}">{{ manual.isActive ? 'Visible' : 'Masqué' }}</span>
                         </div>
-
-                        <div class="admin-manual-badges">
-                            <span class="public-tenant-badge">{{ manual.equipmentLabel }}</span>
-                            <span class="public-tenant-badge">Ordre {{ manual.displayOrder }}</span>
-                        </div>
-
-                        {% if manual.shortMessage %}
-                            <p class="admin-manual-copy">{{ manual.shortMessage }}</p>
-                        {% endif %}
 
                         {% if manual.importantNotice %}
                             <div class="detail-note-soft admin-manual-warning">
@@ -181,14 +160,6 @@
                                 <input type="text" name="equipmentLabel" list="manual-equipment-suggestions" value="{{ manual.equipmentLabel }}" required>
                             </label>
                             <label>
-                                <span>Titre</span>
-                                <input type="text" name="title" value="{{ manual.title }}" required>
-                            </label>
-                            <label>
-                                <span>Message court</span>
-                                <textarea name="shortMessage" rows="3">{{ manual.shortMessage }}</textarea>
-                            </label>
-                            <label>
                                 <span>Consigne importante</span>
                                 <textarea name="importantNotice" rows="3">{{ manual.importantNotice }}</textarea>
                             </label>
@@ -198,10 +169,6 @@
                                 <small>Formats acceptés : MP4, MOV, WebM. Taille maximum : 6 Mo.</small>
                             </label>
                             <div class="admin-manual-settings-row">
-                                <label>
-                                    <span>Ordre</span>
-                                    <input type="number" name="displayOrder" min="0" value="{{ manual.displayOrder }}">
-                                </label>
                                 <label class="admin-manual-checkbox-field">
                                     <span>Visible côté locataire</span>
                                     <input type="checkbox" name="isActive" value="1" {{ manual.isActive ? 'checked' : '' }}>
