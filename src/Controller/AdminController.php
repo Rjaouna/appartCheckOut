@@ -1217,12 +1217,7 @@ class AdminController extends AbstractController
             $message .= ' ' . $checkoutMessage;
         }
 
-        return $this->apartmentDetailResponse(
-            $apartment,
-            $entityManager,
-            $message,
-            $this->normalizeApartmentDetailSection((string) $request->request->get('section'))
-        );
+        return $this->reservationContextResponse($reservation, $request, $entityManager, $message);
     }
 
     #[Route('/reservations/{id}/field', name: 'admin_reservation_field_update', methods: ['POST'])]
@@ -2937,9 +2932,62 @@ class AdminController extends AbstractController
     {
         $today = new \DateTimeImmutable('today');
         $reservations = $this->findUpcomingReservations($entityManager);
+        $apartments = $entityManager->getRepository(Apartment::class)->findBy(
+            ['status' => ApartmentStatus::Active],
+            ['name' => 'ASC']
+        );
+        $reservationRangesByApartment = [];
+
+        foreach ($apartments as $apartment) {
+            if ($apartment instanceof Apartment && $apartment->getId() !== null) {
+                $reservationRangesByApartment[$apartment->getId()] = [];
+            }
+        }
+
+        if ($apartments !== []) {
+            $activeReservations = $entityManager->createQueryBuilder()
+                ->select('reservation', 'apartment', 'checkin')
+                ->from(ApartmentReservation::class, 'reservation')
+                ->join('reservation.apartment', 'apartment')
+                ->leftJoin('reservation.checkin', 'checkin')
+                ->where('apartment IN (:apartments)')
+                ->andWhere('reservation.departureDate >= :today')
+                ->andWhere('checkin.id IS NULL')
+                ->setParameter('apartments', $apartments)
+                ->setParameter('today', $today, 'date_immutable')
+                ->orderBy('reservation.arrivalDate', 'ASC')
+                ->addOrderBy('reservation.id', 'DESC')
+                ->getQuery()
+                ->getResult();
+
+            foreach ($activeReservations as $reservation) {
+                if (!$reservation instanceof ApartmentReservation) {
+                    continue;
+                }
+
+                $apartment = $reservation->getApartment();
+                $apartmentId = $apartment?->getId();
+
+                if (
+                    $apartmentId === null
+                    || !$reservation->getArrivalDate() instanceof \DateTimeImmutable
+                    || !$reservation->getDepartureDate() instanceof \DateTimeImmutable
+                ) {
+                    continue;
+                }
+
+                $reservationRangesByApartment[$apartmentId][] = [
+                    'arrivalDate' => $reservation->getArrivalDate()->format('Y-m-d'),
+                    'departureDate' => $reservation->getDepartureDate()->format('Y-m-d'),
+                    'guestName' => $reservation->getGuestName(),
+                ];
+            }
+        }
 
         return [
             'reservations' => $reservations,
+            'apartments' => $apartments,
+            'reservationRangesByApartment' => $reservationRangesByApartment,
             'todayDate' => $today,
             'todayCount' => count(array_filter(
                 $reservations,

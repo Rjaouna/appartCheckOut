@@ -4,11 +4,145 @@
             <h1>Gestion des arrivées</h1>
             <p>{{ reservations|length }} réservation{{ reservations|length > 1 ? 's' : '' }} active{{ reservations|length > 1 ? 's' : '' }} à suivre, avec les actions terrain et admin.</p>
         </div>
-        <div class="head-actions">
-            <a class="secondary-button" href="{{ path('admin_arrivals_history') }}">Historique des arrivées</a>
+        <div class="head-actions admin-arrivals-head-actions">
             <a class="secondary-button app-back-button" href="{{ path('admin_dashboard') }}">Retour</a>
+            <button class="primary-button" type="button" data-arrival-reservation-picker-trigger>Ajouter une réservation</button>
+            <a class="secondary-button" href="{{ path('admin_arrivals_history') }}">Historique des arrivées</a>
         </div>
     </section>
+
+    {% set firstApartment = apartments|default([])|first %}
+    {% set firstApartmentRanges = firstApartment ? reservationRangesByApartment[firstApartment.id]|default([]) : [] %}
+
+    <div class="modal fade" id="arrivalReservationApartmentModal" tabindex="-1" aria-labelledby="arrivalReservationApartmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content apartment-name-modal-content arrival-reservation-picker-modal-content">
+                <div class="modal-header apartment-name-modal-header">
+                    <div>
+                        <span class="eyebrow">Nouvelle réservation</span>
+                        <h4 class="modal-title" id="arrivalReservationApartmentModalLabel">Choisir l’appartement</h4>
+                    </div>
+                    <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                </div>
+                <div class="arrival-reservation-picker-body">
+                    <p class="muted">Sélectionne le logement concerné, puis complète les informations du locataire.</p>
+                    <div class="arrival-reservation-apartment-grid">
+                        {% for apartmentChoice in apartments|default([]) %}
+                            <button
+                                class="arrival-reservation-apartment-card"
+                                type="button"
+                                data-arrival-reservation-apartment-choice
+                                data-reservation-action="{{ path('admin_apartment_reservation_create', {id: apartmentChoice.id}) }}"
+                                data-reservation-ranges="{{ reservationRangesByApartment[apartmentChoice.id]|default([])|json_encode|e('html_attr') }}"
+                                data-reservation-apartment-name="{{ apartmentChoice.name|e('html_attr') }}"
+                            >
+                                <span class="arrival-reservation-apartment-photo">
+                                    <img src="{{ asset(apartmentChoice.imagePath ?: '/img/ecrans/appartement.png') }}" alt="{{ apartmentChoice.name }}">
+                                </span>
+                                <span>
+                                    <strong>{{ apartmentChoice.name }}</strong>
+                                    <small>{{ apartmentChoice.city ?: 'Appartement actif' }}</small>
+                                </span>
+                            </button>
+                        {% else %}
+                            <p class="empty-state">Aucun appartement actif n’est disponible pour créer une réservation.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="apartmentReservationModal" tabindex="-1" aria-labelledby="apartmentReservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content apartment-name-modal-content apartment-reservation-modal-content">
+                <div class="modal-header apartment-name-modal-header">
+                    <div>
+                        <span class="eyebrow">Réservation</span>
+                        <h4 class="modal-title" id="apartmentReservationModalLabel">Enregistrer une arrivée</h4>
+                        <p class="muted arrival-reservation-selected-name" data-arrival-reservation-selected-name>
+                            {{ firstApartment ? firstApartment.name : 'Sélectionne d’abord un appartement.' }}
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" aria-label="Fermer" data-modal-close></button>
+                </div>
+                <form
+                    method="post"
+                    action="{{ firstApartment ? path('admin_apartment_reservation_create', {id: firstApartment.id}) : '#' }}"
+                    class="stack-form apartment-reservation-modal-form"
+                    data-async-form
+                    data-update-target="#admin-arrivals-root"
+                    data-swap-mode="outer"
+                    data-close-modal="apartmentReservationModal"
+                    data-reservation-ranges="{{ firstApartmentRanges|json_encode|e('html_attr') }}"
+                >
+                    <input type="hidden" name="context" value="arrivals">
+                    <p class="form-inline-error" data-form-error hidden></p>
+
+                    <div class="reservation-wizard-step" data-reservation-step="1">
+                        <label>
+                            <span>Nom du locataire</span>
+                            <input type="text" name="guestName" required data-reservation-step-input>
+                        </label>
+                        <div class="editable-field-actions">
+                            <button class="primary-button" type="button" data-reservation-next>Suivant</button>
+                        </div>
+                    </div>
+
+                    <div class="reservation-wizard-step is-collapsed" data-reservation-step="2" hidden>
+                        <label>
+                            <span>Numéro WhatsApp</span>
+                            <input type="text" name="guestWhatsappNumber" placeholder="+33 6 00 00 00 00" required>
+                        </label>
+                        <p class="muted">Saisis le numéro au format international, par exemple +33 6 00 00 00 00.</p>
+                        <div class="editable-field-actions">
+                            <button class="secondary-button" type="button" data-reservation-prev>Retour</button>
+                            <button class="primary-button" type="button" data-reservation-next>Suivant</button>
+                        </div>
+                    </div>
+
+                    <div class="reservation-wizard-step is-collapsed" data-reservation-step="3" hidden>
+                        <div class="reservation-range-picker" data-reservation-range-picker>
+                            <div class="reservation-range-summary">
+                                <div class="reservation-range-chip">
+                                    <span>Arrivée</span>
+                                    <strong data-reservation-date-display="arrival">Non définie</strong>
+                                </div>
+                                <div class="reservation-range-chip">
+                                    <span>Départ</span>
+                                    <strong data-reservation-date-display="departure">Non défini</strong>
+                                </div>
+                            </div>
+                            <p class="muted">Choisis d’abord une date d’arrivée, puis une date de départ.</p>
+                            <div class="reservation-calendar-card">
+                                <div class="reservation-calendar-nav">
+                                    <button type="button" class="secondary-button" data-reservation-calendar-shift="-1">Précédent</button>
+                                    <strong data-reservation-calendar-label></strong>
+                                    <button type="button" class="secondary-button" data-reservation-calendar-shift="1">Suivant</button>
+                                </div>
+                                <div class="reservation-calendar-weekdays" aria-hidden="true">
+                                    <span>Lun</span>
+                                    <span>Mar</span>
+                                    <span>Mer</span>
+                                    <span>Jeu</span>
+                                    <span>Ven</span>
+                                    <span>Sam</span>
+                                    <span>Dim</span>
+                                </div>
+                                <div class="reservation-calendar-grid" data-reservation-calendar-grid></div>
+                            </div>
+                            <input type="hidden" name="arrivalDate" data-reservation-date-input="arrival">
+                            <input type="hidden" name="departureDate" data-reservation-date-input="departure">
+                        </div>
+                        <div class="editable-field-actions">
+                            <button class="secondary-button" type="button" data-reservation-prev>Retour</button>
+                            <button class="primary-button" type="submit">Terminer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <section class="employee-arrival-stack admin-arrival-pro-stack">
         {% for reservation in reservations %}
