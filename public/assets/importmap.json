@@ -1,6 +1,6 @@
 {
     "app": {
-        "path": "\/assets\/app-MwV_WoJ.js",
+        "path": "\/assets\/app--CvLZzo.js",
         "type": "js"
     },
     "\/assets\/stimulus_bootstrap.js": {
@@ -24,7 +24,7 @@
         "type": "js"
     },
     "\/assets\/styles\/app.css": {
-        "path": "\/assets\/styles\/app-9C3FvdV.css",
+        "path": "\/assets\/styles\/app-bB6CIcw.css",
         "type": "css"
     },
     "@hotwired\/stimulus": {
