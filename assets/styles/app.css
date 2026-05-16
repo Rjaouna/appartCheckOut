@@ -2028,14 +2028,29 @@ select {
 @media (max-width: 560px) {
     .top-consumable-notification-panel {
         position: fixed;
-        top: 86px;
+        top: max(76px, env(safe-area-inset-top));
         left: 12px;
         right: 12px;
+        bottom: 12px;
+        z-index: 1505;
         width: auto;
+        max-height: none;
+        overscroll-behavior: contain;
     }
 
     .consumable-notification-restock-form {
         grid-template-columns: 1fr;
+    }
+
+    .consumable-notification-restock-form label,
+    .consumable-notification-restock-form input,
+    .consumable-notification-restock-form .primary-button {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .consumable-notification-restock-form input {
+        font-size: 16px;
     }
 
     .consumable-notification-item-top {
@@ -2302,6 +2317,15 @@ select {
     --modal-shadow: 0 32px 90px rgba(var(--text-rgb), 0.18);
     font-family: var(--font);
     z-index: 1310;
+}
+
+.modal.airbnb-equipment-modal {
+    z-index: 1500;
+}
+
+body.airbnb-check-body:has(.modal.airbnb-equipment-modal.show) .airbnb-mobile-frame,
+body.airbnb-check-body:has(.modal.airbnb-equipment-modal[aria-modal="true"]) .airbnb-mobile-frame {
+    z-index: 1;
 }
 
 .modal-backdrop {
@@ -3680,6 +3704,10 @@ body.nav-compact .top-app-bar {
     pointer-events: none;
 }
 
+body.nav-compact.consumable-notifications-open .top-app-bar {
+    pointer-events: auto;
+}
+
 body.nav-compact .top-app-brand {
     opacity: 0;
     transform: translateY(-18px);
@@ -3694,7 +3722,7 @@ body.nav-compact .top-consumable-notifications {
 body.nav-compact.consumable-notifications-open .top-consumable-notifications {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0);
+    transform: none;
 }
 
 body.nav-compact .floating-main-menu-button {
@@ -13756,7 +13784,7 @@ a.apartment-manager-link:focus-visible {
         linear-gradient(90deg, rgba(var(--primary-rgb), 0.84) 0%, rgba(var(--primary-rgb), 0.62) 42%, rgba(var(--text-rgb), 0.34) 100%),
         var(--dashboard-photo, url("/img/ecrans/appartement.png")) !important;
     background-position: center;
-    background-size: cover;
+    background-size: cover !important;
 }
 
 .dashboard-photo-hero::before {
