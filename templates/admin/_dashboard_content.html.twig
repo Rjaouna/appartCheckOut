@@ -228,44 +228,83 @@
     </section>
 
     <div id="dashboard-launch-checkout-menu" class="workflow-actions-source" hidden>
-        <div class="action-menu-grid">
+        <div class="action-menu-grid dashboard-launch-menu-grid">
             {% for card in launchableApartmentCards %}
-                <div class="admin-dashboard-launch-tile">
-                    <div class="admin-dashboard-launch-head">
-                        <span class="action-menu-icon action-menu-icon-pink" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3v-10.5Z" fill="currentColor"/>
-                            </svg>
-                        </span>
-                        <div class="admin-dashboard-launch-copy">
-                            <strong>{{ card.apartment.name }}</strong>
-                            <small>{{ card.assignedEmployeeNames }}</small>
-                        </div>
+                {% set assignedEmployees = card.assignedEmployees|default([]) %}
+                <div class="admin-dashboard-launch-tile admin-dashboard-launch-tile-modern">
+                    <div class="admin-dashboard-launch-media">
+                        <img src="{{ asset(card.apartment.imagePath ?: '/img/ecrans/appartement.png') }}" alt="{{ card.apartment.name }}">
+                        {% if assignedEmployees is not empty %}
+                            <div class="admin-dashboard-launch-avatars" aria-label="Employés assignés">
+                                {% for employee in assignedEmployees|slice(0, 4) %}
+                                    <a class="admin-dashboard-launch-avatar {{ employee.photoPath ? 'has-photo' : '' }}" href="{{ path('admin_user_show', {id: employee.id}) }}" title="{{ employee.fullName }}" aria-label="Voir la fiche de {{ employee.fullName }}">
+                                        {% if employee.photoPath %}
+                                            <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
+                                        {% else %}
+                                            {{ employee.fullName|first|upper }}
+                                        {% endif %}
+                                    </a>
+                                {% endfor %}
+                                {% if assignedEmployees|length > 4 %}
+                                    <span class="admin-dashboard-launch-avatar admin-dashboard-launch-avatar-more" title="{{ assignedEmployees|length - 4 }} employé{{ assignedEmployees|length - 4 > 1 ? 's' : '' }} supplémentaire{{ assignedEmployees|length - 4 > 1 ? 's' : '' }}">+{{ assignedEmployees|length - 4 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
 
-                    {% if card.assignedEmployees is not empty %}
+                    <div class="admin-dashboard-launch-body">
+                        <div class="admin-dashboard-launch-copy">
+                            <span class="employee-home-kicker">Appartement</span>
+                            <strong>{{ card.apartment.name }}</strong>
+                            <small>
+                                {{ card.apartment.city ?: 'Ville non renseignée' }}
+                                {% if assignedEmployees is not empty %}
+                                    · {{ assignedEmployees|length }} employé{{ assignedEmployees|length > 1 ? 's' : '' }} assigné{{ assignedEmployees|length > 1 ? 's' : '' }}
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        {% if assignedEmployees is not empty %}
+                            <div class="admin-dashboard-launch-team">
+                                {% for employee in assignedEmployees|slice(0, 3) %}
+                                    <span>{{ employee.fullName }}</span>
+                                {% endfor %}
+                                {% if assignedEmployees|length > 3 %}
+                                    <span>+{{ assignedEmployees|length - 3 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {% if assignedEmployees is not empty %}
                         <form method="post" action="{{ path('admin_checkout_create', {id: card.apartment.id}) }}" class="admin-dashboard-launch-form" data-async-form data-update-target="#admin-dashboard-content">
                             <input type="hidden" name="priority" value="normal">
                             <input type="hidden" name="context" value="dashboard">
-                            {% if card.assignedEmployees|length == 1 %}
+                            {% if assignedEmployees|length == 1 %}
                                 <input type="hidden" name="assignedTo" value="{{ card.firstAssignedEmployeeId }}">
                             {% else %}
                                 <label class="admin-dashboard-launch-field">
                                     <span>Employé</span>
                                     <select name="assignedTo" required>
-                                        {% for employee in card.assignedEmployees %}
+                                        {% for employee in assignedEmployees %}
                                             <option value="{{ employee.id }}">{{ employee.fullName }}</option>
                                         {% endfor %}
                                     </select>
                                 </label>
                             {% endif %}
-                            <button class="primary-button" type="submit">check-out</button>
+                            <button class="primary-button admin-dashboard-launch-submit" type="submit">
+                                <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                                Lancer le check-out
+                            </button>
                         </form>
                     {% else %}
                         <div class="admin-dashboard-launch-empty">
                             <span class="admin-dashboard-inline-note">Assigne d’abord un employé à cet appartement.</span>
+                            {% if card.apartment.id %}
+                                <a class="secondary-button" href="{{ path('admin_apartment_section', {id: card.apartment.id, section: 'assignment'}) }}">Assigner un employé</a>
+                            {% endif %}
                         </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             {% else %}
                 <div class="action-menu-tile action-menu-tile-muted">
@@ -282,41 +321,77 @@
     </div>
 
     <div id="dashboard-checkout-status-menu" class="workflow-actions-source" hidden>
-        <div class="action-menu-grid">
+        <div class="action-menu-grid dashboard-checkout-menu-grid">
             {% for checkout in scheduledCheckouts %}
-                <div class="action-menu-tile action-menu-tile-muted action-menu-tile-checkout" data-click-url="{{ path('admin_checkout_show', {id: checkout.id}) }}">
-                    <div class="action-menu-tile-top">
-                        <span class="action-menu-icon action-menu-icon-blue">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10ZM6 8h12V6H6v2Z" fill="currentColor"/>
-                            </svg>
-                        </span>
+                {% set apartmentEmployees = checkout.apartment.assignedEmployees|filter(employee => 'ROLE_ADMIN' not in employee.roles) %}
+                <article class="dashboard-checkout-card" data-click-url="{{ path('admin_checkout_show', {id: checkout.id}) }}">
+                    <div class="dashboard-checkout-card-media">
+                        <img src="{{ asset(checkout.apartment.imagePath ?: '/img/ecrans/check-out.png') }}" alt="{{ checkout.apartment.name }}">
+                        <span class="dashboard-checkout-status-pill">À traiter</span>
                         {% if checkout.status.value != 'in_progress' %}
                             <form
+                                class="dashboard-checkout-cancel-form-floating"
                                 method="post"
                                 action="{{ path('admin_checkout_cancel', {id: checkout.id}) }}"
                                 data-async-form
                                 data-update-target="#admin-dashboard-content"
                             >
                                 <input type="hidden" name="context" value="dashboard">
-                                <button class="icon-action-button icon-action-button-danger" type="submit" aria-label="Annuler le check-out {{ checkout.apartment.name }}" title="Annuler le check-out">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3 1.4 1.4Z" fill="currentColor"/>
-                                    </svg>
+                                <button class="dashboard-checkout-cancel-button dashboard-checkout-cancel-button-floating" type="submit" aria-label="Annuler le check-out {{ checkout.apartment.name }}" title="Annuler le check-out">
+                                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                    <span>Annuler</span>
                                 </button>
                             </form>
                         {% endif %}
-                    </div>
-                    <a class="action-menu-checkout-link" href="{{ path('admin_checkout_show', {id: checkout.id}) }}">
-                        <span>{{ checkout.apartment.name }}</span>
-                    </a>
-                    <small>
-                        {{ checkout.assignedTo ? checkout.assignedTo.fullName : 'Sans employé assigné' }}
-                        {% if checkout.scheduledAt %}
-                            · {{ checkout.scheduledAt|date('d/m/Y H:i') }}
+                        {% if apartmentEmployees is not empty %}
+                            <div class="dashboard-checkout-avatars" aria-label="Employés responsables">
+                                {% for employee in apartmentEmployees|slice(0, 4) %}
+                                    <a class="dashboard-checkout-avatar {{ employee.photoPath ? 'has-photo' : '' }}" href="{{ path('admin_user_show', {id: employee.id}) }}" title="{{ employee.fullName }}" aria-label="Voir la fiche de {{ employee.fullName }}">
+                                        {% if employee.photoPath %}
+                                            <img src="{{ employee.photoPath }}" alt="{{ employee.fullName }}">
+                                        {% else %}
+                                            {{ employee.fullName|first|upper }}
+                                        {% endif %}
+                                    </a>
+                                {% endfor %}
+                                {% if apartmentEmployees|length > 4 %}
+                                    <span class="dashboard-checkout-avatar dashboard-checkout-avatar-more">+{{ apartmentEmployees|length - 4 }}</span>
+                                {% endif %}
+                            </div>
+                        {% elseif checkout.assignedTo %}
+                            <div class="dashboard-checkout-avatars" aria-label="Employé assigné">
+                                <a class="dashboard-checkout-avatar {{ checkout.assignedTo.photoPath ? 'has-photo' : '' }}" href="{{ path('admin_user_show', {id: checkout.assignedTo.id}) }}" title="{{ checkout.assignedTo.fullName }}" aria-label="Voir la fiche de {{ checkout.assignedTo.fullName }}">
+                                    {% if checkout.assignedTo.photoPath %}
+                                        <img src="{{ checkout.assignedTo.photoPath }}" alt="{{ checkout.assignedTo.fullName }}">
+                                    {% else %}
+                                        {{ checkout.assignedTo.fullName|first|upper }}
+                                    {% endif %}
+                                </a>
+                            </div>
                         {% endif %}
-                    </small>
-                </div>
+                    </div>
+                    <div class="dashboard-checkout-card-body">
+                        <div class="dashboard-checkout-card-title">
+                            <span class="employee-home-kicker">Check-out à traiter</span>
+                            <h3>{{ checkout.apartment.name }}</h3>
+                        </div>
+                        <div class="dashboard-checkout-meta">
+                            <span>
+                                <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                                {{ checkout.scheduledAt ? checkout.scheduledAt|date('d/m/Y H:i') : 'Date non renseignée' }}
+                            </span>
+                            <span>
+                                <i class="bi bi-person-check" aria-hidden="true"></i>
+                                {{ checkout.assignedTo ? checkout.assignedTo.fullName : 'Sans employé assigné' }}
+                            </span>
+                        </div>
+                        <div class="dashboard-checkout-card-actions">
+                            <a class="primary-button dashboard-checkout-open-button" href="{{ path('admin_checkout_show', {id: checkout.id}) }}">
+                                Ouvrir l’inventaire
+                            </a>
+                        </div>
+                    </div>
+                </article>
             {% else %}
                 <div class="action-menu-tile action-menu-tile-muted">
                     <span class="action-menu-icon action-menu-icon-dark">

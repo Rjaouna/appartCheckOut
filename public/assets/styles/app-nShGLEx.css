@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
-@import '../vendor/bootstrap-icons/font/bootstrap-icons.css';
+@import "../vendor/bootstrap-icons/font/bootstrap-icons-UNAnHWy.css";
 
 :root {
     --bg: #f7f7f7;
@@ -3674,12 +3674,6 @@ body.nav-compact .top-app-bar {
 
 body.nav-compact .top-app-brand {
     opacity: 0;
-    transform: translateY(-18px);
-}
-
-body.nav-compact .top-consumable-notifications {
-    opacity: 0;
-    pointer-events: none;
     transform: translateY(-18px);
 }
 
