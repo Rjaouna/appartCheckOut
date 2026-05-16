@@ -255,7 +255,11 @@
                     <div class="admin-dashboard-launch-body">
                         <div class="admin-dashboard-launch-copy">
                             <span class="employee-home-kicker">Appartement</span>
-                            <strong>{{ card.apartment.name }}</strong>
+                            <strong>
+                                <a class="dashboard-apartment-name-link" href="{{ path('admin_apartment_show', {id: card.apartment.id}) }}">
+                                    {{ card.apartment.name }}
+                                </a>
+                            </strong>
                             <small>
                                 {{ card.apartment.city ?: 'Ville non renseignée' }}
                                 {% if assignedEmployees is not empty %}
@@ -373,7 +377,11 @@
                     <div class="dashboard-checkout-card-body">
                         <div class="dashboard-checkout-card-title">
                             <span class="employee-home-kicker">Check-out à traiter</span>
-                            <h3>{{ checkout.apartment.name }}</h3>
+                            <h3>
+                                <a class="dashboard-apartment-name-link" href="{{ path('admin_apartment_show', {id: checkout.apartment.id}) }}">
+                                    {{ checkout.apartment.name }}
+                                </a>
+                            </h3>
                         </div>
                         <div class="dashboard-checkout-meta">
                             <span>
